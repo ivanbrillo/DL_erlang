@@ -7,10 +7,14 @@ pid = 0
 counter = 0
 
 
+# {[[4, "dense"], [8, "conv1d"]]}
+
+
 def register_handler(dest):
     global pid  # Declare pid as global to modify it
     def handler(message):
-        cast(dest, message)
+        parsed = f"{message[0][0]} neurons, {message[0][1].to_string()}"
+        cast(dest, parsed)
     set_message_handler(handler)
     pid = dest
     return Atom(b"ok")
