@@ -1,0 +1,15 @@
+{application, ds_proj, [
+    {description, "An OTP application"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {main, []}},
+    {applications, [
+        kernel,
+        stdlib,
+	erlport
+    ]},
+    {env, []},
+    {modules, []},
+    {licenses, ["Apache-2.0"]},
+    {links, []}
+ ]}.
