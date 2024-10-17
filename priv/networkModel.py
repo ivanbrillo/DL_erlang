@@ -8,5 +8,5 @@ class NetworkModel(tf.keras.Model):
 
     def call(self, x):
         network_output = self.network_sequential(x)
-        # to be add specific behavior
+        # todo: add specific behavior (if the model of the prof gives us the directive)
         return network_output

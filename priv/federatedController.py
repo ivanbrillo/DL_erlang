@@ -1,21 +1,23 @@
-import tensorflow as tf
 import numpy as np
 import json
 from networkModel import NetworkModel
 
 
-class FederatedModel():
+class FederatedController():
     def __init__(self, network_model: NetworkModel):
         super().__init__()
-        self.model: NetworkModel = network_model
-
-    def serialize(self) -> str:
+        self.model: NetworkModel = network_model 
+    
+    def get_definition(self) -> str:
         config = self.model.get_config()
+        return json.dumps({"config": config})
+    
+    def get_weights(self) -> str:
         weights = [w.tolist() for w in self.model.get_weights()]
-        return json.dumps({"config": config, "weights": weights})
+        return json.dumps({"weights": weights})
 
     def update_weights(self, node_output: list[list, int]):
-        new_weights = FederatedModel.federated_weight_average(node_output)
+        new_weights = FederatedController.federated_weight_average(node_output)
         self.model.set_weights(new_weights)
 
     @staticmethod
