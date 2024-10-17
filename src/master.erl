@@ -3,7 +3,7 @@
 %% @end
 %%%-------------------------------------------------------------------
 
--module(main).
+-module(master).
 -export([initialize_model/3, update_weights/2, start_master_slave/0]).
 
 
