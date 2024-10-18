@@ -4,18 +4,30 @@
 %%%-------------------------------------------------------------------
 
 -module(master).
--export([initialize_model/3, update_weights/2, start_master_slave/0]).
+-export([start_master/0, loop_master/0, initialize_model/3, update_weights/3, train/2]).
 
 
-start_master_slave() ->
+start_master() ->
+    MasterPid = spawn(?MODULE, loop_master, []),
+    io:format("Starting local process on master~n"),
+
     PythonCodePath = code:priv_dir(ds_proj),
     {ok, Master} = python:start([{python_path, PythonCodePath}, {python, "python3"}]),
     io:format("Master start correctly~n"),
 
-    {ok, Slave} = python:start([{python_path, PythonCodePath}, {python, "python3"}]),
-    io:format("Slave 1 start correctly~n"),
+    {MasterPid, Master}.
 
-    {Master, Slave}.
+
+
+loop_master() ->
+    receive
+
+        _Invalid ->
+            io:format("Master received message.~n"),
+            loop_master()
+    end.
+
+
 
 
 get_model(Master) ->
@@ -24,7 +36,16 @@ get_model(Master) ->
     io:format("Model retrieved correctly from Master~n"),
     Model.
     % ModelData = jsx:decode(Model, [return_maps]),
-    % ProcessedModel = jsx:encode(ModelData),
+    % ProcessedModel = jsx:encode(ModelData).
+
+
+initialize_model(Master, SlavePid, Slave) ->
+    Model = get_model(Master),
+    SlavePid ! {initialize, Slave, Model},
+    io:format("Slave 1 model initialized correctly~n"),
+    ok.
+
+
 
 
 get_weights(Master) ->
@@ -34,16 +55,17 @@ get_weights(Master) ->
     Weights. 
 
 
-initialize_model(Master, Slave, NodeId) ->
-    Model = get_model(Master),
-    python:call(Slave, node, register_handler, [self(), NodeId]),
-    Slave ! {initialize, Model},
-    io:format("Slave ~p model initialized correctly~n", [NodeId]),
+update_weights(Master, SlavePid, Slave) ->
+    Weights = get_weights(Master),
+    SlavePid ! {update, Slave, Weights},
+    io:format("Slave 1 weights updated correctly~n"),
     ok.
 
 
-update_weights(Master, Slave) ->
-    Weights = get_weights(Master),
-    Slave ! {update, Weights},
-    io:format("Slave 1 weights updated correctly~n"),
+
+
+
+train(SlavePid, Slave) ->
+    SlavePid ! {train, Slave},
+    io:format("Slave 1 train completed~n"),
     ok.

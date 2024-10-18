@@ -19,6 +19,10 @@ def register_handler(master_pid, node_id):
         elif code == "update":
             cast(master_pid, f"NODE {node_id}, correctly updated")
             nodeController.update_model(json_payload)
+        elif code == "train":
+            cast(master_pid, f"NODE {node_id}, correctly parsed")
+            # nodeController.train_local(train_data)
+            local_weights = nodeController.get_local_weights()
         else:
             cast(master_pid, f"NODE {node_id}, invalid message code")
             raise Exception("Message code not handled")
