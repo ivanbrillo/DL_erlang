@@ -4,7 +4,7 @@
 %%%-------------------------------------------------------------------
 
 -module(master).
--export([start_master/0, loop_master/0, initialize_model/3, update_weights/3, train/2]).
+-export([start_master/0, loop_master/0, initialize_model/3, update_weights/3, train/2, get_cluster_nodes/0]).
 
 
 start_master() ->
@@ -17,6 +17,11 @@ start_master() ->
 
     {MasterPid, Master}.
 
+
+get_cluster_nodes() ->
+    Nodes = net_adm:world(),
+    MasterNode = node(), % Get the current node (master)
+    lists:filter(fun(N) -> N =/= MasterNode end, Nodes).
 
 
 loop_master() ->
