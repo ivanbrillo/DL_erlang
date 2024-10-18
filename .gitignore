@@ -18,3 +18,7 @@ _build/
 _checkouts/
 
 priv/Dataset/
+
+# docs
+_static
+_templates
