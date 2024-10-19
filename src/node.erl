@@ -26,11 +26,16 @@ loop_node(MasterPid, PythonPid) ->
             io:format("NODE ~p,  Initialization completed~n", [node()]),
             loop_node(MasterPid, PythonPid);
 
-        % {update, Slave, Weights} ->
-        %     Slave ! {update, Weights},
-        %     io:format("Weight update completed~n"),
-        %     loop_node(MasterPid);
-        
+        {update_weights, Weights} ->
+            PythonPid ! {update, Weights},
+
+            receive 
+                weights_ack -> MasterPid ! {weights_ack, self()}
+            end,
+
+            io:format("NODE ~p,  Weights updated successfully~n", [node()]),
+            loop_node(MasterPid, PythonPid);
+
         % {train, Slave} ->
         %     Slave ! {train, "Dataset"},
         %     io:format("Train completed~n"),

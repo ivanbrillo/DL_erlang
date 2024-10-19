@@ -10,7 +10,8 @@
     pythonModelPID = 0,
     pythonUiPID = 0,
     initializedNodes = [],
-    distributedNodes = []
+    distributedNodes = [],
+    weightsNodes = []
 }).
 
 
@@ -58,13 +59,32 @@ loop_master(State) ->
 
             receive
                 [model_definition, ModelDefinition] -> 
-                    ResponseList = distribute_model(State#state.initializedNodes, ModelDefinition)
+                    ResponseList = distribute_object(State#state.initializedNodes, initialize, distribution_ack, ModelDefinition)
             end,
 
-            io:format("Get all ack.~p~n", [ResponseList]),  % TODO to be changed
+            io:format("Get all model distribution ack.~p~n", [ResponseList]),  % TODO to be changed
             NewState = State#state{distributedNodes = ResponseList},
             State#state.pythonUiPID ! {distributed_nodes, ResponseList},
             loop_master(NewState);
+
+        distribute_weights ->
+            State#state.pythonModelPID ! {get_weights, ""},
+            io:format("Send request for the model weights. ~p~n", [State#state.pythonModelPID]),
+
+            receive
+                [model_weights, Weights] -> 
+                    ResponseList = distribute_object(State#state.distributedNodes, update_weights, weights_ack, Weights)
+            end,
+
+            io:format("Get all weights update ack.~p~n", [ResponseList]),  % TODO to be changed
+            NewState = State#state{weightsNodes = ResponseList},
+            State#state.pythonUiPID ! {weights_updated_nodes, ResponseList},
+            loop_master(NewState);
+
+        [python_unhandled, Cause] ->
+            io:format("Python received unhandled message: ~p~n", [Cause]),
+            loop_master(State);
+
 
         _Invalid ->
             io:format("Master received unhandled message. ~p~n", [_Invalid]),
@@ -86,59 +106,22 @@ initialize_nodes() ->
     [spawn(Node, node, start_node, [self()]) || Node <- Active_nodes].
 
 
-
-distribute_model(PidList, Model) ->
+% form {Code, Object} wait for AckCode
+distribute_object(PidList, Code, AckCode,  Object) ->
     lists:foreach(fun(Pid) ->
-        Pid ! {initialize, Model}
+        Pid ! {Code, Object}
     end, PidList),
 
-    wait_ack(length(PidList),  []).
+    wait_ack(length(PidList),  [], AckCode).
     % TODO: handle the lack of response
 
 
-wait_ack(N, RespList) when N == 0 ->
+wait_ack(N, RespList, _) when N == 0 ->
     RespList;
 
-wait_ack(N, RespList) ->
+wait_ack(N, RespList, AckCode) ->
     receive
-        {distribution_ack, Pid} -> wait_ack(N-1, RespList ++ [Pid])
+        {AckCode, Pid} -> wait_ack(N-1, RespList ++ [Pid], AckCode)
     end.
 
 
-
-% get_model(PythonPID) ->
-
-
-%     RawModel = python:call(PythonPID, master, get_model_definition, []),
-%     Model = list_to_binary(RawModel),
-%     io:format("Model retrieved correctly from Master~n"),
-%     Model.
-%     % ModelData = jsx:decode(Model, [return_maps]),
-%     % ProcessedModel = jsx:encode(ModelData).
-
-
-
-
-
-
-get_weights(Master) ->
-    RawWeights = python:call(Master, master, get_model_weights, []),
-    % io:format("Raw data from Python (first 100 chars):~n~p~n", [string:slice(RawWeights, 0, 100)]),
-    Weights = list_to_binary(RawWeights),
-    Weights. 
-
-
-update_weights(Master, SlavePid) ->
-    Weights = get_weights(Master),
-    SlavePid ! {update, Weights},
-    io:format("Slave 1 weights updated correctly~n"),
-    ok.
-
-
-
-
-
-train(SlavePid) ->
-    SlavePid ! {train, ""},
-    io:format("Slave 1 train completed~n"),
-    ok.
