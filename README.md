@@ -1,6 +1,9 @@
 # ds_proj
 
-start the master with:      
+HIDE WARNINGS (Linux):
+export TF_CPP_MIN_LOG_LEVEL=3
+
+START THE MASTER WITH:    
 rebar3 shell --sname master@localhost
 
 start some slaves with:

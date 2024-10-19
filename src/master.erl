@@ -128,9 +128,9 @@ get_weights(Master) ->
     Weights. 
 
 
-update_weights(Master, SlavePid, Slave) ->
+update_weights(Master, SlavePid) ->
     Weights = get_weights(Master),
-    SlavePid ! {update, Slave, Weights},
+    SlavePid ! {update, Weights},
     io:format("Slave 1 weights updated correctly~n"),
     ok.
 
@@ -138,7 +138,7 @@ update_weights(Master, SlavePid, Slave) ->
 
 
 
-train(SlavePid, Slave) ->
-    SlavePid ! {train, Slave},
+train(SlavePid) ->
+    SlavePid ! {train, ""},
     io:format("Slave 1 train completed~n"),
     ok.
