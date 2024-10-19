@@ -12,7 +12,8 @@ class NodeController:
 
     def initialize_model(self, json_string: str) -> None:
         data = json.loads(json_string)
-        self.model = tf.keras.Model.from_config(data['config'])
+        sequential = tf.keras.Sequential.from_config(data['config'])
+        self.model = NetworkModel(sequential)
     
     def update_model(self, json_string: str) -> None:
         data = json.loads(json_string)

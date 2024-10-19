@@ -7,9 +7,10 @@ class FederatedController():
     def __init__(self, network_model: NetworkModel):
         super().__init__()
         self.model: NetworkModel = network_model 
+        self.master_pid: int
     
     def get_definition(self) -> str:
-        config = self.model.get_config()
+        config = self.model.network.get_config()
         return json.dumps({"config": config})
     
     def get_weights(self) -> str:

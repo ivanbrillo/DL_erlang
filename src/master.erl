@@ -4,51 +4,119 @@
 %%%-------------------------------------------------------------------
 
 -module(master).
--export([start_master/0, loop_master/0, initialize_model/3, update_weights/3, train/2, get_cluster_nodes/0]).
+-export([start_master/0, loop_master/1]).
+
+-record(state, {
+    pythonModelPID = 0,
+    pythonUiPID = 0,
+    initializedNodes = [],
+    distributedNodes = []
+}).
 
 
 start_master() ->
-    MasterPid = spawn(?MODULE, loop_master, []),
+    PythonCodePath = code:priv_dir(ds_proj),
+    {ok, PythonModel} = python:start([{python_path, PythonCodePath}, {python, "python3"}]),
+    io:format("Python model started correctly~n"),
+
+    {ok, PythonUI} = python:start([{python_path, PythonCodePath}, {python, "python3"}]),
+    io:format("Python UI started correctly~n"),  % admits modularity (eg. javascript for UI in the future)
+
+    State = #state{pythonModelPID = PythonModel, pythonUiPID = PythonUI},
+    MasterPid = spawn(?MODULE, loop_master, [State]),
     io:format("Starting local process on master~n"),
 
-    PythonCodePath = code:priv_dir(ds_proj),
-    {ok, Master} = python:start([{python_path, PythonCodePath}, {python, "python3"}]),
-    io:format("Master start correctly~n"),
+    Result1 = python:call(PythonModel, master, register_handler, [MasterPid]),
+    io:format("~p~n", [Result1]),
 
-    {MasterPid, Master}.
+    Result2 = python:call(PythonUI, ui, register_handler, [MasterPid]),
+    io:format("~p~n", [Result2]),
 
-
-get_cluster_nodes() ->
-    Nodes = net_adm:world(),
-    MasterNode = node(), % Get the current node (master)
-    lists:filter(fun(N) -> N =/= MasterNode end, Nodes).
+    % set return value to ok.
+    MasterPid.
 
 
-loop_master() ->
+
+loop_master(State) ->
+
     receive
+        get_nodes ->
+            Nodes = get_cluster_nodes(),
+            io:format("get_nodes. ~n"),
+            State#state.pythonUiPID ! {nodes, Nodes},
+            loop_master(State);
+
+        initialize_nodes -> 
+            InitializedNodes = initialize_nodes(),
+            NewState = State#state{initializedNodes = InitializedNodes},
+            State#state.pythonUiPID ! {initialized_nodes, InitializedNodes},
+            loop_master(NewState);
+
+        distribute_model ->
+            State#state.pythonModelPID ! {get_model, ""},
+            io:format("Send request for the model definition. ~p~n", [State#state.pythonModelPID]),
+
+            receive
+                [model_definition, ModelDefinition] -> 
+                    ResponseList = distribute_model(State#state.initializedNodes, ModelDefinition)
+            end,
+
+            io:format("Get all ack.~p~n", [ResponseList]),  % TODO to be changed
+            NewState = State#state{distributedNodes = ResponseList},
+            State#state.pythonUiPID ! {distributed_nodes, ResponseList},
+            loop_master(NewState);
 
         _Invalid ->
-            io:format("Master received message.~n"),
-            loop_master()
+            io:format("Master received unhandled message. ~p~n", [_Invalid]),
+            loop_master(State)
     end.
 
 
 
 
-get_model(Master) ->
-    RawModel = python:call(Master, master, get_model_definition, []),
-    Model = list_to_binary(RawModel),
-    io:format("Model retrieved correctly from Master~n"),
-    Model.
-    % ModelData = jsx:decode(Model, [return_maps]),
-    % ProcessedModel = jsx:encode(ModelData).
+
+get_cluster_nodes() ->
+    Nodes = net_adm:world(),
+    MasterNode = node(), % Get the current node (master)
+    lists:filter(fun(N) -> N =/= MasterNode end, Nodes). % Exclude the current node (master) from the list
 
 
-initialize_model(Master, SlavePid, Slave) ->
-    Model = get_model(Master),
-    SlavePid ! {initialize, Slave, Model},
-    io:format("Slave 1 model initialized correctly~n"),
-    ok.
+initialize_nodes() ->
+    Active_nodes = get_cluster_nodes(),
+    [spawn(Node, node, start_node, [self()]) || Node <- Active_nodes].
+
+
+
+distribute_model(PidList, Model) ->
+    lists:foreach(fun(Pid) ->
+        Pid ! {initialize, Model}
+    end, PidList),
+
+    wait_ack(length(PidList),  []).
+    % TODO: handle the lack of response
+
+
+wait_ack(N, RespList) when N == 0 ->
+    RespList;
+
+wait_ack(N, RespList) ->
+    receive
+        {distribution_ack, Pid} -> wait_ack(N-1, RespList ++ [Pid])
+    end.
+
+
+
+% get_model(PythonPID) ->
+
+
+%     RawModel = python:call(PythonPID, master, get_model_definition, []),
+%     Model = list_to_binary(RawModel),
+%     io:format("Model retrieved correctly from Master~n"),
+%     Model.
+%     % ModelData = jsx:decode(Model, [return_maps]),
+%     % ProcessedModel = jsx:encode(ModelData).
+
+
 
 
 
