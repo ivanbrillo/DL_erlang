@@ -4,7 +4,7 @@
 %%%-------------------------------------------------------------------
 
 -module(master).
--export([start_master/0, loop_master/0, initialize_model/3, update_weights/3, train/2, get_cluster_nodes/0]).
+-export([start_master/0, start_slave/2, loop_master/0, initialize_model/2, update_weights/2, train/1, get_cluster_nodes/0]).
 
 
 start_master() ->
@@ -16,6 +16,13 @@ start_master() ->
     io:format("Master start correctly~n"),
 
     {MasterPid, Master}.
+
+
+start_slave(Name, MasterPid) ->
+    SlavePid = spawn(Name, node, start_node, [MasterPid, 1]),
+    io:format("Starting remote process on slave node~n"),
+    SlavePid.
+
 
 
 get_cluster_nodes() ->
@@ -44,9 +51,9 @@ get_model(Master) ->
     % ProcessedModel = jsx:encode(ModelData).
 
 
-initialize_model(Master, SlavePid, Slave) ->
+initialize_model(Master, SlavePid) ->
     Model = get_model(Master),
-    SlavePid ! {initialize, Slave, Model},
+    SlavePid ! {initialize, Model},
     io:format("Slave 1 model initialized correctly~n"),
     ok.
 
@@ -60,9 +67,9 @@ get_weights(Master) ->
     Weights. 
 
 
-update_weights(Master, SlavePid, Slave) ->
+update_weights(Master, SlavePid) ->
     Weights = get_weights(Master),
-    SlavePid ! {update, Slave, Weights},
+    SlavePid ! {update, Weights},
     io:format("Slave 1 weights updated correctly~n"),
     ok.
 
@@ -70,7 +77,7 @@ update_weights(Master, SlavePid, Slave) ->
 
 
 
-train(SlavePid, Slave) ->
-    SlavePid ! {train, Slave},
+train(SlavePid) ->
+    SlavePid ! {train, ""},
     io:format("Slave 1 train completed~n"),
     ok.
