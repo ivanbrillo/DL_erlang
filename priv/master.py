@@ -30,6 +30,9 @@ def register_handler(master_pid):
             cast(master_pid, [encode_status_code("model_definition"), federatedController.get_definition().encode('utf-8')])
         elif code == "get_weights":
             cast(master_pid, [encode_status_code("model_weights"), federatedController.get_weights().encode('utf-8')])
+        elif code == "update_weights":
+            federatedController.update_weights(payload)
+            cast(master_pid, encode_status_code("update_weights"))
         else:
             cast(master_pid, [encode_status_code("python_unhandled"), "NODE master, invalid message code " + code])
         

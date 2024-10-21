@@ -21,10 +21,11 @@ def register_handler(master_pid, node_id):
             nodeController.update_model(json_payload)
             cast(master_pid, encode_status_code("weights_ack"))
         elif code == "train":
-            pass
-            # cast(master_pid, f"NODE {node_id}, correctly parsed")
-            # nodeController.train_local(train_data)
-            # local_weights = nodeController.get_local_weights()
+            nodeController.train_local()
+            cast(master_pid, encode_status_code("train_ack"))
+        elif code == "get_weights":
+            nodeController.get_weights()
+            cast(master_pid, [encode_status_code("node_weights"), nodeController.get_weights().encode('utf-8')])
         else:
             cast(master_pid, [encode_status_code("python_unhandled"), f"NODE {nodeController.node_id}, invalid message code {code}"])
         

@@ -19,8 +19,9 @@ class NodeController:
         data = json.loads(json_string)
         self.model.set_weights([tf.convert_to_tensor(w) for w in data['weights']])
 
-    def train_local(self, train_data) -> None:
-        self.model.fit(train_data)    
+    def train_local(self) -> None:
+        #self.model.fit(train_data)    
+        return
 
     def get_weights(self) -> str:
         weights = [w.tolist() for w in self.model.get_weights()]

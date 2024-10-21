@@ -11,7 +11,8 @@
     pythonUiPID = 0,
     initializedNodes = [],
     distributedNodes = [],
-    weightsNodes = []
+    weightsNodes = [],
+    trainNodes = []
 }).
 
 
@@ -81,6 +82,37 @@ loop_master(State) ->
             State#state.pythonUiPID ! {weights_updated_nodes, ResponseList},
             loop_master(NewState);
 
+        train -> 
+            lists:foreach(fun(Pid) ->
+                Pid ! {train, ""}
+            end, State#state.distributedNodes),
+
+            ResponseList = wait_ack(length(State#state.distributedNodes),  [], train_ack),
+            % TODO: handle the lack of response
+
+            io:format("Get all train ack.~p~n", [ResponseList]),  % TODO to be changed
+            State#state.pythonUiPID ! {training_completed, ResponseList},
+
+
+            io:format("All the nodes are finished train, I can get the weights~n"),
+            lists:foreach(fun(Pid) ->
+                Pid ! {get_weights, ""}
+            end, State#state.distributedNodes),
+
+            NewWeightsNodes = wait_weights_node(length(State#state.distributedNodes),  [], weights_updated),
+
+            State#state.pythonModelPID ! {update_weights, NewWeightsNodes},
+            receive
+                update_weights -> 
+                    io:format("Model weights updated correctly~n")
+            end,
+
+            State#state.pythonUiPID ! {weights_model_updated, ""},
+            NewState = State#state{trainNodes = ResponseList},      
+            loop_master(NewState);
+            
+
+
         [python_unhandled, Cause] ->
             io:format("Python received unhandled message: ~p~n", [Cause]),
             loop_master(State);
@@ -125,3 +157,12 @@ wait_ack(N, RespList, AckCode) ->
     end.
 
 
+wait_weights_node(N, WeightsUpdated, _) when N == 0 ->
+    WeightsUpdated;
+
+wait_weights_node(N, WeightsUpdated, AckCode) ->
+    receive
+        {AckCode, _, Weights} -> 
+            NewUpdated = [[Weights, 1] | WeightsUpdated],
+            wait_weights_node(N-1, NewUpdated, AckCode)
+    end.

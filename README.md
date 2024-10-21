@@ -15,3 +15,7 @@ P = master:start_master(), P ! initialize_nodes.
 wait some seconds ... and then you can distribute the model with:
 
 P ! distribute_model. 
+
+P ! distribute_weights.
+
+P ! train. 

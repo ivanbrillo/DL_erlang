@@ -36,10 +36,26 @@ loop_node(MasterPid, PythonPid) ->
             io:format("NODE ~p,  Weights updated successfully~n", [node()]),
             loop_node(MasterPid, PythonPid);
 
-        % {train, Slave} ->
-        %     Slave ! {train, "Dataset"},
-        %     io:format("Train completed~n"),
-        %     loop_node(MasterPid);
+        {train, _} ->
+            PythonPid ! {train, ""},  
+
+            receive 
+                train_ack -> MasterPid ! {train_ack, self()}
+            end,        
+
+            io:format("NODE ~p,  Training completed~n", [node()]),
+            loop_node(MasterPid, PythonPid);
+
+        {get_weights, _} ->
+            PythonPid ! {get_weights, ""},
+
+            receive
+                [node_weights, Weights] -> 
+                    MasterPid ! {weights_updated, self(), Weights}
+            end,
+
+            io:format("NODE ~p,  Weights returned~n", [node()]),
+            loop_node(MasterPid, PythonPid);
 
         % Invalid message (discard it)
         _Invalid ->
