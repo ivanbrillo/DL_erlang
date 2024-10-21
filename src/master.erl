@@ -7,12 +7,12 @@
 -export([start_master/0, loop_master/1]).
 
 -record(state, {
-    pythonModelPID = 0,
-    pythonUiPID = 0,
-    initializedNodes = [],
-    distributedNodes = [],
-    weightsNodes = [],
-    trainNodes = []
+    pythonModelPID :: pid(),
+    pythonUiPID :: pid(),
+    initializedNodes = [] :: [pid()],
+    distributedNodes = [] :: [pid()],
+    weightsNodes = [] :: [pid()],
+    trainNodes = [] :: [pid()]
 }).
 
 
@@ -85,8 +85,6 @@ loop_master(State) ->
         train -> 
    
             TrainNodes = distribute_object(State#state.distributedNodes, train, train_ack, "train"),
-            % TODO: handle the lack of response
-
             io:format("Get all train ack.~p~n", [TrainNodes]),  % TODO to be changed
             State#state.pythonUiPID ! {training_completed, TrainNodes},
 
@@ -94,11 +92,8 @@ loop_master(State) ->
             ResponseList = distribute_object(TrainNodes, get_weights, weights_updated, "get_weights"),
             {PidList, NewWeightsNodes} = lists:unzip(ResponseList),
 
-            State#state.pythonModelPID ! {update_weights, NewWeightsNodes},
-            receive
-                update_weights -> 
-                    io:format("Model weights updated correctly~n")
-            end,
+            distribute_object([State#state.pythonModelPID], update_weights, update_weights_ack, NewWeightsNodes),
+            io:format("Model update the weights correctly~n"),
 
             State#state.pythonUiPID ! {weights_model_updated, "weights updated correctly"},
 
@@ -108,7 +103,6 @@ loop_master(State) ->
         [python_unhandled, Cause] ->
             io:format("Python received unhandled message: ~p~n", [Cause]),
             loop_master(State);
-
 
         _Invalid ->
             io:format("Master received unhandled message. ~p~n", [_Invalid]),
