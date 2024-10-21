@@ -17,7 +17,7 @@ class FederatedController():
         weights = [w.tolist() for w in self.model.get_weights()]
         return json.dumps({"weights": weights})
 
-    def update_weights(self, node_output: list[list, int]):
+    def update_weights(self, node_output: list[list]):
         # new_weights = FederatedController.federated_weight_average(node_output)
         # self.model.set_weights(new_weights)
         return      #added for debugging
