@@ -51,7 +51,7 @@ loop_node(MasterPid, PythonPid) ->
 
             receive
                 [node_weights, Weights] -> 
-                    MasterPid ! {weights_updated, self(), Weights}
+                    MasterPid ! {weights_updated, {self(), Weights}}
             end,
 
             io:format("NODE ~p,  Weights returned~n", [node()]),

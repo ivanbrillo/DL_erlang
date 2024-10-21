@@ -25,7 +25,7 @@ def register_handler(master_pid, node_id):
             cast(master_pid, encode_status_code("train_ack"))
         elif code == "get_weights":
             nodeController.get_weights()
-            cast(master_pid, [encode_status_code("node_weights"), nodeController.get_weights().encode('utf-8')])
+            cast(master_pid, [encode_status_code("node_weights"), nodeController.get_weights(add_cardinality = True).encode('utf-8')])
         else:
             cast(master_pid, [encode_status_code("python_unhandled"), f"NODE {nodeController.node_id}, invalid message code {code}"])
         

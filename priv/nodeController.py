@@ -9,6 +9,7 @@ class NodeController:
         self.master_pid: int
         self.node_id: int
         self.model: NetworkModel
+        self.dataset_size: int = 0 # todo 
 
     def initialize_model(self, json_string: str) -> None:
         data = json.loads(json_string)
@@ -23,7 +24,11 @@ class NodeController:
         #self.model.fit(train_data)    
         return
 
-    def get_weights(self) -> str:
+    def get_weights(self, add_cardinality: bool = False) -> str:
         weights = [w.tolist() for w in self.model.get_weights()]
-        return json.dumps({"weights": weights})
+        if add_cardinality:
+            return json.dumps({"weights": weights, "size": self.dataset_size})
+        else: 
+            return json.dumps({"weights": weights})
+
 

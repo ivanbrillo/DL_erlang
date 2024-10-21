@@ -83,23 +83,16 @@ loop_master(State) ->
             loop_master(NewState);
 
         train -> 
-            lists:foreach(fun(Pid) ->
-                Pid ! {train, ""}
-            end, State#state.distributedNodes),
-
-            ResponseList = wait_ack(length(State#state.distributedNodes),  [], train_ack),
+   
+            TrainNodes = distribute_object(State#state.distributedNodes, train, train_ack, "train"),
             % TODO: handle the lack of response
 
-            io:format("Get all train ack.~p~n", [ResponseList]),  % TODO to be changed
-            State#state.pythonUiPID ! {training_completed, ResponseList},
-
+            io:format("Get all train ack.~p~n", [TrainNodes]),  % TODO to be changed
+            State#state.pythonUiPID ! {training_completed, TrainNodes},
 
             io:format("All the nodes are finished train, I can get the weights~n"),
-            lists:foreach(fun(Pid) ->
-                Pid ! {get_weights, ""}
-            end, State#state.distributedNodes),
-
-            NewWeightsNodes = wait_weights_node(length(State#state.distributedNodes),  [], weights_updated),
+            ResponseList = distribute_object(TrainNodes, get_weights, weights_updated, "get_weights"),
+            {PidList, NewWeightsNodes} = lists:unzip(ResponseList),
 
             State#state.pythonModelPID ! {update_weights, NewWeightsNodes},
             receive
@@ -107,11 +100,10 @@ loop_master(State) ->
                     io:format("Model weights updated correctly~n")
             end,
 
-            State#state.pythonUiPID ! {weights_model_updated, ""},
-            NewState = State#state{trainNodes = ResponseList},      
-            loop_master(NewState);
-            
+            State#state.pythonUiPID ! {weights_model_updated, "weights updated correctly"},
 
+            NewState = State#state{trainNodes = PidList},      
+            loop_master(NewState);
 
         [python_unhandled, Cause] ->
             io:format("Python received unhandled message: ~p~n", [Cause]),
@@ -144,25 +136,14 @@ distribute_object(PidList, Code, AckCode,  Object) ->
         Pid ! {Code, Object}
     end, PidList),
 
-    wait_ack(length(PidList),  [], AckCode).
+    wait_response(length(PidList),  [], AckCode).
     % TODO: handle the lack of response
 
 
-wait_ack(N, RespList, _) when N == 0 ->
+wait_response(N, RespList, _) when N == 0 ->
     RespList;
 
-wait_ack(N, RespList, AckCode) ->
+wait_response(N, RespList, AckCode) ->
     receive
-        {AckCode, Pid} -> wait_ack(N-1, RespList ++ [Pid], AckCode)
-    end.
-
-
-wait_weights_node(N, WeightsUpdated, _) when N == 0 ->
-    WeightsUpdated;
-
-wait_weights_node(N, WeightsUpdated, AckCode) ->
-    receive
-        {AckCode, _, Weights} -> 
-            NewUpdated = [[Weights, 1] | WeightsUpdated],
-            wait_weights_node(N-1, NewUpdated, AckCode)
+        {AckCode, Response} -> wait_response(N-1, RespList ++ [Response], AckCode)
     end.
