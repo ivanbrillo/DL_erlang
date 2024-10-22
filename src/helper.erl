@@ -1,5 +1,5 @@
 -module(helper).
--export([get_cluster_nodes/0, initialize_nodes/0, distribute_object/4, wait_response/3, init_python_process/0, python_register_handler/3, model_get_and_distribute/7]).
+-export([get_cluster_nodes/0, initialize_nodes/0, distribute_object/4, wait_response/3, init_python_process/0, python_register_handler/3, model_get_and_distribute/7, distribute_command/4, get_nodes_send_model/7]).
 
 get_cluster_nodes() ->
     Nodes = net_adm:world(),
@@ -50,3 +50,14 @@ model_get_and_distribute(PidReq, CodeReq, MsgReq, CodeResp, SendCode, Ack, ListP
 
     io:format("Get all ~p ack.~p~n", [MsgReq, ResponseList]),  % TODO to be changed
     ResponseList.
+
+distribute_command(PidNodes, Request, ResponseCode, Payload) ->
+    ResponseList = helper:distribute_object(PidNodes, Request, ResponseCode, Payload),
+    {PidList, Response} = lists:unzip(ResponseList),
+    {PidList, Response}.
+
+
+get_nodes_send_model(PidNodes, ModelPid, Request, ResponseCode, Payload, ModelCode, ModelAck) ->
+    {PidList, Response} = distribute_command(PidNodes, Request, ResponseCode, Payload),
+    helper:distribute_object([ModelPid], ModelCode, ModelAck, Response),
+    PidList.

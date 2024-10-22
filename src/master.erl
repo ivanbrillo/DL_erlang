@@ -66,13 +66,12 @@ loop_master(State) ->
 
             notify_ui(State, {training_completed, TrainNodes}),
             io:format("All the nodes are finished train, I can get the weights~n"),
-            ResponseList = helper:distribute_object(TrainNodes, get_weights, weights_updated, "get_weights"),
-            {PidList, NewWeightsNodes} = lists:unzip(ResponseList),
 
-            helper:distribute_object([State#state.pythonModelPID], update_weights, update_weights_ack, NewWeightsNodes),
+            PidList = helper:get_nodes_send_model(TrainNodes, State#state.pythonModelPID, get_weights, weights_updated, "", update_weights, update_weights_ack),
+
             io:format("Model update the weights correctly~n"),
-
             notify_ui(State, {weights_model_updated, PidList}),
+
             NewState = State#state{trainNodes = PidList},      
             loop_master(NewState);
 
