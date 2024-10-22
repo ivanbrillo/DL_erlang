@@ -17,14 +17,14 @@ def register_handler(master_pid, node_id):
         if code == "initialize":
             nodeController.initialize_model(json_payload)
             cast(master_pid, encode_status_code("initialize_ack"))
+        elif code == "load_db":
+            cast(master_pid, [encode_status_code("db_ack"), nodeController.load_db().encode('utf-8')])
         elif code == "update":
             nodeController.update_model(json_payload)
             cast(master_pid, encode_status_code("weights_ack"))
         elif code == "train":
-            nodeController.train_local()
-            cast(master_pid, encode_status_code("train_ack"))
+            cast(master_pid, [encode_status_code("train_ack"), nodeController.train_local().encode('utf-8')])
         elif code == "get_weights":
-            nodeController.get_weights()
             cast(master_pid, [encode_status_code("node_weights"), nodeController.get_weights(add_cardinality = True).encode('utf-8')])
         else:
             cast(master_pid, [encode_status_code("python_unhandled"), f"NODE {nodeController.node_id}, invalid message code {code}"])

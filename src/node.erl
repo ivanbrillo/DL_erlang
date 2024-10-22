@@ -16,6 +16,16 @@ start_node(MasterPid) ->
 loop_node(MasterPid, PythonPid) ->
 
     receive
+        {load_db, _} ->
+            PythonPid ! {load_db, ""},
+
+            receive 
+                [db_ack, Infos] -> MasterPid ! {db_ack, {self(), Infos}}
+            end,
+
+            io:format("NODE ~p, Load DB completed~n", [node()]),
+            loop_node(MasterPid, PythonPid);
+
         {initialize, Model} ->
             PythonPid ! {initialize, Model},
 
@@ -40,7 +50,7 @@ loop_node(MasterPid, PythonPid) ->
             PythonPid ! {train, ""},  
 
             receive 
-                train_ack -> MasterPid ! {train_ack, self()}
+                [train_ack, Result] -> MasterPid ! {train_ack, {self(), Result}}
             end,        
 
             io:format("NODE ~p,  Training completed~n", [node()]),

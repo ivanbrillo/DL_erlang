@@ -10,6 +10,7 @@
     pythonModelPID :: pid(),
     pythonUiPID :: pid(),
     initializedNodes = [] :: [pid()],
+    dbLoadedNodes = [] :: [pid()],
     distributedNodes = [] :: [pid()],
     weightsNodes = [] :: [pid()],
     trainNodes = [] :: [pid()]
@@ -40,6 +41,13 @@ loop_master(State) ->
             notify_ui(State, {nodes, Nodes}),
             loop_master(State);
 
+        load_db ->
+            {PidList, Infos} = helper:distribute_command(State#state.initializedNodes, load_db, db_ack, ""),
+            io:format("DB loaded: ~p~n", [Infos]),
+            NewState = State#state{dbLoadedNodes = PidList},
+            notify_ui(State, {db_loaded, PidList}),
+            loop_master(NewState);
+
         initialize_nodes -> 
             InitializedNodes = helper:initialize_nodes(),
             NewState = State#state{initializedNodes = InitializedNodes},
@@ -61,12 +69,13 @@ loop_master(State) ->
             loop_master(NewState);
 
         train -> 
-            TrainNodes = helper:distribute_object(State#state.distributedNodes, train, train_ack, "train"),
-            io:format("Get all train ack.~p~n", [TrainNodes]),  % TODO to be changed
+            {TrainNodes, Accuracy} = helper:distribute_command(State#state.distributedNodes, train, train_ack, ""),
+            io:format("Finish training, accuracy: ~p~n", [Accuracy]),
+
+            % TrainNodes = helper:distribute_object(State#state.distributedNodes, train, train_ack, "train"),
+            % io:format("Get all train ack.~p~n", [TrainNodes]),  % TODO to be changed
 
             notify_ui(State, {training_completed, TrainNodes}),
-            io:format("All the nodes are finished train, I can get the weights~n"),
-
             PidList = helper:get_nodes_send_model(TrainNodes, State#state.pythonModelPID, get_weights, weights_updated, "", update_weights, update_weights_ack),
 
             io:format("Model update the weights correctly~n"),

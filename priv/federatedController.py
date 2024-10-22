@@ -17,20 +17,35 @@ class FederatedController():
         weights = [w.tolist() for w in self.model.get_weights()]
         return json.dumps({"weights": weights})
 
-    def update_weights(self, node_output: list[list]):
-        # new_weights = FederatedController.federated_weight_average(node_output)
-        # self.model.set_weights(new_weights)
-        return      #added for debugging
+    def update_weights(self, node_outputs: list[list]):
+        data = [json.loads(output.decode('utf-8')) for output in node_outputs]
+
+        # data = json.loads(node_outputs)
+        new_weights = FederatedController.federated_weight_average(data)
+        self.model.set_weights(new_weights)
+        # return      #added for debugging
 
     @staticmethod
-    def federated_weight_average(node_outputs: list[list, int]) -> np.array:
-        # node_output[i][0] -> weights, node_output[i][1] -> data_size
-        ds_size = sum(output[1] for output in node_outputs)
-
-        # Initialize the weighted sum with zeros, using the shape of the first client's weights
-        new_weights = np.zeros_like(node_outputs[0][0])
+    def federated_weight_average(parsed_outputs: list[dict]) -> list:
+        # Number of nodes
+        n_nodes = len(parsed_outputs)
+        if n_nodes == 0:
+            raise ValueError("No outputs to average")
+            
+        # Calculate total dataset size
+        total_size = sum(output["size"] for output in parsed_outputs)
         
-        for weights, size in node_outputs:
-            new_weights += weights * (size / ds_size)
+        # Get the structure of weights from first node
+        first_weights = parsed_outputs[0]["weights"]
+        averaged_weights = [np.zeros_like(np.array(w)) for w in first_weights]
         
-        return new_weights
+        # Average weights across nodes
+        for node_output in parsed_outputs:
+            weight = node_output["size"] / total_size
+            node_weights = node_output["weights"]
+            
+            # Add weighted contribution from this node
+            for layer_idx, layer_weights in enumerate(node_weights):
+                averaged_weights[layer_idx] += np.array(layer_weights) * weight
+        
+        return averaged_weights

@@ -7,6 +7,6 @@ class NetworkModel(tf.keras.Model):
         self.network: tf.keras.Sequential = sequential
 
     def call(self, x):
-        network_output = self.network_sequential(x)
+        network_output = self.network(x)
         # todo: add specific behavior (if the model of the prof gives us the directive)
         return network_output
