@@ -72,9 +72,6 @@ loop_master(State) ->
             {TrainNodes, Accuracy} = helper:distribute_command(State#state.distributedNodes, train, train_ack, ""),
             io:format("Finish training, accuracy: ~p~n", [Accuracy]),
 
-            % TrainNodes = helper:distribute_object(State#state.distributedNodes, train, train_ack, "train"),
-            % io:format("Get all train ack.~p~n", [TrainNodes]),  % TODO to be changed
-
             notify_ui(State, {training_completed, TrainNodes}),
             PidList = helper:get_nodes_send_model(TrainNodes, State#state.pythonModelPID, get_weights, weights_updated, "", update_weights, update_weights_ack),
 
