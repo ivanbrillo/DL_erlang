@@ -7,6 +7,14 @@ nodeController: NodeController = NodeController()
 
 
 def register_handler(master_pid, node_id):
+    """
+    Register a handler for Erlang messages to this Python process.
+
+    :param master_pid: The Erlang process ID of the master process
+    :param node_id: The ID of this node as a string
+    :return: A string indicating whether the handler was registered correctly
+    """
+    
     nodeController.node_id = node_id.decode('utf-8')
     nodeController.master_pid = master_pid
 
@@ -38,4 +46,10 @@ def register_handler(master_pid, node_id):
 
 
 def encode_status_code(code: str) -> Atom:
+    """
+    Encode a status code string into an Erlang Atom.
+
+    :param code: The status code string
+    :return: An Erlang Atom representing the status code
+    """
     return Atom(code.encode('utf-8'))
