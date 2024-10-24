@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Helper Erlang Module &mdash; Federated Machine learning 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/my_theme.css?v=547657ed" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Master Erlang Module" href="master_erl.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Federated Machine learning
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="master.html">master module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="node.html">node module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataParser.html">dataParser module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="federatedController.html">federatedController module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modelDefinition.html">modelDefinition module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="networkModel.html">networkModel module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nodeController.html">nodeController module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ui.html">ui module</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Erlang Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="node_erl.html">Node Erlang Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="master_erl.html">Master Erlang Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Helper Erlang Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#helper.get_cluster_nodes"><code class="docutils literal notranslate"><span class="pre">get_cluster_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper.initialize_nodes"><code class="docutils literal notranslate"><span class="pre">initialize_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper.distribute_object"><code class="docutils literal notranslate"><span class="pre">distribute_object()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper.wait_response"><code class="docutils literal notranslate"><span class="pre">wait_response()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper.init_python_process"><code class="docutils literal notranslate"><span class="pre">init_python_process()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper.python_register_handler"><code class="docutils literal notranslate"><span class="pre">python_register_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper.model_get_and_distribute"><code class="docutils literal notranslate"><span class="pre">model_get_and_distribute()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper.distribute_command"><code class="docutils literal notranslate"><span class="pre">distribute_command()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#helper.get_nodes_send_model"><code class="docutils literal notranslate"><span class="pre">get_nodes_send_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Federated Machine learning</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Helper Erlang Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/helper_erl.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-helper">
+<span id="helper-erlang-module"></span><h1>Helper Erlang Module<a class="headerlink" href="#module-helper" title="Link to this heading"></a></h1>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.get_cluster_nodes">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">get_cluster_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#helper.get_cluster_nodes" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Retrieves the list of cluster nodes, excluding the current master node.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of cluster nodes (excluding the master).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.initialize_nodes">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">initialize_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#helper.initialize_nodes" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Initializes the active nodes in the cluster by spawning processes on the nodes and starting the <cite>node</cite> module.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of process identifiers (PIDs) of the spawned nodes.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.distribute_object">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">distribute_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PidList</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AckCode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helper.distribute_object" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Sends a message with the given code and object to each PID in the list.
+It waits for the acknowledgment (AckCode) from all nodes and collects the responses.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>PidList</strong> (<em>list</em>) – List of process identifiers (PIDs) to send the object to.</p></li>
+<li><p><strong>Code</strong> (<em>term</em>) – The code to send with the object.</p></li>
+<li><p><strong>AckCode</strong> (<em>term</em>) – The acknowledgment code expected from the nodes.</p></li>
+<li><p><strong>Object</strong> (<em>term</em>) – The object to distribute to the nodes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of responses from the nodes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.wait_response">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">wait_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RespList</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AckCode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helper.wait_response" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Waits for responses from the nodes. It expects <cite>N</cite> responses with the given acknowledgment code.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> (<em>integer</em>) – Number of responses to wait for.</p></li>
+<li><p><strong>RespList</strong> (<em>list</em>) – The list of responses collected so far.</p></li>
+<li><p><strong>AckCode</strong> (<em>term</em>) – The acknowledgment code expected in the responses.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The complete list of responses.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.init_python_process">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">init_python_process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#helper.init_python_process" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Initializes a Python process by starting it and setting the Python environment path.
+Returns the process identifier (PID) of the Python process.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The process identifier (PID) of the Python process.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pid</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.python_register_handler">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">python_register_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PythonPid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MasterPid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helper.python_register_handler" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Registers the Erlang master process as a handler for the Python process.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>PythonPid</strong> (<em>pid</em>) – The process identifier (PID) of the Python process.</p></li>
+<li><p><strong>Module</strong> (<em>atom</em>) – The module in Python where the handler function is located.</p></li>
+<li><p><strong>MasterPid</strong> (<em>pid</em>) – The process identifier (PID) of the master Erlang process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.model_get_and_distribute">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">model_get_and_distribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PidReq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CodeReq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MsgReq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CodeResp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SendCode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ListPid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helper.model_get_and_distribute" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Sends a request to the Python process to retrieve a model or weights, then distributes the received data to a list of nodes.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>PidReq</strong> (<em>pid</em>) – The process identifier (PID) of the Python process making the request.</p></li>
+<li><p><strong>CodeReq</strong> (<em>term</em>) – The code to request the model or weights.</p></li>
+<li><p><strong>MsgReq</strong> (<em>term</em>) – The message accompanying the request.</p></li>
+<li><p><strong>CodeResp</strong> (<em>term</em>) – The code to expect in the response.</p></li>
+<li><p><strong>SendCode</strong> (<em>term</em>) – The code to send when distributing the received data.</p></li>
+<li><p><strong>Ack</strong> (<em>term</em>) – The acknowledgment code expected from the nodes.</p></li>
+<li><p><strong>ListPid</strong> (<em>list</em>) – List of process identifiers (PIDs) of the nodes to distribute the data to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of responses from the nodes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.distribute_command">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">distribute_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PidNodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ResponseCode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Payload</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helper.distribute_command" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Distributes a command to a list of nodes and collects the responses. The payload is sent with the request.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>PidNodes</strong> (<em>list</em>) – List of process identifiers (PIDs) of the nodes to send the request to.</p></li>
+<li><p><strong>Request</strong> (<em>term</em>) – The request command to send.</p></li>
+<li><p><strong>ResponseCode</strong> (<em>term</em>) – The response code expected in the acknowledgment.</p></li>
+<li><p><strong>Payload</strong> (<em>term</em>) – The payload to send with the request.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing a list of PIDs and the corresponding responses.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="helper.get_nodes_send_model">
+<span class="sig-prename descclassname"><span class="pre">helper.</span></span><span class="sig-name descname"><span class="pre">get_nodes_send_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PidNodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ModelPid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ResponseCode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ModelCode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ModelAck</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#helper.get_nodes_send_model" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Retrieves model weights from the nodes, distributes the updated model, and sends it back to the Python process.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>PidNodes</strong> (<em>list</em>) – List of process identifiers (PIDs) of the nodes to request the model from.</p></li>
+<li><p><strong>ModelPid</strong> (<em>pid</em>) – The process identifier (PID) of the Python process holding the model.</p></li>
+<li><p><strong>Request</strong> (<em>term</em>) – The request command to retrieve the model.</p></li>
+<li><p><strong>ResponseCode</strong> (<em>term</em>) – The response code expected from the nodes.</p></li>
+<li><p><strong>Payload</strong> (<em>term</em>) – The payload to send with the request.</p></li>
+<li><p><strong>ModelCode</strong> (<em>term</em>) – The code to send when distributing the updated model.</p></li>
+<li><p><strong>ModelAck</strong> (<em>term</em>) – The acknowledgment code expected from the nodes for the updated model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of PIDs of the nodes that successfully received the updated model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="master_erl.html" class="btn btn-neutral float-left" title="Master Erlang Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Ivan Brillo, Daniel Pipitone, Andrea Bochicchio.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
