@@ -27,14 +27,16 @@ def register_handler(master_pid):
         code = code.decode('utf-8')
 
         if code == "get_model":
-            cast(master_pid, [encode_status_code("model_definition"), federatedController.get_definition().encode('utf-8')])
+            response = federatedController.get_definition().encode('utf-8')
+            cast(master_pid, (encode_status_code("model_definition"), response))
         elif code == "get_weights":
-            cast(master_pid, [encode_status_code("model_weights"), federatedController.get_weights().encode('utf-8')])
+            response = federatedController.get_weights().encode('utf-8')
+            cast(master_pid, (encode_status_code("model_weights"), response))
         elif code == "update_weights":
             federatedController.update_weights(payload)
             cast(master_pid, (encode_status_code("update_weights_ack"), "ok"))
         else:
-            cast(master_pid, [encode_status_code("python_unhandled"), "NODE master, invalid message code " + code])
+            cast(master_pid, (encode_status_code("python_unhandled"), "NODE master, invalid message code " + code))
         
 
     set_message_handler(handler)

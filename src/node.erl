@@ -17,52 +17,31 @@ loop_node(MasterPid, PythonPid) ->
 
     receive
         {load_db, _} ->
-            PythonPid ! {load_db, ""},
-
-            receive 
-                [db_ack, Infos] -> MasterPid ! {db_ack, {self(), Infos}}
-            end,
+            request_python(load_db, "", db_ack, db_ack, PythonPid, MasterPid),
 
             io:format("NODE ~p, Load DB completed~n", [node()]),
             loop_node(MasterPid, PythonPid);
 
-        {initialize, Model} ->
-            PythonPid ! {initialize, Model},
-
-            receive 
-                initialize_ack -> MasterPid ! {distribution_ack, self()}
-            end,
+        {initialize_model, Model} ->
+            send_python(initialize, Model, initialize_ack, PythonPid, MasterPid),
 
             io:format("NODE ~p,  Initialization completed~n", [node()]),
             loop_node(MasterPid, PythonPid);
 
-        {update_weights, Weights} ->
-            PythonPid ! {update, Weights},
-
-            receive 
-                weights_ack -> MasterPid ! {weights_ack, self()}
-            end,
+        {update_weights, Weights} ->  
+            send_python(update, Weights, weights_ack, PythonPid, MasterPid),
 
             io:format("NODE ~p,  Weights updated successfully~n", [node()]),
             loop_node(MasterPid, PythonPid);
 
         {train, _} ->
-            PythonPid ! {train, ""},  
-
-            receive 
-                [train_ack, Result] -> MasterPid ! {train_ack, {self(), Result}}
-            end,        
+            request_python(train, "", train_ack, train_ack, PythonPid, MasterPid),
 
             io:format("NODE ~p,  Training completed~n", [node()]),
             loop_node(MasterPid, PythonPid);
 
         {get_weights, _} ->
-            PythonPid ! {get_weights, ""},
-
-            receive
-                [node_weights, Weights] -> 
-                    MasterPid ! {weights_updated, {self(), Weights}}
-            end,
+            request_python(get_weights, "", node_weights, weights_updated, PythonPid, MasterPid),
 
             io:format("NODE ~p,  Weights returned~n", [node()]),
             loop_node(MasterPid, PythonPid);
@@ -71,4 +50,21 @@ loop_node(MasterPid, PythonPid) ->
         _Invalid ->
             io:format("Invalid message discarded in nodo.~n"),
             loop_node(MasterPid, PythonPid)
+    end.
+
+
+
+request_python(ReqCode, Payload, RespCode, SendCode, PythonPid, MasterPid) ->
+    PythonPid ! {ReqCode, Payload},
+
+    receive
+        {RespCode, Response} -> 
+            MasterPid ! {SendCode, {self(), Response}}
+    end.
+
+send_python(ReqCode, Payload, AckCode, PythonPid, MasterPid) ->
+    PythonPid ! {ReqCode, Payload},
+
+    receive 
+        AckCode -> MasterPid ! {AckCode, self()}
     end.

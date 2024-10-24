@@ -5,16 +5,8 @@
 
 -module(master).
 -export([start_master/0, loop_master/1]).
+-include("state.hrl").
 
--record(state, {
-    pythonModelPID :: pid(),
-    pythonUiPID :: pid(),
-    initializedNodes = [] :: [pid()],
-    dbLoadedNodes = [] :: [pid()],
-    distributedNodes = [] :: [pid()],
-    weightsNodes = [] :: [pid()],
-    trainNodes = [] :: [pid()]
-}).
 
 
 start_master() ->
@@ -28,8 +20,6 @@ start_master() ->
     MasterPid.
 
 
-notify_ui(State, Message) ->
-    State#state.pythonUiPID ! Message.
 
 
 loop_master(State) ->
@@ -38,50 +28,45 @@ loop_master(State) ->
         get_nodes ->
             Nodes = helper:get_cluster_nodes(),
             io:format("get_nodes. ~n"),
-            notify_ui(State, {nodes, Nodes}),
+            helper:notify_ui(State, {nodes, Nodes}),
             loop_master(State);
 
         load_db ->
             {PidList, Infos} = helper:distribute_command(State#state.initializedNodes, load_db, db_ack, ""),
             io:format("DB loaded: ~p~n", [Infos]),
             NewState = State#state{dbLoadedNodes = PidList},
-            notify_ui(State, {db_loaded, PidList}),
+            helper:notify_ui(State, {db_loaded, PidList}),
             loop_master(NewState);
 
         initialize_nodes -> 
             InitializedNodes = helper:initialize_nodes(),
             NewState = State#state{initializedNodes = InitializedNodes},
-            notify_ui(State, {initialized_nodes, InitializedNodes}),
+            helper:notify_ui(State, {initialized_nodes, InitializedNodes}),
             loop_master(NewState);
 
         distribute_model ->
-            ResponseList = helper:model_get_and_distribute(State#state.pythonModelPID, get_model, "model definition", model_definition, initialize, distribution_ack, State#state.initializedNodes),
+            ResponseList = helper:model_get_and_distribute(State#state.pythonModelPID, get_model, "", model_definition, initialize_model, initialize_ack, State#state.initializedNodes),
 
             NewState = State#state{distributedNodes = ResponseList},
-            notify_ui(State,{distributed_nodes, ResponseList}),
+            helper:notify_ui(State,{distributed_nodes, ResponseList}),
             loop_master(NewState);
 
         distribute_weights ->
-            ResponseList = helper:model_get_and_distribute(State#state.pythonModelPID, get_weights, "model weights", model_weights, update_weights, weights_ack, State#state.distributedNodes),
+            ResponseList = helper:model_get_and_distribute(State#state.pythonModelPID, get_weights, "", model_weights, update_weights, weights_ack, State#state.distributedNodes),
 
             NewState = State#state{weightsNodes = ResponseList},
-            notify_ui(State, {weights_updated_nodes, ResponseList}),        
+            helper:notify_ui(State, {weights_updated_nodes, ResponseList}),        
             loop_master(NewState);
 
         train -> 
-            {TrainNodes, Accuracy} = helper:distribute_command(State#state.distributedNodes, train, train_ack, ""),
-            io:format("Finish training, accuracy: ~p~n", [Accuracy]),
-
-            notify_ui(State, {training_completed, TrainNodes}),
-            PidList = helper:get_nodes_send_model(TrainNodes, State#state.pythonModelPID, get_weights, weights_updated, "", update_weights, update_weights_ack),
-
-            io:format("Model update the weights correctly~n"),
-            notify_ui(State, {weights_model_updated, PidList}),
-
-            NewState = State#state{trainNodes = PidList},      
+            NewState = helper:train(1, State),
             loop_master(NewState);
 
-        [python_unhandled, Cause] ->
+        {train, NEpochs} ->
+            NewState = helper:train(NEpochs, State),
+            loop_master(NewState);
+
+        {python_unhandled, Cause} ->
             io:format("Python received unhandled message: ~p~n", [Cause]),
             loop_master(State);
 
@@ -89,6 +74,3 @@ loop_master(State) ->
             io:format("Master received unhandled message. ~p~n", [_Invalid]),
             loop_master(State)
     end.
-
-
-

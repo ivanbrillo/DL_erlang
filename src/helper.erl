@@ -1,5 +1,8 @@
 -module(helper).
--export([get_cluster_nodes/0, initialize_nodes/0, distribute_object/4, wait_response/3, init_python_process/0, python_register_handler/3, model_get_and_distribute/7, distribute_command/4, get_nodes_send_model/7]).
+-export([get_cluster_nodes/0, initialize_nodes/0, distribute_object/4, init_python_process/0, python_register_handler/3, model_get_and_distribute/7, distribute_command/4, get_nodes_send_model/7, train/2, notify_ui/2]).
+-include("state.hrl").
+
+
 
 get_cluster_nodes() ->
     Nodes = net_adm:world(),
@@ -41,14 +44,12 @@ python_register_handler(PythonPid, Module, MasterPid) ->
 
 model_get_and_distribute(PidReq, CodeReq, MsgReq, CodeResp, SendCode, Ack, ListPid) ->
     PidReq ! {CodeReq, MsgReq},
-    io:format("Send request for ~p.~n", [MsgReq]),
 
     receive
-        [CodeResp, Response] -> 
+        {CodeResp, Response} -> 
             ResponseList = helper:distribute_object(ListPid, SendCode, Ack, Response)
     end,
 
-    io:format("Get all ~p ack.~p~n", [MsgReq, ResponseList]),  % TODO to be changed
     ResponseList.
 
 distribute_command(PidNodes, Request, ResponseCode, Payload) ->
@@ -61,3 +62,33 @@ get_nodes_send_model(PidNodes, ModelPid, Request, ResponseCode, Payload, ModelCo
     {PidList, Response} = distribute_command(PidNodes, Request, ResponseCode, Payload),
     helper:distribute_object([ModelPid], ModelCode, ModelAck, Response),
     PidList.
+
+
+train(NEpochs, State) ->
+    train(NEpochs, 0, State).
+
+train(TotEpochs, TotEpochs, State) ->
+    State;
+
+train(TotEpochs, CurrentEpoch, State) ->
+    {TrainNodes, Accuracy} = helper:distribute_command(State#state.distributedNodes, train, train_ack, ""),
+    io:format("Finish training epoch ~p, accuracy: ~p~n", [CurrentEpoch, Accuracy]),
+
+    notify_ui(State, {training_completed, TrainNodes}),
+    PidList = helper:get_nodes_send_model(TrainNodes, State#state.pythonModelPID, get_weights, weights_updated, "", update_weights, update_weights_ack),
+
+    io:format("Model update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
+    notify_ui(State, {weights_model_updated, PidList}),
+
+    ResponseList = helper:model_get_and_distribute(State#state.pythonModelPID, get_weights, "", model_weights, update_weights, weights_ack, PidList),
+
+    io:format("Nodes update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
+    notify_ui(State, {weights_updated_nodes, ResponseList}),
+
+    NewState = State#state{trainNodes = ResponseList},
+    train(TotEpochs, CurrentEpoch+1, NewState).
+
+
+
+notify_ui(State, Message) ->
+    State#state.pythonUiPID ! Message.

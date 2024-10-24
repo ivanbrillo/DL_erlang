@@ -19,7 +19,7 @@ class NodeController:
     def load_db(self) -> None:
         self.x_train, self.y_train, self.x_test, self.y_test = preprocess_image()
         self.dataset_size = self.x_train.shape[0]
-        return json.dumps({"train_size": self.x_train.shape, "test_size": self.x_train.shape})
+        return json.dumps({"train_size": self.x_train.shape, "test_size": self.x_test.shape})
 
     def initialize_model(self, json_string: str) -> None:
         data = json.loads(json_string)
@@ -38,7 +38,7 @@ class NodeController:
             epochs=1,
             batch_size=32,
             validation_split=0.1,
-            verbose=2
+            verbose=0
         )
 
         return json.dumps({"accuracy": train_result.history['accuracy']})
