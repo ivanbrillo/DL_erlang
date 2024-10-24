@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sigma.js Network</title>
+    <style>
+        #graph-container {
+            width: 100%;
+            height: 500px;
+            background: #f8fafc;
+        }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="startAnimation()">Start Animation</button>
+        <button onclick="stopAnimation()">Stop Animation</button>
+    </div>
+    <div id="graph-container"></div>
+
+    <!-- Importa le dipendenze di Sigma.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/graphology/0.25.4/graphology.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/graphology-layout/0.6.1/graphology-layout.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/graphology-layout-forceatlas2/0.10.1/graphology-layout-forceatlas2.min.js"></script>
+
+    <script>
+        // Crea un nuovo grafo
+        const graph = new graphology.Graph();
+
+        // Aggiungi i nodi
+        graph.addNode('master', {
+            x: 0,
+            y: 0,
+            size: 15,
+            label: 'Master',
+            color: '#2563eb',
+            type: 'master'
+        });
+
+        graph.addNode('slave1', {
+            x: 1,
+            y: 1,
+            size: 10,
+            label: 'Node 1',
+            color: '#16a34a',
+            type: 'slave'
+        });
+
+        graph.addNode('slave2', {
+            x: -1,
+            y: 1,
+            size: 10,
+            label: 'Node 2',
+            color: '#16a34a',
+            type: 'slave'
+        });
+
+        // Aggiungi gli archi
+        graph.addEdge('master', 'slave1', {
+            type: 'arrow',
+            size: 3,
+            color: '#4B5563'
+        });
+
+        graph.addEdge('master', 'slave2', {
+            type: 'arrow',
+            size: 3,
+            color: '#4B5563'
+        });
+
+        // Crea il renderer
+        const renderer = new Sigma(graph, document.getElementById('graph-container'), {
+            defaultEdgeType: 'arrow',
+            defaultEdgeColor: '#4B5563',
+            defaultNodeColor: '#2563eb',
+            minCameraRatio: 0.1,
+            maxCameraRatio: 10,
+            labelSize: 15,
+            labelColor: {
+                color: '#000000'
+            },
+            nodeHoverColor: 'node',
+            defaultNodeHoverColor: '#000',
+            defaultEdgeHoverColor: '#000',
+            enableEdgeHovering: true,
+            edgeHoverSizeRatio: 2
+        });
+
+        // Variabili per l'animazione
+        let animationFrame;
+        let startTime = Date.now();
+        let isAnimating = false;
+
+        // Funzione di animazione
+        function animate() {
+            if (!isAnimating) return;
+
+            const now = Date.now();
+            const elapsedTime = now - startTime;
+            const phase = (elapsedTime % 2000) / 2000; // 2 secondi per ciclo
+
+            // Animazione degli archi
+            graph.edges().forEach(edge => {
+                const color = `rgba(75, 85, 99, ${Math.abs(Math.sin(phase * Math.PI * 2))})`;
+                graph.setEdgeAttribute(edge, 'color', color);
+            });
+
+            renderer.refresh();
+            animationFrame = requestAnimationFrame(animate);
+        }
+
+        // Funzioni di controllo dell'animazione
+        function startAnimation() {
+            if (!isAnimating) {
+                isAnimating = true;
+                startTime = Date.now();
+                animate();
+            }
+        }
+
+        function stopAnimation() {
+            isAnimating = false;
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            // Ripristina i colori originali
+            graph.edges().forEach(edge => {
+                graph.setEdgeAttribute(edge, 'color', '#4B5563');
+            });
+            renderer.refresh();
+        }
+
+        // Avvia l'animazione automaticamente
+        startAnimation();
+
+        // Aggiungi interattività
+        renderer.on('nodeHover', event => {
+            if (event.node) {
+                renderer.getCamera().animatedZoom(event);
+            }
+        });
+    </script>
+</body>
+</html>
