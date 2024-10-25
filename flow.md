@@ -40,4 +40,5 @@
 * The master sends a message to all the Erlang nodes, requesting them to train their local models for a specified number of epochs.
 * Once the Python process finishes training, the node will send an ack.
 * When all acks are collected, the Erlang master will send the collected weights to the Python model, which will perform a weighted average and update its weights.
-* When the model sends back an ack, the Erlang master will continue its loop.
+* I ask the python model to provide the weight of the new network and distribute them across different nodes. 
+* When the nodes sends back an ack and there are still some epochs to be trained, the Erlang master will restart this sequence of steps.
