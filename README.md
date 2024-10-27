@@ -1,23 +1,35 @@
 # ds_proj
 
-HIDE WARNINGS (Linux):
-export TF_CPP_MIN_LOG_LEVEL=3
+### DOC LINKS
+
+- https://ivanbrillo.github.io/DL_erlang/
+
+The code documentation link dones't work, the html is in the ```docs/_build/html/index.html```
+
+### HIDE WARNINGS (Linux):
+```export TF_CPP_MIN_LOG_LEVEL=3```
+
+### Start Erlang shells
 
 START THE MASTER WITH:    
-rebar3 shell --sname master@localhost
+```rebar3 shell --sname master@localhost```
 
 start some slaves with:
-rebar3 shell --sname slave1@localhost
-rebar3 shell --sname slave2@localhost
+```rebar3 shell --sname slave1@localhost```
+```rebar3 shell --sname slave2@localhost```
 
-P = master:start_master(), P ! initialize_nodes.
+### Model Commands
 
-wait some seconds ... and then you can distribute the model with:
+Initialize master process and start erlang nodes processes
 
-P ! load_db.
+```P = master:start_master(), P ! initialize_nodes.```
 
-P ! distribute_model. 
+wait some seconds in order to wait the inizialization of all the nodes, then you can procede as follow:
 
-P ! distribute_weights.
+* ```P ! load_db.```
 
-P ! train. 
+* ```P ! distribute_model. ```
+
+* ```P ! distribute_weights.```
+
+* ```P ! train.```  To train for one epochs or ```P ! {train, NEpochs}```  for training with NEpochs the network
