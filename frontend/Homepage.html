@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="node.css">
+    <link rel="stylesheet" href="analytics.css">
+
+    <script src="home.js" defer></script>
+    <script src="node.js" defer></script>
+    <script src="analytics.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script> <!-- Chart.js -->
     <title>Federated Machine Learning</title>
 </head>
 <body>
@@ -32,7 +40,7 @@
     <div id="left_menu">
         <div id="inner">
             <div>
-                <span id="title">Federated Machine Learning</span>
+                <h1>FEDERATED MACHINE LEARNING</h1>
                 <line></line>
             </div>
             
@@ -50,43 +58,18 @@
         </div>
     </div>
 
-    <!-- <div id="Node1_frame">
-        Node 1
-        <div id="info_node1">
-            CPU:
-            Memory:
-            Disk I/O: 
-            Response Time:
-            Throughput:
-            Accuracy:
+
+    
+    <div id="container">
+        <div id="containerNodes">
+
         </div>
 
-        <div id="active1">
-            <circle></circle>
-            Active
+        <div id="containerButton">
+            <button onclick="addNode()">Add Node</button>
+            <button onclick="removeNode()">Remove Node</button>
         </div>
     </div>
-
-    <div id="Node2_frame">
-        Node 2
-        <div id="info_node2">
-            CPU:
-            Memory:
-            Disk I/O: 
-            Response Time:
-            Throughput:
-            Accuracy:
-        </div>
-
-        <div id="active2">
-            <circle></circle>
-            Active
-        </div>
-    </div> -->
-
-    <button id="initialize">
-        <img src="img/power_icon.png" alt="">
-    </button>
 
     <!-- <div id="accuracy_level">
         <img src="accuracy_icon" alt="">
@@ -104,15 +87,27 @@
         </div>
     </div> -->
 
+    <!--
     <button id="update_btn"></button>
     <button id="distribute_btn"></button>
+    -->
 
     <!-- <div id="log_frame">
         Log
         <textarea name="Log" id="log"></textarea>
     </div> -->
 
-
+    <div id="dashboard">
+        <h3>NEURAL NETWORK TRAINING PROGRESS</h3>
+        <div class="controls">
+            <div>
+                <button class="button start-btn" id="startBtn">Start Training</button>
+                <button class="button reset-btn" id="resetBtn">Reset</button>
+            </div>
+            <div class="epoch-counter">Epoch: <span id="epochCounter">0</span>/50</div>
+        </div>
+        <canvas id="accuracyChart"></canvas>
+    </div>
 
     
 </body>

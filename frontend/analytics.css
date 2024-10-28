@@ -1,0 +1,68 @@
+#dashboard {
+    display: none;
+    box-sizing: border-box;
+    height: 73%;
+    width: 74%;
+
+    position: absolute;
+    top: 17%;
+    right: 5%;
+    z-index: 1000;
+
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+
+    padding: 2%;
+}
+
+#dashboard h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: white;
+    margin: 0px;
+    text-align: center;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.start-btn {
+    background: #0a115b;
+    color: white;
+}
+
+.reset-btn {
+    background: red;
+    color: white;
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+.epoch-counter {
+    color: white;
+    font-size: 18px;
+    width: bold;
+}
+
+canvas {
+    width: 100% !important;
+    height: 80% !important;
+}
