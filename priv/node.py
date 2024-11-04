@@ -18,24 +18,24 @@ def register_handler(master_pid, node_id):
     nodeController.node_id = node_id.decode('utf-8')
     nodeController.master_pid = master_pid
 
-    def handler(message):
-        code, json_payload = message
+    def handler(message):        
+        code, payload = message
         code = code.decode('utf-8')
 
         if code == "initialize":
-            nodeController.initialize_model(json_payload)
+            nodeController.initialize_model(payload)
             cast(master_pid, encode_status_code("initialize_ack"))
         elif code == "load_db":
             response = nodeController.load_db().encode('utf-8')
             cast(master_pid, (encode_status_code("db_ack"), response))
         elif code == "update":
-            nodeController.update_model(json_payload)
+            nodeController.update_model(payload)
             cast(master_pid, encode_status_code("weights_ack"))
         elif code == "train":
             response = nodeController.train_local().encode('utf-8')
             cast(master_pid, (encode_status_code("train_ack"), response))
         elif code == "get_weights":
-            response = nodeController.get_weights(add_cardinality = True).encode('utf-8')
+            response = nodeController.get_weights(add_cardinality = True)
             cast(master_pid, (encode_status_code("node_weights"), response))
         else:
             cast(master_pid, (encode_status_code("python_unhandled"), f"NODE {nodeController.node_id}, invalid message code {code}"))

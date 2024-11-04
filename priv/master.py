@@ -35,10 +35,10 @@ def register_handler(master_pid):
         code = code.decode('utf-8')
 
         if code == "get_model":
-            response = federatedController.get_definition().encode('utf-8')
+            response = federatedController.get_definition()
             cast(master_pid, (encode_status_code("model_definition"), response))
         elif code == "get_weights":
-            response = federatedController.get_weights().encode('utf-8')
+            response = federatedController.get_weights()
             cast(master_pid, (encode_status_code("model_weights"), response))
         elif code == "update_weights":
             federatedController.update_weights(payload)

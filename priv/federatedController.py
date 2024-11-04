@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 import json
 from networkModel import NetworkModel
@@ -11,53 +12,46 @@ class FederatedController():
     
     def get_definition(self) -> str:
         """
-        Retrieve the network configuration as a JSON string.
+        Retrieve the network configuration as its bytes representation.
 
         Returns:
-            A JSON string containing the network configuration.
+            A bytes object containing the network configuration.
         """
-
-        config = self.model.network.get_config()
-        return json.dumps({"config": config})
+        return pickle.dumps(self.model.network.get_config())
     
     def get_weights(self) -> str:
         """
-        Retrieve the model weights as a JSON string.
+        Retrieve the model weights as its bytes representation.
 
         Returns:
-            A JSON string containing the model weights.
+            A bytes object containing the model weights.
         """
+        return pickle.dumps(self.model.get_weights())
 
-        weights = [w.tolist() for w in self.model.get_weights()]
-        return json.dumps({"weights": weights})
-
-    def update_weights(self, node_outputs: list[list]):
+    def update_weights(self, node_outputs: list):
         """
         Update the model weights with the given node outputs.
 
-        The node outputs are given as a list of bytes, which are expected to be
-        JSON strings containing dictionaries with the following keys:
+        The node outputs are given as a list of bytes, representing the following tuple serialization:
 
-        - "weights": A list of Numpy arrays representing the Node weights.
-        - "size": The total size of the dataset for the specific Node weights.
+        0. weights: A list of Numpy arrays representing the Node weights.
+        1. size: The total size of the dataset for the specific Node weights.
 
         The function will average the weights of all nodes based on their dataset
         size and set the averaged weights as the new model weights.
 
         Args:
-            node_outputs: A list of JSONString, where each element contains the node weights and dataset size.
+            node_outputs: A list of bytes object, where each element contains the node weights and dataset size.
 
         Returns:
             None
         """
-
-        data = [json.loads(output.decode('utf-8')) for output in node_outputs]
-
-        new_weights = FederatedController.federated_weight_average(data)
+        node_outputs = [pickle.loads(output) for output in node_outputs]
+        new_weights = FederatedController.federated_weight_average(node_outputs)
         self.model.set_weights(new_weights)
 
     @staticmethod
-    def federated_weight_average(parsed_outputs: list[dict]) -> list:
+    def federated_weight_average(node_outputs) -> list:
         # Number of nodes
         """
         Averages the weights from a list of node weights.
@@ -69,21 +63,21 @@ class FederatedController():
             A list of Numpy arrays, representing the averaged model weights.
         """
         
-        n_nodes = len(parsed_outputs)
+        n_nodes = len(node_outputs)
         if n_nodes == 0:
             raise ValueError("No outputs to average")
             
         # Calculate total dataset size
-        total_size = sum(output["size"] for output in parsed_outputs)
+        total_size = sum(output[1] for output in node_outputs)
         
         # Get the structure of weights from first node
-        first_weights = parsed_outputs[0]["weights"]
+        first_weights = node_outputs[0][0]
         averaged_weights = [np.zeros_like(np.array(w)) for w in first_weights]
         
         # Average weights across nodes
-        for node_output in parsed_outputs:
-            weight = node_output["size"] / total_size
-            node_weights = node_output["weights"]
+        for node_output in node_outputs:
+            weight = node_output[1] / total_size
+            node_weights = node_output[0]
             
             # Add weighted contribution from this node
             for layer_idx, layer_weights in enumerate(node_weights):

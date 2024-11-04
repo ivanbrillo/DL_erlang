@@ -1,3 +1,4 @@
+import pickle
 import tensorflow as tf
 import json
 from networkModel import NetworkModel
@@ -26,28 +27,28 @@ class NodeController:
         self.dataset_size = self.x_train.shape[0]
         return json.dumps({"train_size": self.x_train.shape, "test_size": self.x_test.shape})
 
-    def initialize_model(self, json_string: str) -> None:
+    def initialize_model(self, bytes_model: str) -> None:
         """
         Initialize the local model with the provided configuration.
         The model is compiled with the Adam optimizer and categorical cross-entropy loss.
 
         Args:
-            json_string: A JSON string containing the model configuration.
+            bytes_model: A bytes object containing the model configuration.
         """
-        data = json.loads(json_string)
-        sequential = tf.keras.Sequential.from_config(data['config'])
+        data = pickle.loads(bytes_model)
+        sequential = tf.keras.Sequential.from_config(data)
         self.model = NetworkModel(sequential)
         self.model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     
-    def update_model(self, json_string: str) -> None:
+    def update_model(self, bytes_weights: str) -> None:
         """
         Update the local model with the provided weights.
 
         Args:
-            json_string: A JSON string containing the weights of the model.
+            bytes_weights: A bytes object containing the weights of the model.
         """
-        data = json.loads(json_string)
-        self.model.set_weights([tf.convert_to_tensor(w) for w in data['weights']])
+        data = pickle.loads(bytes_weights)
+        self.model.set_weights(data)
 
     def train_local(self) -> None:
 
@@ -69,18 +70,13 @@ class NodeController:
 
     def get_weights(self, add_cardinality: bool = False) -> str:
         """
-        Returns the weights of the local model as a JSON string.
+        Returns the weights of the local model as a bytes object.
 
         Args:
-            add_cardinality: If true, the dataset size of the node will be added to the JSON string.
+            add_cardinality: If true, the dataset size of the node will be added to the serialized object.
 
         Returns:
-            A JSON string containing the weights of the model and the optional dataset size.
+            A bytes object containing the weights of the model and the optional dataset size.
         """
         weights = [w.tolist() for w in self.model.get_weights()]
-        if add_cardinality:
-            return json.dumps({"weights": weights, "size": self.dataset_size})
-        else: 
-            return json.dumps({"weights": weights})
-
-
+        return  pickle.dumps((weights, self.dataset_size)) if add_cardinality else pickle.dumps(weights)
