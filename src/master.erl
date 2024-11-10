@@ -5,7 +5,7 @@
 
 -module(master).
 -export([start_master/0, loop_master/1]).
--include("state.hrl").
+-include("helper/state.hrl").
 
 
 
