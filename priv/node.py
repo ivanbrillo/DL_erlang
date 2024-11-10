@@ -24,13 +24,13 @@ def register_handler(master_pid, node_id):
 
         if code == "initialize":
             nodeController.initialize_model(payload)
-            cast(master_pid, encode_status_code("initialize_ack"))
+            cast(master_pid, (encode_status_code("initialize_ack"), None))
         elif code == "load_db":
             response = nodeController.load_db().encode('utf-8')
             cast(master_pid, (encode_status_code("db_ack"), response))
         elif code == "update":
             nodeController.update_model(payload)
-            cast(master_pid, encode_status_code("weights_ack"))
+            cast(master_pid, (encode_status_code("weights_ack"), None))
         elif code == "train":
             response = nodeController.train_local().encode('utf-8')
             cast(master_pid, (encode_status_code("train_ack"), response))

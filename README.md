@@ -34,5 +34,5 @@ Wait a few seconds for all nodes to initialize. Then proceed with the following 
   - For one epoch:
     ```P ! train.```
   - For multiple epochs:
-    ```P ! {train, NEpochs}```
+    ```P ! {train, NEpochs}.```
     where `NEpochs` is the number of epochs to train
