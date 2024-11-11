@@ -1,76 +1,103 @@
-%%%-------------------------------------------------------------------
-%% @doc ds_proj public API
-%% @end
-%%%-------------------------------------------------------------------
-
 -module(master).
--export([start_master/0, loop_master/1]).
+-behaviour(gen_server).
+
+%% API
+-export([start_link/0, get_nodes/0, load_db/0, initialize_nodes/0,
+         distribute_model/0, distribute_weights/0, train/0, train/1]).
+
+%% gen_server callbacks
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+         terminate/2, code_change/3]).
+
 -include("helper/state.hrl").
 
+%% API functions
+start_link() ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
+    gen_server:call(?MODULE, initialize_nodes),
+    gen_server:call(?MODULE, load_db),
+    gen_server:call(?MODULE, distribute_model),
+    gen_server:call(?MODULE, distribute_weights).
 
 
-start_master() ->
+get_nodes() ->
+    gen_server:call(?MODULE, get_nodes).
+
+load_db() ->
+    gen_server:call(?MODULE, load_db).
+
+initialize_nodes() ->
+    gen_server:call(?MODULE, initialize_nodes).
+
+distribute_model() ->
+    gen_server:call(?MODULE, distribute_model).
+
+distribute_weights() ->
+    gen_server:call(?MODULE, distribute_weights).
+
+train() ->
+    gen_server:cast(?MODULE, {train, 1}).
+
+train(NEpochs) ->
+    gen_server:cast(?MODULE, {train, NEpochs}).
+
+%% gen_server callbacks
+init([]) ->
+    process_flag(trap_exit, true),
     PythonModel = python_helper:init_python_process(),
     PythonUI = python_helper:init_python_process(),
     State = #state{pythonModelPID = PythonModel, pythonUiPID = PythonUI},
-    MasterPid = spawn(?MODULE, loop_master, [State]),
+    
+    python_helper:python_register_handler(PythonModel, master, self()),
+    python_helper:python_register_handler(PythonUI, ui, self()),
+    
+    {ok, State}.
 
-    python_helper:python_register_handler(PythonModel, master, MasterPid),
-    python_helper:python_register_handler(PythonUI, ui, MasterPid),
-    MasterPid.
+handle_call(get_nodes, _From, State) ->
+    Nodes = network_helper:get_cluster_nodes(),
+    message_primitives:notify_ui(State#state.pythonUiPID, {nodes, Nodes}),
+    {reply, Nodes, State};
+
+handle_call(load_db, _From, State) ->
+    {PidList, Infos} = master_utils:load_db(State#state.initializedNodes),
+    message_primitives:notify_ui(State#state.pythonUiPID, {db_loaded, PidList}),
+    {reply, {ok, Infos}, State#state{dbLoadedNodes = PidList}};
+
+handle_call(initialize_nodes, _From, State) ->
+    InitializedNodes = network_helper:initialize_nodes(),
+    message_primitives:notify_ui(State#state.pythonUiPID, {initialized_nodes, InitializedNodes}),
+    {reply, {ok, InitializedNodes}, State#state{initializedNodes = InitializedNodes}};
+
+handle_call(distribute_model, _From, State) ->
+    ResponseList = master_utils:distribute_model(State#state.pythonModelPID, State#state.initializedNodes),
+    message_primitives:notify_ui(State#state.pythonUiPID, {distributed_nodes, ResponseList}),
+    {reply, {ok, ResponseList}, State#state{distributedNodes = ResponseList}};
+
+handle_call(distribute_weights, _From, State) ->
+    ResponseList = master_utils:distribute_model_weights(State#state.pythonModelPID, State#state.distributedNodes),
+    message_primitives:notify_ui(State#state.pythonUiPID, {weights_updated_nodes, ResponseList}),
+    {reply, {ok, ResponseList}, State#state{weightsNodes = ResponseList}}.
+
+handle_cast({train, NEpochs}, State) ->
+    Nodes = master_utils:train(NEpochs, State#state.pythonModelPID, State#state.distributedNodes, State#state.pythonUiPID),
+    {noreply, State#state{trainNodes = Nodes}}.
+
+handle_info({python_unhandled, Cause}, State) ->
+    io:format("Python received unhandled message: ~p~n", [Cause]),
+    {noreply, State};
 
 
+handle_info({'EXIT', Pid, {Ref, return, {ok, NodePid}}}, State) ->
+    io:format("Node process ~p-~p returned successfully with reference ~p~n", [Pid, NodePid, Ref]),
+    {noreply, State};
 
 
-loop_master(State) ->
+handle_info(_Info, State) ->
+    io:format("Master received unhandled message: ~p~n", [_Info]),
+    {noreply, State}.
 
-    receive
-        get_nodes ->
-            Nodes = network_helper:get_cluster_nodes(),
-            io:format("get_nodes. ~n"),
-            message_primitives:notify_ui(State#state.pythonUiPID, {nodes, Nodes}),
-            loop_master(State);
+terminate(_Reason, _State) ->
+    ok.
 
-        load_db ->
-            {PidList, Infos} = master_utils:load_db(State#state.initializedNodes),
-            io:format("DB loaded: ~p~n", [Infos]),
-            NewState = State#state{dbLoadedNodes = PidList},
-            message_primitives:notify_ui(State#state.pythonUiPID, {db_loaded,  PidList}),
-            loop_master(NewState);
-
-        initialize_nodes -> 
-            InitializedNodes = network_helper:initialize_nodes(),
-            NewState = State#state{initializedNodes = InitializedNodes},
-            message_primitives:notify_ui(State#state.pythonUiPID, {initialized_nodes, InitializedNodes}),
-            loop_master(NewState);
-
-        distribute_model ->
-            ResponseList = master_utils:distribute_model(State#state.pythonModelPID, State#state.initializedNodes),
-            NewState = State#state{distributedNodes = ResponseList},
-            message_primitives:notify_ui(State#state.pythonUiPID,{distributed_nodes, ResponseList}),
-            loop_master(NewState);
-
-        distribute_weights ->
-            ResponseList = master_utils:distribute_model_weights(State#state.pythonModelPID, State#state.distributedNodes),
-            NewState = State#state{weightsNodes = ResponseList},
-            message_primitives:notify_ui(State#state.pythonUiPID, {weights_updated_nodes, ResponseList}),        
-            loop_master(NewState);
-
-        train -> 
-            Nodes = master_utils:train(1, State#state.pythonModelPID, State#state.distributedNodes, State#state.pythonUiPID),
-            NewState = State#state{trainNodes = Nodes},
-            loop_master(NewState);
-
-        {train, NEpochs} ->
-            Nodes = master_utils:train(NEpochs, State#state.pythonModelPID, State#state.distributedNodes, State#state.pythonUiPID),
-            NewState = State#state{trainNodes = Nodes},
-            loop_master(NewState);
-
-        {python_unhandled, Cause} ->
-            io:format("Python received unhandled message: ~p~n", [Cause]),
-            loop_master(State);
-
-        _Invalid ->
-            io:format("Master received unhandled message. ~p~n", [_Invalid]),
-            loop_master(State)
-    end.
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.

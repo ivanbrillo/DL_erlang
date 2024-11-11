@@ -1,51 +1,80 @@
 -module(node).
--export([start_node/1]).
+-behaviour(gen_server).
 
+%% API
+-export([start_link/1, load_db/1, initialize_model/2, update_weights/2,
+         train/1, get_weights/1]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+         terminate/2, code_change/3]).
 
+%% API functions
+start_link(MasterPid) ->
+    gen_server:start(?MODULE, [MasterPid], []).
 
-start_node(MasterPid) ->
+load_db(Pid) ->
+    gen_server:call(Pid, load_db).
+
+initialize_model(Pid, Model) ->
+    gen_server:call(Pid, {initialize_model, Model}).
+
+update_weights(Pid, Weights) ->
+    gen_server:call(Pid, {update_weights, Weights}).
+
+train(Pid) ->
+    gen_server:call(Pid, train, 20000).
+
+get_weights(Pid) ->
+    gen_server:call(Pid, get_weights).
+
+%% gen_server callbacks
+init([MasterPid]) ->
+    % process_flag(trap_exit, true),
     PythonCodePath = code:priv_dir(ds_proj),
     {ok, PythonPid} = python:start([{python_path, PythonCodePath}, {python, "python3"}]),
     Response = python:call(PythonPid, node, register_handler, [self(), node()]),
     io:format("~p~n", [Response]),
-    loop_node(MasterPid, PythonPid).
+    {ok, #{master_pid => MasterPid, python_pid => PythonPid}}.
 
+handle_call(load_db, _From, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
+    Response = message_primitives:synch_message(PythonPid, load_db, null, db_ack),
+    % MasterPid ! {db_ack, {self(), Response}},
+    io:format("NODE ~p, Load DB completed~n", [node()]),
+    {reply, {self(), Response}, State};
 
-loop_node(MasterPid, PythonPid) ->
+handle_call({initialize_model, Model}, _From, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
+    message_primitives:synch_message(PythonPid, initialize, Model, initialize_ack),
+    % MasterPid ! {initialize_ack, self()},
+    io:format("NODE ~p, Initialization completed~n", [node()]),
+    {reply, self(), State};
 
-    receive
-        {load_db, _} ->
-            Response = message_primitives:synch_message(PythonPid, load_db, null, db_ack),
-            MasterPid ! {db_ack, {self(), Response}},
-            io:format("NODE ~p, Load DB completed~n", [node()]),
-            loop_node(MasterPid, PythonPid);
+handle_call({update_weights, Weights}, _From, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
+    message_primitives:synch_message(PythonPid, update, Weights, weights_ack),
+    % MasterPid ! {weights_ack, self()},
+    io:format("NODE ~p, Weights updated successfully~n", [node()]),
+    {reply, self(), State};
 
-        {initialize_model, Model} ->
-            message_primitives:synch_message(PythonPid, initialize, Model, initialize_ack),
-            MasterPid ! {initialize_ack, self()},
-            io:format("NODE ~p,  Initialization completed~n", [node()]),
-            loop_node(MasterPid, PythonPid);
+handle_call(train, _From, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
+    Response = message_primitives:synch_message(PythonPid, train, null, train_ack),
+    % MasterPid ! {train_ack, {self(), Response}},
+    io:format("NODE ~p, Training completed~n", [node()]),
+    {reply, {self(), Response}, State};
 
-        {update_weights, Weights} ->  
-            message_primitives:synch_message(PythonPid, update, Weights, weights_ack),
-            MasterPid ! {weights_ack, self()},
-            io:format("NODE ~p,  Weights updated successfully~n", [node()]),
-            loop_node(MasterPid, PythonPid);
+handle_call(get_weights, _From, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
+    Response = message_primitives:synch_message(PythonPid, get_weights, null, node_weights),
+    % MasterPid ! {node_weights, {self(), Response}},
+    io:format("NODE ~p, Weights returned~n", [node()]),
+    {reply, {self(), Response}, State}.
 
-        {train, _} ->
-            Response = message_primitives:synch_message(PythonPid, train, null, train_ack),
-            MasterPid ! {train_ack, {self(), Response}},
-            io:format("NODE ~p,  Training completed~n", [node()]),
-            loop_node(MasterPid, PythonPid);
+handle_cast(_Msg, State) ->
+    {noreply, State}.
 
-        {get_weights, _} ->
-            Response = message_primitives:synch_message(PythonPid, get_weights, null, node_weights),
-            MasterPid ! {node_weights, {self(), Response}},
-            io:format("NODE ~p,  Weights returned~n", [node()]),
-            loop_node(MasterPid, PythonPid);
+handle_info(_Info, State) ->
+    io:format("Invalid message discarded in node: ~p~n", [_Info]),
+    {noreply, State}.
 
-        % Invalid message (discard it)
-        _Invalid ->
-            io:format("Invalid message discarded in nodo.~n"),
-            loop_node(MasterPid, PythonPid)
-    end.
+terminate(_Reason, #{python_pid := PythonPid}) ->
+    python:stop(PythonPid),
+    ok.
+
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.

@@ -1,31 +1,35 @@
 -module(master_utils).
 -export([distribute_model/2, distribute_model_weights/2, load_db/1, train/4]).
 
-
 distribute_model(PythonModelPid, Nodes) ->
     Model = message_primitives:synch_message(PythonModelPid, get_model, null, model_definition),
-    ResponseList = message_primitives:synch_message(Nodes, initialize_model, Model, initialize_ack),
+    % Instead of sending messages directly, use gen_server calls
+    ResponseList = [node:initialize_model(Node, Model) || Node <- Nodes],
     ResponseList.
-
 
 distribute_model_weights(PythonModelPid, Nodes) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
-    ResponseList = message_primitives:synch_message(Nodes, update_weights, Weights, weights_ack),
+    % Use gen_server calls to update weights
+    ResponseList = [node:update_weights(Node, Weights) || Node <- Nodes],
     ResponseList.    
 
-
 send_nodes_weights(PythonModelPid, Nodes) ->
-    ResponseList = message_primitives:synch_message(Nodes, get_weights, null, node_weights),
-    {PidList, Weights} = lists:unzip(ResponseList),
+    % Get weights using gen_server calls
+    ResponseList = [node:get_weights(Node) || Node <- Nodes],
+    {_PidList, Weights} = lists:unzip(ResponseList),
     message_primitives:synch_message(PythonModelPid, update_weights, Weights, update_weights_ack),
-    PidList.
+    Nodes.
 
+% load_db(Nodes) ->
+%     % Use gen_server calls to load DB
+%     ResponseList = [node:load_db(Node) || Node <- Nodes],
+%     {Nodes, ResponseList}.
 
 load_db(Nodes) ->
-    ResponseList = message_primitives:synch_message(Nodes, load_db, null, db_ack),
+    ResponseList = [node:load_db(Node) || Node <- Nodes],
     {PidList, Infos} = lists:unzip(ResponseList),
     {PidList, Infos}.
-            
+
 
 train(NEpochs, PythonModelPid, Nodes, UiPid) ->
     train(NEpochs, 0, PythonModelPid, Nodes, UiPid).
@@ -34,7 +38,8 @@ train(TotEpochs, TotEpochs, _, Nodes, _) ->
     Nodes;
 
 train(TotEpochs, CurrentEpoch, PythonModelPid, Nodes, UiPid) ->
-    ResponseList1 = message_primitives:synch_message(Nodes, train, null, train_ack),
+    % Train using gen_server calls
+    ResponseList1 = [node:train(Node) || Node <- Nodes],
     {TrainNodes, Accuracy} = lists:unzip(ResponseList1),
     io:format("Finish training epoch ~p, accuracy: ~p~n", [CurrentEpoch, Accuracy]),
     message_primitives:notify_ui(UiPid, {training_completed, TrainNodes}),
