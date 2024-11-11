@@ -3,33 +3,26 @@
 
 distribute_model(PythonModelPid, Nodes) ->
     Model = message_primitives:synch_message(PythonModelPid, get_model, null, model_definition),
-    % Instead of sending messages directly, use gen_server calls
-    ResponseList = [node:initialize_model(Node, Model) || Node <- Nodes],
-    ResponseList.
+    lists:foreach(fun(Node) -> node:initialize_model(Node, Model) end, Nodes),
+    message_primitives:wait_response(length(Nodes), initialize_ack).
 
 distribute_model_weights(PythonModelPid, Nodes) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
-    % Use gen_server calls to update weights
-    ResponseList = [node:update_weights(Node, Weights) || Node <- Nodes],
-    ResponseList.    
+    lists:foreach(fun(Node) -> node:update_weights(Node, Weights) end, Nodes),
+    message_primitives:wait_response(length(Nodes), weights_ack).
 
 send_nodes_weights(PythonModelPid, Nodes) ->
-    % Get weights using gen_server calls
-    ResponseList = [node:get_weights(Node) || Node <- Nodes],
+    lists:foreach(fun(Node) -> node:get_weights(Node) end, Nodes),
+    ResponseList = message_primitives:wait_response(length(Nodes), node_weights),
     {_PidList, Weights} = lists:unzip(ResponseList),
     message_primitives:synch_message(PythonModelPid, update_weights, Weights, update_weights_ack),
     Nodes.
 
-% load_db(Nodes) ->
-%     % Use gen_server calls to load DB
-%     ResponseList = [node:load_db(Node) || Node <- Nodes],
-%     {Nodes, ResponseList}.
-
 load_db(Nodes) ->
-    ResponseList = [node:load_db(Node) || Node <- Nodes],
+    lists:foreach(fun(Node) -> node:load_db(Node) end, Nodes),
+    ResponseList = message_primitives:wait_response(length(Nodes), db_ack),
     {PidList, Infos} = lists:unzip(ResponseList),
     {PidList, Infos}.
-
 
 train(NEpochs, PythonModelPid, Nodes, UiPid) ->
     train(NEpochs, 0, PythonModelPid, Nodes, UiPid).
@@ -38,8 +31,9 @@ train(TotEpochs, TotEpochs, _, Nodes, _) ->
     Nodes;
 
 train(TotEpochs, CurrentEpoch, PythonModelPid, Nodes, UiPid) ->
-    % Train using gen_server calls
-    ResponseList1 = [node:train(Node) || Node <- Nodes],
+    % Start training on all nodes
+    lists:foreach(fun(Node) -> node:train(Node) end, Nodes),
+    ResponseList1 = message_primitives:wait_response(length(Nodes), train_ack),
     {TrainNodes, Accuracy} = lists:unzip(ResponseList1),
     io:format("Finish training epoch ~p, accuracy: ~p~n", [CurrentEpoch, Accuracy]),
     message_primitives:notify_ui(UiPid, {training_completed, TrainNodes}),

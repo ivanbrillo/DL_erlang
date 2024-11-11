@@ -13,33 +13,33 @@
 
 %% API functions
 start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
-    gen_server:call(?MODULE, initialize_nodes),
-    gen_server:call(?MODULE, load_db),
-    gen_server:call(?MODULE, distribute_model),
-    gen_server:call(?MODULE, distribute_weights).
+    gen_server:start_link({local, erlang_master}, ?MODULE, [], []),
+    gen_server:call(erlang_master, initialize_nodes, 20000),
+    gen_server:call(erlang_master, load_db, 20000),
+    gen_server:call(erlang_master, distribute_model, 20000),
+    gen_server:call(erlang_master, distribute_weights, 20000).
 
 
 get_nodes() ->
-    gen_server:call(?MODULE, get_nodes).
+    gen_server:call(erlang_master, get_nodes).
 
 load_db() ->
-    gen_server:call(?MODULE, load_db).
+    gen_server:call(erlang_master, load_db).
 
 initialize_nodes() ->
-    gen_server:call(?MODULE, initialize_nodes).
+    gen_server:call(erlang_master, initialize_nodes).
 
 distribute_model() ->
-    gen_server:call(?MODULE, distribute_model).
+    gen_server:call(erlang_master, distribute_model).
 
 distribute_weights() ->
-    gen_server:call(?MODULE, distribute_weights).
+    gen_server:call(erlang_master, distribute_weights).
 
 train() ->
-    gen_server:cast(?MODULE, {train, 1}).
+    gen_server:cast(erlang_master, {train, 1}).
 
 train(NEpochs) ->
-    gen_server:cast(?MODULE, {train, NEpochs}).
+    gen_server:cast(erlang_master, {train, NEpochs}).
 
 %% gen_server callbacks
 init([]) ->
@@ -88,7 +88,7 @@ handle_info({python_unhandled, Cause}, State) ->
 
 
 handle_info({'EXIT', Pid, {Ref, return, {ok, NodePid}}}, State) ->
-    io:format("Node process ~p-~p returned successfully with reference ~p~n", [Pid, NodePid, Ref]),
+    io:format("Node process ~p-~p returned EXIT successfully with reference ~p~n", [Pid, NodePid, Ref]),
     {noreply, State};
 
 
