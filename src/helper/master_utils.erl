@@ -3,23 +3,23 @@
 
 distribute_model(PythonModelPid, Nodes) ->
     Model = message_primitives:synch_message(PythonModelPid, get_model, null, model_definition),
-    lists:foreach(fun(Node) -> node:initialize_model(Node, Model) end, Nodes),
+    lists:foreach(fun(Pid) -> node:initialize_model(Pid, Model) end, Nodes),
     message_primitives:wait_response(length(Nodes), initialize_ack).
 
 distribute_model_weights(PythonModelPid, Nodes) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
-    lists:foreach(fun(Node) -> node:update_weights(Node, Weights) end, Nodes),
+    lists:foreach(fun(Pid) -> node:update_weights(Pid, Weights) end, Nodes),
     message_primitives:wait_response(length(Nodes), weights_ack).
 
 send_nodes_weights(PythonModelPid, Nodes) ->
-    lists:foreach(fun(Node) -> node:get_weights(Node) end, Nodes),
+    lists:foreach(fun(Pid) -> node:get_weights(Pid) end, Nodes),
     ResponseList = message_primitives:wait_response(length(Nodes), node_weights),
     {_PidList, Weights} = lists:unzip(ResponseList),
     message_primitives:synch_message(PythonModelPid, update_weights, Weights, update_weights_ack),
     Nodes.
 
 load_db(Nodes) ->
-    lists:foreach(fun(Node) -> node:load_db(Node) end, Nodes),
+    lists:foreach(fun(Pid) -> node:load_db(Pid) end, Nodes),
     ResponseList = message_primitives:wait_response(length(Nodes), db_ack),
     {PidList, Infos} = lists:unzip(ResponseList),
     {PidList, Infos}.
@@ -32,7 +32,7 @@ train(TotEpochs, TotEpochs, _, Nodes, _) ->
 
 train(TotEpochs, CurrentEpoch, PythonModelPid, Nodes, UiPid) ->
     % Start training on all nodes
-    lists:foreach(fun(Node) -> node:train(Node) end, Nodes),
+    lists:foreach(fun(Pid) -> node:train(Pid) end, Nodes),
     ResponseList1 = message_primitives:wait_response(length(Nodes), train_ack),
     {TrainNodes, Accuracy} = lists:unzip(ResponseList1),
     io:format("Finish training epoch ~p, accuracy: ~p~n", [CurrentEpoch, Accuracy]),

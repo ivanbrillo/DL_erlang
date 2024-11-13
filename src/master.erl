@@ -44,6 +44,8 @@ train(NEpochs) ->
 %% gen_server callbacks
 init([]) ->
     process_flag(trap_exit, true),
+    net_kernel:monitor_nodes(true),
+    
     PythonModel = python_helper:init_python_process(),
     PythonUI = python_helper:init_python_process(),
     State = #state{pythonModelPID = PythonModel, pythonUiPID = PythonUI},
@@ -59,38 +61,52 @@ handle_call(get_nodes, _From, State) ->
     {reply, Nodes, State};
 
 handle_call(load_db, _From, State) ->
-    {PidList, Infos} = master_utils:load_db(State#state.initializedNodes),
+    {PidNodes, _} = lists:unzip(State#state.currentUpNodes),
+    {PidList, Infos} = master_utils:load_db(PidNodes),
     message_primitives:notify_ui(State#state.pythonUiPID, {db_loaded, PidList}),
-    {reply, {ok, Infos}, State#state{dbLoadedNodes = PidList}};
+    {reply, {ok, Infos}, State};
 
 handle_call(initialize_nodes, _From, State) ->
     InitializedNodes = network_helper:initialize_nodes(),
     message_primitives:notify_ui(State#state.pythonUiPID, {initialized_nodes, InitializedNodes}),
-    {reply, {ok, InitializedNodes}, State#state{initializedNodes = InitializedNodes}};
+    {reply, {ok, InitializedNodes}, State#state{initialUpNodes = InitializedNodes, currentUpNodes = InitializedNodes}};
 
 handle_call(distribute_model, _From, State) ->
-    ResponseList = master_utils:distribute_model(State#state.pythonModelPID, State#state.initializedNodes),
+    {PidNodes, _} = lists:unzip(State#state.currentUpNodes),
+    ResponseList = master_utils:distribute_model(State#state.pythonModelPID, PidNodes),
     message_primitives:notify_ui(State#state.pythonUiPID, {distributed_nodes, ResponseList}),
-    {reply, {ok, ResponseList}, State#state{distributedNodes = ResponseList}};
+    {reply, {ok, ResponseList}, State};
 
 handle_call(distribute_weights, _From, State) ->
-    ResponseList = master_utils:distribute_model_weights(State#state.pythonModelPID, State#state.distributedNodes),
+    {PidNodes, _} = lists:unzip(State#state.currentUpNodes),
+    ResponseList = master_utils:distribute_model_weights(State#state.pythonModelPID, PidNodes),
     message_primitives:notify_ui(State#state.pythonUiPID, {weights_updated_nodes, ResponseList}),
-    {reply, {ok, ResponseList}, State#state{weightsNodes = ResponseList}}.
+    {reply, {ok, ResponseList}, State}.
 
 handle_cast({train, NEpochs}, State) ->
-    Nodes = master_utils:train(NEpochs, State#state.pythonModelPID, State#state.distributedNodes, State#state.pythonUiPID),
-    {noreply, State#state{trainNodes = Nodes}}.
+    {PidNodes, _} = lists:unzip(State#state.currentUpNodes),
+    Nodes = master_utils:train(NEpochs, State#state.pythonModelPID, PidNodes, State#state.pythonUiPID),
+    message_primitives:notify_ui(State#state.pythonUiPID, {train_completed, Nodes}),
+    {noreply, State}.
 
 handle_info({python_unhandled, Cause}, State) ->
     io:format("Python received unhandled message: ~p~n", [Cause]),
     {noreply, State};
 
-
 handle_info({'EXIT', Pid, {Ref, return, {ok, NodePid}}}, State) ->
     io:format("Node process ~p-~p returned EXIT successfully with reference ~p~n", [Pid, NodePid, Ref]),
     {noreply, State};
 
+handle_info({nodeup, Node, NodeType}, State) ->
+    error_logger:info_msg("Node ~p connected. Type: ~p~n", [Node, NodeType]),
+    {noreply, State};
+
+handle_info({nodedown, Node}, State) ->
+    error_logger:warning_msg("Node ~p disconnected.~n", [Node]),
+    % Remove any tuple matching the disconnected Node from initialUpNodes
+    UpdatedUpNodes = lists:keydelete(Node, 2, State#state.currentUpNodes),
+    io:format("Nodes: ~p~n", [UpdatedUpNodes]),
+    {noreply, State#state{currentUpNodes = UpdatedUpNodes}};
 
 handle_info(_Info, State) ->
     io:format("Master received unhandled message: ~p~n", [_Info]),
