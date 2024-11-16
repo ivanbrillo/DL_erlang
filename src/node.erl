@@ -9,7 +9,9 @@
 
 %% API functions
 start_link(MasterPid) ->
-    gen_server:start(?MODULE, [MasterPid], []).
+    {ok, Pid} = gen_server:start(?MODULE, [MasterPid], []),
+    MasterPid ! {ok, {Pid, node()}},
+    {ok, Pid}.
 
 load_db(Pid) ->
     gen_server:cast(Pid, load_db).
@@ -28,10 +30,10 @@ get_weights(Pid) ->
 
 %% gen_server callbacks
 init([MasterPid]) ->
-    PythonCodePath = code:priv_dir(ds_proj),
-    {ok, PythonPid} = python:start([{python_path, PythonCodePath}, {python, "python3"}]),
-    Response = python:call(PythonPid, node, register_handler, [self(), node()]),
-    io:format("~p~n", [Response]),
+    net_kernel:monitor_nodes(true),
+    PythonPid = python_helper:init_python_process(),
+    {ok, _Name} = python:call(PythonPid, node, register_handler, [self(), node()]),
+    io:format("--- NODE ~p: Initialized correctly ---~n", [node()]),
     {ok, #{master_pid => MasterPid, python_pid => PythonPid}}.
 
 handle_call(_Request, _From, State) ->
@@ -56,7 +58,8 @@ handle_cast({update_weights, Weights}, State = #{master_pid := MasterPid, python
     {noreply, State};
 
 handle_cast(train, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
-    Response = message_primitives:synch_message(PythonPid, train, null, train_ack),
+    Response = message_primitives:synch_message(PythonPid, train, null, train_ack, 30000),
+    
     MasterPid ! {train_ack, {self(), Response}},
     io:format("NODE ~p, Training completed~n", [node()]),
     {noreply, State};
@@ -67,8 +70,8 @@ handle_cast(get_weights, State = #{master_pid := MasterPid, python_pid := Python
     io:format("NODE ~p, Weights returned~n", [node()]),
     {noreply, State}.
 
-handle_info(_Info, State) ->
-    io:format("Invalid message discarded in node: ~p~n", [_Info]),
+handle_info(Info, State) ->
+    io:format("Invalid message discarded in node: ~p~n", [Info]),
     {noreply, State}.
 
 terminate(_Reason, #{python_pid := PythonPid}) ->

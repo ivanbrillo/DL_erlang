@@ -1,28 +1,44 @@
 -module(master_utils).
--export([distribute_model/2, distribute_model_weights/2, load_db/1, train/4]).
+-export([distribute_model/3, distribute_model_weights/3, load_db/2, train/4, load_nodes/2]).
 
-distribute_model(PythonModelPid, Nodes) ->
+
+distribute_model(PythonModelPid, Pids, asynch) ->
     Model = message_primitives:synch_message(PythonModelPid, get_model, null, model_definition),
-    lists:foreach(fun(Pid) -> node:initialize_model(Pid, Model) end, Nodes),
-    message_primitives:wait_response(length(Nodes), initialize_ack).
+    lists:foreach(fun(Pid) -> node:initialize_model(Pid, Model) end, Pids),
+    ok;
 
-distribute_model_weights(PythonModelPid, Nodes) ->
+distribute_model(PythonModelPid, Pids, synch) ->
+    distribute_model(PythonModelPid, Pids, asynch),
+    message_primitives:wait_response(length(Pids), initialize_ack).
+
+
+distribute_model_weights(PythonModelPid, Pids, asynch) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
-    lists:foreach(fun(Pid) -> node:update_weights(Pid, Weights) end, Nodes),
-    message_primitives:wait_response(length(Nodes), weights_ack).
+    lists:foreach(fun(Pid) -> node:update_weights(Pid, Weights) end, Pids),
+    ok;
+
+distribute_model_weights(PythonModelPid, Pids, synch) ->
+    distribute_model_weights(PythonModelPid, Pids, asynch),
+    message_primitives:wait_response(length(Pids), weights_ack).
+
+
+load_db(Pids, asynch) ->
+    lists:foreach(fun(Pid) -> node:load_db(Pid) end, Pids),
+    ok;
+
+load_db(Pids, synch) ->
+    load_db(Pids, asynch),
+    ResponseList = message_primitives:wait_response(length(Pids), db_ack),
+    lists:unzip(ResponseList).
+
 
 send_nodes_weights(PythonModelPid, Nodes) ->
     lists:foreach(fun(Pid) -> node:get_weights(Pid) end, Nodes),
     ResponseList = message_primitives:wait_response(length(Nodes), node_weights),
-    {_PidList, Weights} = lists:unzip(ResponseList),
+    {PidList, Weights} = lists:unzip(ResponseList),
     message_primitives:synch_message(PythonModelPid, update_weights, Weights, update_weights_ack),
-    Nodes.
+    PidList.
 
-load_db(Nodes) ->
-    lists:foreach(fun(Pid) -> node:load_db(Pid) end, Nodes),
-    ResponseList = message_primitives:wait_response(length(Nodes), db_ack),
-    {PidList, Infos} = lists:unzip(ResponseList),
-    {PidList, Infos}.
 
 train(NEpochs, PythonModelPid, Nodes, UiPid) ->
     train(NEpochs, 0, PythonModelPid, Nodes, UiPid).
@@ -42,8 +58,16 @@ train(TotEpochs, CurrentEpoch, PythonModelPid, Nodes, UiPid) ->
     io:format("Model update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
     message_primitives:notify_ui(UiPid, {weights_model_updated, PidList}),
 
-    ResponseList2 = distribute_model_weights(PythonModelPid, Nodes),
-    io:format("Nodes update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
-    message_primitives:notify_ui(UiPid, {weights_updated_nodes, ResponseList2}),
+    PidList2 = distribute_model_weights(PythonModelPid, PidList, synch),
 
-    train(TotEpochs, CurrentEpoch+1, PythonModelPid, ResponseList2, UiPid).
+    io:format("Nodes update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
+    message_primitives:notify_ui(UiPid, {weights_updated_nodes, PidList2}),
+
+    train(TotEpochs, CurrentEpoch+1, PythonModelPid, PidList2, UiPid).
+
+
+load_nodes(ListsPidNodes, PythonModelPid) ->
+    {Pids, _Nodes} = lists:unzip(ListsPidNodes),
+    load_db(Pids, asynch),
+    distribute_model(PythonModelPid, Pids, asynch),
+    distribute_model_weights(PythonModelPid, Pids, synch).

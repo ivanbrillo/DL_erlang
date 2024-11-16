@@ -4,10 +4,11 @@
 
 init_python_process() ->
     PythonCodePath = code:priv_dir(ds_proj),
-    {ok, PythonPid} = python:start([{python_path, PythonCodePath}, {python, "python3"}]),
+    {ok, PythonPid} = python:start_link([{python_path, PythonCodePath}, {python, "python3"}]),
     PythonPid.
 
 python_register_handler(PythonPid, Module, MasterPid) ->
-    Result = python:call(PythonPid, Module, register_handler, [MasterPid]),
-    io:format("~p~n", [Result]).
+    {ok, Name} = python:call(PythonPid, Module, register_handler, [MasterPid]),
+    io:format("--- MASTER: python process ~s register correctly ---~n", [Name]),
+    ok.
 

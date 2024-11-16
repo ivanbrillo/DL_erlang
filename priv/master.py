@@ -48,7 +48,7 @@ def register_handler(master_pid):
         
 
     set_message_handler(handler)
-    return "NODE Master, handler registered Correctly"
+    return (encode_status_code("ok"), "MODEL")
 
 
 

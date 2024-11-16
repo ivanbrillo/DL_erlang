@@ -42,7 +42,8 @@ def register_handler(master_pid, node_id):
         
 
     set_message_handler(handler)
-    return f"NODE {nodeController.node_id}, handler registered Correctly"
+    return (encode_status_code("ok"), "NODE")
+
 
 
 def encode_status_code(code: str) -> Atom:

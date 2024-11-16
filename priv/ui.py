@@ -12,7 +12,8 @@ def register_handler(master_pid):
         # raise Exception(json_payload)
 
     set_message_handler(handler)
-    return "NODE UI, handler registered Correctly"
+    return (encode_status_code("ok"), "UI")
+
 
 
 
