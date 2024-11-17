@@ -48,22 +48,32 @@ train(TotEpochs, TotEpochs, _, Nodes, _) ->
 
 train(TotEpochs, CurrentEpoch, PythonModelPid, Nodes, UiPid) ->
     % Start training on all nodes
-    lists:foreach(fun(Pid) -> node:train(Pid) end, Nodes),
-    ResponseList1 = message_primitives:wait_response(length(Nodes), train_ack),
-    {TrainNodes, Accuracy} = lists:unzip(ResponseList1),
-    io:format("Finish training epoch ~p, accuracy: ~p~n", [CurrentEpoch, Accuracy]),
-    message_primitives:notify_ui(UiPid, {training_completed, TrainNodes}),
+    % lists:foreach(fun(Pid) -> node:train(Pid) end, Nodes),
+    % ResponseList1 = message_primitives:wait_response(length(Nodes), train_ack),
+    % {TrainNodes, Accuracy} = lists:unzip(ResponseList1),
+    % io:format("Finish training epoch ~p, accuracy: ~p~n", [CurrentEpoch, Accuracy]),
+    % message_primitives:notify_ui(UiPid, {training_completed, TrainNodes}),
 
-    PidList = send_nodes_weights(PythonModelPid, TrainNodes),
-    io:format("Model update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
-    message_primitives:notify_ui(UiPid, {weights_model_updated, PidList}),
+    % PidList = send_nodes_weights(PythonModelPid, TrainNodes),
+    % io:format("Model update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
+    % message_primitives:notify_ui(UiPid, {weights_model_updated, PidList}),
 
-    PidList2 = distribute_model_weights(PythonModelPid, PidList, synch),
+    % PidList2 = distribute_model_weights(PythonModelPid, PidList, synch),
 
-    io:format("Nodes update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
-    message_primitives:notify_ui(UiPid, {weights_updated_nodes, PidList2}),
+    % io:format("Nodes update the weights correctly for epoch: ~p~n", [CurrentEpoch]),
+    % message_primitives:notify_ui(UiPid, {weights_updated_nodes, PidList2}),
 
-    train(TotEpochs, CurrentEpoch+1, PythonModelPid, PidList2, UiPid).
+    % train(TotEpochs, CurrentEpoch+1, PythonModelPid, PidList2, UiPid).
+    Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
+    lists:foreach(fun(Pid) -> node:train_pipeline(Pid, Weights) end, Nodes),
+    ResponseList = message_primitives:wait_response(length(Nodes), train_pipeline_ack),
+    {PidList, Messages} = lists:unzip(ResponseList),
+    {Weights, Accuracy} = lists:unzip(Messages),
+
+    message_primitives:synch_message(PythonModelPid, update_weights, Weights, update_weights_ack),
+    io:format("--- MASTER: train completed for epochs: ~p, resulting nodes accuracy: ~p ---~n", [CurrentEpoch, Accuracy]),
+    train(TotEpochs, CurrentEpoch+1, PythonModelPid, PidList, UiPid).
+%TODO SBAGLIATO
 
 
 load_nodes(ListsPidNodes, PythonModelPid) ->

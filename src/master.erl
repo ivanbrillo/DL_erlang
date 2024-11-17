@@ -97,15 +97,16 @@ handle_cast({train, NEpochs}, State) ->
     {noreply, State}.
 
 handle_info({nodeup, Node, _}, State) ->
-    io:format("--- MASTER: Node ~p connected ---~n", [Node]),
-    {noreply, State};
+    io:format("--- MASTER: Node ~p connected, initializing---~n", [Node]),
+    Pids = master_utils:load_nodes([Node], State#state.pythonModelPID) ++ State#state.currentUpNodes,
+    {noreply, State#state{currentUpNodes = Pids}};
 
 handle_info({nodedown, Node}, State) ->
     io:format("--- MASTER: Node ~p disconnected ---~n", [Node]),
     UpdatedUpNodes = lists:keydelete(Node, 2, State#state.currentUpNodes),
     {noreply, State#state{currentUpNodes = UpdatedUpNodes}};
 
-handle_info({python_unhandled, Cause}, State) ->
+handle_info({python_unhandled, Cause}, State) ->   % TODO: to be removed
     io:format("--- MASTER: Python received unhandled message: ~p ---~n", [Cause]),
     {noreply, State};
 
@@ -116,7 +117,7 @@ handle_info(Info, State) ->
 % called from supervisor shutdown
 terminate(_Reason, State) ->
     io:format("--- MASTER: Terminating Procedure ---~n"),
-    python:stop(State#state.pythonModelPID),      % TODO: possible shutdown procedure (eg. save model)
+    python:stop(State#state.pythonModelPID),      % TODO: possible shutdown procedure (eg. save python model)
     ok.
 
 code_change(_OldVsn, State, _Extra) ->

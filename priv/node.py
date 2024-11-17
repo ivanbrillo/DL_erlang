@@ -26,16 +26,21 @@ def register_handler(master_pid, node_id):
             nodeController.initialize_model(payload)
             cast(master_pid, (encode_status_code("initialize_ack"), None))
         elif code == "load_db":
-            response = nodeController.load_db().encode('utf-8')
+            response = nodeController.load_db()
             cast(master_pid, (encode_status_code("db_ack"), response))
         elif code == "update":
             nodeController.update_model(payload)
             cast(master_pid, (encode_status_code("weights_ack"), None))
         elif code == "train":
-            response = nodeController.train_local().encode('utf-8')
+            response = nodeController.train_local()
             cast(master_pid, (encode_status_code("train_ack"), response))
+        elif code == "train_pipeline":
+            nodeController.update_model(payload)
+            accuracy = nodeController.train_local()
+            response = nodeController.get_weights([nodeController.dataset_size])
+            cast(master_pid, (encode_status_code("train_pipeline_ack"), (response, accuracy)))
         elif code == "get_weights":
-            response = nodeController.get_weights(add_cardinality = True)
+            response = nodeController.get_weights([nodeController.dataset_size])
             cast(master_pid, (encode_status_code("node_weights"), response))
         else:
             cast(master_pid, (encode_status_code("python_unhandled"), f"NODE {nodeController.node_id}, invalid message code {code}"))

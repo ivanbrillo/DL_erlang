@@ -21,11 +21,11 @@ class NodeController:
         """
         Load the dataset and preprocess it.
 
-        Returns a JSON object containing the shapes of the training and test sets.
+        Returns a tuple containing the shapes of the training and test sets respectivly.
         """
         self.x_train, self.y_train, self.x_test, self.y_test = preprocess_image()
         self.dataset_size = self.x_train.shape[0]
-        return json.dumps({"train_size": self.x_train.shape, "test_size": self.x_test.shape})
+        return self.x_train.shape, self.x_test.shape
 
     def initialize_model(self, bytes_model: str) -> None:
         """
@@ -56,7 +56,7 @@ class NodeController:
         Train the local model on the node's dataset for one epoch.
 
         Returns:
-            A JSON object containing the training accuracy.
+            A floating point representing the test accuracy of the current epoch.
         """
         train_result = self.model.fit(
             self.x_train, self.y_train,
@@ -65,10 +65,10 @@ class NodeController:
             verbose=0
         )
 
-        return json.dumps({"accuracy": train_result.history['accuracy']})
+        return train_result.history['accuracy'][0]  # one value since 1 epoch
 
 
-    def get_weights(self, add_cardinality: bool = False) -> str:
+    def get_weights(self, additional_infos: list) -> str:
         """
         Returns the weights of the local model as a bytes object.
 
@@ -79,4 +79,6 @@ class NodeController:
             A bytes object containing the weights of the model and the optional dataset size.
         """
         weights = [w.tolist() for w in self.model.get_weights()]
-        return  pickle.dumps((weights, self.dataset_size)) if add_cardinality else pickle.dumps(weights)
+        return  pickle.dumps((weights, *additional_infos)) if len(additional_infos) > 0 else pickle.dumps(weights)
+
+        # return  pickle.dumps((weights, self.dataset_size)) if add_cardinality else pickle.dumps(weights)

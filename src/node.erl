@@ -5,7 +5,7 @@
 -export([start_link/1, load_db/1, initialize_model/2, update_weights/2,
          train/1, get_weights/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+         terminate/2, code_change/3, train_pipeline/2]).
 
 %% API functions
 start_link(MasterPid) ->
@@ -24,6 +24,9 @@ update_weights(Pid, Weights) ->
 
 train(Pid) ->
     gen_server:cast(Pid, train).
+
+train_pipeline(Pid, Weights) ->
+    gen_server:cast(Pid, {train_pipeline, Weights}).
 
 get_weights(Pid) ->
     gen_server:cast(Pid, get_weights).
@@ -63,6 +66,14 @@ handle_cast(train, State = #{master_pid := MasterPid, python_pid := PythonPid}) 
     MasterPid ! {train_ack, {self(), Response}},
     io:format("NODE ~p, Training completed~n", [node()]),
     {noreply, State};
+
+
+handle_cast({train_pipeline, Weights}, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
+    Weights = message_primitives:synch_message(PythonPid, train_pipeline, Weights, train_pipeline_ack),
+    MasterPid ! {train_pipeline_ack, {self(), Weights}},
+    io:format("NODE ~p, Training completed~n", [node()]),
+    {noreply, State};
+
 
 handle_cast(get_weights, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
     Response = message_primitives:synch_message(PythonPid, get_weights, null, node_weights),
