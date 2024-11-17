@@ -69,8 +69,8 @@ handle_cast(train, State = #{master_pid := MasterPid, python_pid := PythonPid}) 
 
 
 handle_cast({train_pipeline, Weights}, State = #{master_pid := MasterPid, python_pid := PythonPid}) ->
-    Weights = message_primitives:synch_message(PythonPid, train_pipeline, Weights, train_pipeline_ack),
-    MasterPid ! {train_pipeline_ack, {self(), Weights}},
+    NewWeights = message_primitives:synch_message(PythonPid, train_pipeline, Weights, train_pipeline_ack),
+    MasterPid ! {train_pipeline_ack, {self(), NewWeights}},
     io:format("NODE ~p, Training completed~n", [node()]),
     {noreply, State};
 
@@ -81,9 +81,18 @@ handle_cast(get_weights, State = #{master_pid := MasterPid, python_pid := Python
     io:format("NODE ~p, Weights returned~n", [node()]),
     {noreply, State}.
 
+handle_info({nodeup, _, _}, State) ->
+    {noreply, State};
+
+handle_info({nodedown, _Node}, State) ->
+    % io:format("--- MASTER: Node ~p disconnected ---~n", [Node]),
+    {noreply, State};
+
+
 handle_info(Info, State) ->
     io:format("Invalid message discarded in node: ~p~n", [Info]),
     {noreply, State}.
+
 
 terminate(_Reason, #{python_pid := PythonPid}) ->
     python:stop(PythonPid),

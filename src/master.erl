@@ -38,10 +38,10 @@ distribute_weights() ->
     gen_server:call(erlang_master, distribute_weights).
 
 train() ->
-    gen_server:cast(erlang_master, {train, 1}).
+    gen_server:cast(erlang_master, {train, 1, 0}).
 
 train(NEpochs) ->
-    gen_server:cast(erlang_master, {train, NEpochs}).
+    gen_server:cast(erlang_master, {train, NEpochs, 0}).
 
 %% gen_server callbacks
 init([]) ->
@@ -90,10 +90,16 @@ handle_call(distribute_weights, _From, State) ->
     message_primitives:notify_ui(State#state.pythonUiPID, {weights_updated_nodes, ResponseList}),
     {reply, {ok, ResponseList}, State}.
 
-handle_cast({train, NEpochs}, State) ->
+handle_cast({train, EpochsLeft, CurrentEpoch}, State) when EpochsLeft > 0, CurrentEpoch >= 0 ->
     {PidNodes, _} = lists:unzip(State#state.currentUpNodes),
-    Nodes = master_utils:train(NEpochs, State#state.pythonModelPID, PidNodes, State#state.pythonUiPID),
+    Nodes = master_utils:train(CurrentEpoch, State#state.pythonModelPID, PidNodes),
     message_primitives:notify_ui(State#state.pythonUiPID, {train_completed, Nodes}),
+
+    case EpochsLeft > 1 of
+        true -> gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1});
+        false -> ok
+    end,
+
     {noreply, State}.
 
 handle_info({nodeup, Node, _}, State) ->

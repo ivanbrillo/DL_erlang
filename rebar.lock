@@ -1,7 +1,7 @@
 {"1.2.0",
 [{<<"erlport">>,
   {git,"https://github.com/erlport/erlport.git",
-       {ref,"4719354ca724268e6262f779fb697adfe9513dae"}},
+       {ref,"662d5fb08d7621a02e5f8d90a1c98fa78be3c008"}},
   0},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"3.1.0">>},0}]}.
 [
