@@ -26,7 +26,7 @@ init([]) ->
         id => master,
         start => {master, start_link, []},
         restart => permanent,     % Always restart
-        shutdown => 5000,        % Time to wait for graceful shutdown
+        shutdown => 10000,        % Time to wait for graceful shutdown
         type => worker,
         modules => [master]
     },
