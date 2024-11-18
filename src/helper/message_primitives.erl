@@ -1,6 +1,6 @@
 -module(message_primitives).
 -export([synch_message/4, synch_message/5, notify_ui/2, wait_response/2, wait_response/3]).
--define(TIMEOUT, 60000).   % defaul time-out
+-define(TIMEOUT, 20000).   % defaul time-out
 
 
 synch_message(PidList, Code, Message, AckCode, Timeout) when is_list(PidList) ->

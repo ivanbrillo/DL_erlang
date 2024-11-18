@@ -11,6 +11,7 @@ initialize_nodes() ->
     initialize_nodes(ActiveNodes).
 
 initialize_nodes(Nodes) ->
-    lists:filter(fun(N) -> rpc:cast(N, node, start_link, [self(), node()]) end, Nodes),
+    lists:filter(fun(N) -> rpc:cast(N, node_api, start_link, [self(), node()]) end, Nodes),
     PidsOk = message_primitives:wait_response(length(Nodes), ok, 20000),
+    lists:foreach(fun({P, _N}) -> erlang:monitor(process, P) end, PidsOk),
     PidsOk.

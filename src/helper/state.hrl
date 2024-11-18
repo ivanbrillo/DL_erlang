@@ -1,6 +1,12 @@
--record(state, {
+-record(mstate, {
     pythonModelPID :: pid(),
     pythonUiPID :: pid(),
-    initialUpNodes = [] :: [{pid(), node()}],
     currentUpNodes = [] :: [{pid(), node()}]
+}).
+
+
+-record(nstate, {
+    masterPid :: pid(),
+    masterNode :: node(),
+    pythonPid :: pid()
 }).
