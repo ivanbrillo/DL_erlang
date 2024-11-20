@@ -12,30 +12,25 @@ To start the master node:
 ```rebar3 shell --sname master@localhost```
 
 To start slave nodes:
-```rebar3 shell --sname slave1@localhost```
+
+```rebar3 shell --sname slave1@localhost``` 
+
 ```rebar3 shell --sname slave2@localhost```
 
-### Model Commands
-To initialize the master process and start Erlang node processes:
-```P = master:start_master(), P ! initialize_nodes.```
+### Basic Commands
+To start the environment, passing models and weights and loading the db in each node the command is:
+```master_supervisor:start_link_shell().``` 
 
-Wait a few seconds for all nodes to initialize. Then proceed with the following commands:
+To train the model for 1 epoch, the command is:
+```master_api:train().```
 
-* Load the database:
-  ```P ! load_db.```
-
-* Distribute the model:
-  ```P ! distribute_model.```
-
-* Distribute the weights:
-  ```P ! distribute_weights.```
-
-* Train the network:
-  - For one epoch:
-    ```P ! train.```
-  - For multiple epochs:
-    ```P ! {train, NEpochs}.```
-    where `NEpochs` is the number of epochs to train
+While, if you want to train the model for `N` epoch, the command is:
+```master_api:train(N).```
 
 
-master_supervisor:start_link_shell().
+### Emulating disconnection
+To emulate a node disconnection, from the master terminal you can execute:
+
+```erlang:disconnect_node('slave1@localhost').```
+
+This will disconnect the slave1@localhost node and the connection lost handling will be executed from the node and the master.

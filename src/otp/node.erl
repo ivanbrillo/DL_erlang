@@ -8,11 +8,14 @@
 init([MasterPid, MasterNode]) ->
     PythonPid = python_helper:init_python_process(),
     {ok, _Name} = python:call(PythonPid, node, register_handler, [self(), node()]),
-    net_kernel:monitor_nodes(true),
+    net_kernel:monitor_nodes(true),  % nodeup/nodedown messages
     State = #nstate{masterPid = MasterPid, masterNode = MasterNode, pythonPid = PythonPid},
     io:format("--- NODE ~p: Initialized correctly ---~n", [node()]),
     {ok, State}.
 
+
+handle_call(check_status, _From, State) ->
+    {reply, true, State};
 
 handle_call(_Request, _From, State) ->
     {reply, not_implemented, State}.
@@ -54,17 +57,27 @@ handle_cast(get_weights, State) ->
     io:format("--- NODE ~p: Weights returned ---~n", [node()]),
     {noreply, State}.
 
+% the process will terminate if the master node is down for 5 minutes
+handle_info({nodedown, MasterNode}, State) when MasterNode == State#nstate.masterNode ->
+    io:format("--- NODE ~p: MASTER disconnected ---~n", [MasterNode]),
+    TimerRef = erlang:send_after(300000, self(), terminate),  % 5 minutes
+    {noreply, State#nstate{termination_timer = TimerRef}};
 
-handle_info({nodedown, MasterNode}, State = #{masterNode := MasterNode}) ->
+handle_info(terminate, State) ->
     {stop, normal, State};
 
+handle_info({nodeup, MasterNode}, State) when MasterNode == State#nstate.masterNode ->
+    io:format("--- NODE ~p: MASTER node reconnected.~n", [node()]),
+    erlang:cancel_timer(State#nstate.termination_timer),
+    {noreply, State};
+
 handle_info(Info, State) ->
-    io:format("--- NODE ~p: Received unhandled message ~p ---", [node(), Info]),
+    io:format("--- NODE ~p: Received unhandled message ~p, ~p ---~n", [node(), Info, State#nstate.masterNode ]),
     {noreply, State}.
 
 
 terminate(_Reason, State) ->
     io:format("--- NODE ~p: Terminating procedure ---~n", [node()]),
-    python:stop(State#nstate.pythonPid),
-    erlang:disconnect_node(State#nstate.masterNode),
+    python:stop(State#nstate.pythonPid),  % abort python process
+    erlang:disconnect_node(State#nstate.masterNode),  % let know the master node that the node server is shutting down by disconnecting from it
     ok.
