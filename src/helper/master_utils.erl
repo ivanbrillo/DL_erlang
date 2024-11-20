@@ -42,7 +42,7 @@ train(CurrentEpoch, PythonModelPid, Nodes) ->
 
     message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack),
     io:format("--- MASTER: train completed for epochs: ~p, resulting nodes accuracy: ~p ---~n", [CurrentEpoch, Accuracy]),
-    PidList.
+    {PidList, lists:sum(Accuracy) / length(Accuracy)}.
 
 
 load_nodes(ListsPidNodes, PythonModelPid) ->

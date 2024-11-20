@@ -51,16 +51,20 @@ handle_call(distribute_weights, _From, State) ->
     {reply, {ok, ResponseList}, State}.
 
 
-handle_cast({train, EpochsLeft, CurrentEpoch}, State) when EpochsLeft > 0, CurrentEpoch >= 0 ->
+handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when EpochsLeft > 0, CurrentEpoch >= 0 ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
-    Nodes = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes),
+    {Nodes, MeanAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes),
     message_primitives:notify_ui(State#mstate.pythonUiPID, {train_completed, Nodes}),
 
-    case EpochsLeft > 1 of
-        % sending a new request permits new client to access a started training
-        true -> gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1}); 
-        false -> ok
+    case {EpochsLeft > 1, AccuracyThreshold >= MeanAccuracy } of
+        {true, true} -> 
+            gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1, AccuracyThreshold});
+        {true, false} -> 
+            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_completed, MeanAccuracy});
+        {false, _} -> 
+            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_completed, MeanAccuracy})
     end,
+
     {noreply, State}.
 
 

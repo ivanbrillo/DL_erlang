@@ -27,6 +27,9 @@ To train the model for 1 epoch, the command is:
 While, if you want to train the model for `N` epoch, the command is:
 ```master_api:train(N).```
 
+If you want to train the model for at most `N` epoch, until a `T` accuracy threshold is reached the command is:
+```master_api:train(N, T).```
+
 
 ### Emulating disconnection
 To emulate a node disconnection, from the master terminal you can execute:
