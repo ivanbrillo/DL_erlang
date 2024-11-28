@@ -76,8 +76,12 @@ handle_info(Info, State) ->
     {noreply, State}.
 
 
-terminate(_Reason, State) ->
-    io:format("--- NODE ~p: Terminating procedure ---~n", [node()]),
+terminate(Reason, State) ->
+    io:format("--- NODE ~p: Terminating procedure with reason: ~p ---~n", [node(), Reason]),
     python:stop(State#nstate.pythonPid),  % abort python process
-    erlang:disconnect_node(State#nstate.masterNode),  % let know the master node that the node server is shutting down by disconnecting from it
+
+    case Reason =/= normal of  % reason when the server is explicitly terminated via gen_server:terminate
+        true-> erlang:disconnect_node(State#nstate.masterNode);  % let know the master node that the node server is shutting down by disconnecting from it
+        false -> ok  % do not disconnect otherwise the call gen_server:terminate will generate an exception if performed from the master node
+    end,
     ok.

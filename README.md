@@ -9,13 +9,13 @@ Note: The code documentation link in the page above doesn't work. The HTML files
 
 ### Starting Erlang Shells
 To start the master node:
-```rebar3 shell --sname master@localhost```
+```rebar3 shell --name master@localhost.localdomain```
 
 To start slave nodes:
 
-```rebar3 shell --sname slave1@localhost``` 
+```rebar3 shell --name slave1@localhost.localdomain``` 
 
-```rebar3 shell --sname slave2@localhost```
+```rebar3 shell --name slave2@localhost.localdomain```
 
 ### Basic Commands
 To start the environment, passing models and weights and loading the db in each node the command is:

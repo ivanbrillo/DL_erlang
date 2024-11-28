@@ -1,0 +1,4 @@
+ mvn compile exec:java
+
+ in /etc/hosts modify the file in this way:
+ 127.0.0.1       localhost  localhost.localdomain
