@@ -6,39 +6,47 @@ import java.io.IOException;
 
 public class ErlangController {
 
-    private OtpErlangObject supervisorPid;
     private OtpNode javaNode;
-    private OtpConnection otpConnection;
-    private OtpMbox otpMbox;
+    private Thread erlangListenerThread;
+    private Thread erlangSenderThread;
+
     private final String cookie = "cookie";
+    private final String javaNodeName = "java_node";
+    private final String erlangNodeName = "master@localhost";
 
 
-    public void startErlangMaster() throws IOException, InterruptedException {
-        String beamPath = System.getProperty("user.dir") + "/../Erlang";
-        ErlangHelper.startErlangNode(beamPath, cookie, "master@localhost", 10000);
-    }
+//    public void startErlangMaster() throws IOException, InterruptedException {
+//        String beamPath = System.getProperty("user.dir") + "/../Erlang";
+//        ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 10000);
+//    }
 
-    public void stopErlangMaster() throws IOException, OtpAuthException, OtpErlangExit {
-        otpConnection.sendRPC("master_supervisor","terminate", new OtpErlangList(supervisorPid));
-        otpConnection.receiveRPC();
+    public void stopErlangMaster() throws InterruptedException {
+//        synchronized (MessageQueues.connectionLock) {
+//            otpConnection.sendRPC("master_supervisor", "terminate", new OtpErlangList(supervisorPid));
+//            otpConnection.receiveRPC();
+//        }
 
-        otpConnection.close();
+        erlangSenderThread.join();   // will auto-interrupt when a close message is found
+        erlangListenerThread.interrupt();
+        erlangListenerThread.join();
+
         javaNode.close();
     }
 
     public void createConnection() throws IOException, OtpAuthException {
-        javaNode = new OtpNode("java_node", cookie);
-        otpMbox = javaNode.createMbox();
+        javaNode = new OtpNode(javaNodeName, cookie);
 
-        OtpSelf self = new OtpSelf("java_node", cookie);
-        OtpPeer other = new OtpPeer("master@localhost");
-        otpConnection = self.connect(other);
+        erlangListenerThread = new Thread(new ErlangListener(javaNode));
+        erlangListenerThread.start();
+
+        erlangSenderThread = new Thread(new ErlangSender(cookie, javaNodeName, erlangNodeName));
+        erlangSenderThread.start();
     }
 
-    public void setupErlangMaster() throws IOException, OtpAuthException, OtpErlangExit {
-        otpConnection.sendRPC("master_supervisor","start_link_shell", new OtpErlangList());
-        supervisorPid = otpConnection.receiveRPC();
-    }
+//    public void setupErlangMaster() throws IOException, OtpAuthException, OtpErlangExit {
+//            otpConnection.sendRPC("master_supervisor", "start_link_shell", new OtpErlangList());
+//            supervisorPid = otpConnection.receiveRPC();
+//    }
 
 
 }
