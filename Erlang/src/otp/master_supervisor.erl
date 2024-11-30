@@ -1,22 +1,22 @@
 -module(master_supervisor).
 -behaviour(supervisor).
 
--export([start_link/0, init/1, start_link_shell/0, terminate/1]).
+-export([start_link/1, init/1, start_link_shell/1, terminate/1]).
 
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+start_link(JavaPid) ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, [JavaPid]).
 
-start_link_shell() ->
-    {ok, Pid} = start_link(),
+start_link_shell(JavaPid) ->
+    {ok, Pid} = start_link(JavaPid),
     unlink(Pid),
-    Pid.
+    {ok, Pid}.
 
 terminate(MasterSup) ->
     gen_server:stop(erlang_master),  % exit with normal exit code, so its not restarted since the policy is transient
     exit(MasterSup, shutdown).
 
 
-init([]) ->
+init([JavaPid]) ->
     SupFlags = #{
         strategy => one_for_one,  % Restart only the failed child
         intensity => 10,          % Max 10 restarts
@@ -25,7 +25,7 @@ init([]) ->
 
     MasterChild = #{
         id => erlang_master,
-        start => {master_api, start_link, []},
+        start => {master_api, start_link, [JavaPid]},
         restart => transient,     % Restart only if exception occurs (not when exit reasons is shutdown or normal)
         shutdown => 10000,        % Time to wait for graceful shutdown
         type => worker,

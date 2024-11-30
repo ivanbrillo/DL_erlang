@@ -5,40 +5,20 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class ErlangWebSocketHandler extends TextWebSocketHandler {
-    // Keep track of active WebSocket sessions
-    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();   // thread-safe structure, read intensive
 
     // Thread to continuously send Erlang messages to WebSocket clients
-    private final Thread erlangMessageForwarder = new Thread(() -> {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                // Take message from Erlang queue (blocking call)
-                String erlangMessage = MessageQueues.erlangQueue.take();
-
-                // Broadcast to all active WebSocket sessions
-                for (WebSocketSession session : sessions) {
-                    if (session.isOpen()) {
-                        session.sendMessage(new TextMessage(erlangMessage));
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            } catch (IOException e) {
-                System.err.println("[WebSocket] Error sending Erlang message: " + e.getMessage());
-            }
-        }
-    });
+    private final Thread erlangMessageForwarder = new Thread(new WebSocketListener(sessions));
 
     // Start message forwarder when handler is initialized
     public ErlangWebSocketHandler() {
-        erlangMessageForwarder.setDaemon(true);
         erlangMessageForwarder.start();
     }
 
@@ -53,7 +33,6 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
         // Add received WebSocket message to WebSocket queue for Erlang sender
         String receivedMessage = message.getPayload();
         MessageQueues.webSocketQueue.put(receivedMessage);
-
         System.out.println("[WebSocket] Received message: " + receivedMessage);
     }
 
@@ -62,4 +41,5 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
         sessions.remove(session);
         System.out.println("[WebSocket] Session closed: " + session.getId() + ", Status: " + status);
     }
+
 }

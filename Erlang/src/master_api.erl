@@ -1,10 +1,12 @@
 -module(master_api).
--export([start_link/0, get_nodes/0, load_db/0, initialize_nodes/0, distribute_model/0, distribute_weights/0, train/0, train/1, train/2, load_nodes/0]).
+-export([start_link/1, get_nodes/0, get_server_pid/0, load_db/0, initialize_nodes/0, distribute_model/0, distribute_weights/0, train/0, train/1, train/2, load_nodes/0]).
 
 
 % start the master server and the python model and initialize the nodes with the model, weights and db
-start_link() ->
-    Response = gen_server:start_link({local, erlang_master}, master, [], []),
+start_link(JavaPid) ->
+    Response = gen_server:start_link({local, erlang_master}, master, [JavaPid], []),
+    io:format("--- MASTER:  responsonse ~p ---~n", [Response]),   % TODO remove
+
     initialize_nodes(),
     load_nodes(),
     Response.
@@ -12,6 +14,9 @@ start_link() ->
 % get the list of connected nodes to master
 get_nodes() ->
     gen_server:call(erlang_master, get_nodes).
+
+get_server_pid() ->
+    gen_server:call(erlang_master, get_pid).
 
 % start the node servers to the connected nodes in the network specified by the file .hosts.erlang
 initialize_nodes() ->

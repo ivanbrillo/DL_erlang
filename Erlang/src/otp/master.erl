@@ -5,25 +5,32 @@
 
 
 
-init([]) ->
-    io:format("--- MASTER: Starting erlang process ---~n"),
+init([JavaPid]) ->
+    io:format("--- MASTER: Starting erlang process, Java pid: ~p ---~n", [JavaPid]),
+
     PythonModel = python_helper:init_python_process(),
-    PythonUI = python_helper:init_python_process(),
-    State = #mstate{pythonModelPID = PythonModel, pythonUiPID = PythonUI},
+    State = #mstate{pythonModelPID = PythonModel, pythonUiPID = JavaPid},   % TODO change names!
     
     python_helper:python_register_handler(PythonModel, master, self()),
-    python_helper:python_register_handler(PythonUI, ui, self()),
     timer:send_after(10000, self(), check_nodes),  % check the connected nodes in 10s, useful for handling reconnection and new nodes
+    message_primitives:notify_ui(State#mstate.pythonUiPID, {self(), "yooyoyoyoyo"}),
+
     {ok, State}.
 
 
 handle_call(get_nodes, _From, State) ->
     Nodes = network_helper:get_cluster_nodes(),
+    io:format("--- MASTER: nodes ~p ---~n", [Nodes]),   % TODO remove
     {reply, Nodes, State};
+
+handle_call(get_pid, _From, State) ->
+    {reply, self(), State};
 
 handle_call(load_nodes, _From, State) ->
     Pids = master_utils:load_nodes(State#mstate.currentUpNodes, State#mstate.pythonModelPID),
     message_primitives:notify_ui(State#mstate.pythonUiPID, {loaded_nodes, Pids}),
+    io:format("--- MASTER: node loaded ---~n"),   % TODO remove
+
     {reply, ok, State};
 
 handle_call(load_db, _From, State) ->
@@ -36,6 +43,8 @@ handle_call(initialize_nodes, _From, State) ->
     InitializedNodes = network_helper:initialize_nodes(),
     net_kernel:monitor_nodes(true),  % send messages nodeup/nodedown when a node connects/disconnects
     message_primitives:notify_ui(State#mstate.pythonUiPID, {initialized_nodes, InitializedNodes}),
+    io:format("--- MASTER: node initialized ~p ---~n", [InitializedNodes]),   % TODO remove
+
     {reply, {ok, InitializedNodes}, State#mstate{currentUpNodes = InitializedNodes, previousInitializedNodes = InitializedNodes}};
 
 handle_call(distribute_model, _From, State) ->
@@ -105,6 +114,8 @@ handle_info({python_unhandled, Cause}, State) ->   % TODO: to be removed
 
 handle_info(check_nodes, State) ->
     _Nodes = network_helper:get_cluster_nodes(),
+    State#mstate.pythonUiPID ! {ok, "--------------------------"},   % TODO remove
+
     timer:send_after(10000, self(), check_nodes),  % periodic node check each 10s
     {noreply, State};
 
