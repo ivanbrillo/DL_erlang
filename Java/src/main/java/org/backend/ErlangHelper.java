@@ -1,11 +1,13 @@
 package org.backend;
 
 
+import com.ericsson.otp.erlang.*;
+
 import java.io.IOException;
 
 public class ErlangHelper {
 
-    public static Process startErlangNode(String path, String cookie, String name, long timeout) throws IOException, InterruptedException {
+    public static Process startErlangNode(String path, String cookie, String name, long timeout) throws IOException, InterruptedException, RuntimeException {
         ProcessBuilder builder = new ProcessBuilder("rebar3", "shell", "--sname", name, "--setcookie", cookie);
         builder.directory(new java.io.File(path));  // Set the working directory
         builder.environment().put("TF_CPP_MIN_LOG_LEVEL", "3");   // suppress tf info/warning messages
@@ -24,6 +26,16 @@ public class ErlangHelper {
         }
 
         return process;
+    }
+
+
+    public static OtpErlangObject call(OtpConnection otpConnection, OtpErlangObject[] parameters, String module, String methodName) throws RuntimeException {
+        try {
+            otpConnection.sendRPC(module, methodName, new OtpErlangList(parameters));
+            return otpConnection.receiveRPC();
+        } catch (IOException | OtpAuthException | OtpErlangExit e) {
+            throw new RuntimeException("Cannot perform correctly the call", e);
+        }
     }
 
 }
