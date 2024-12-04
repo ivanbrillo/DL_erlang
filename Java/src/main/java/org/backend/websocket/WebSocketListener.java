@@ -1,5 +1,6 @@
-package org.backend;
+package org.backend.websocket;
 
+import org.backend.MessageQueues;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import java.io.IOException;

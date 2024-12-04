@@ -1,5 +1,6 @@
-package org.backend;
+package org.backend.websocket;
 
+import org.backend.erlang.ErlangWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;

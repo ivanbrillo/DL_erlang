@@ -1,8 +1,8 @@
 package org.backend.commands;
 
 import com.ericsson.otp.erlang.*;
-import org.backend.ErlangContext;
-import org.backend.ErlangHelper;
+import org.backend.erlang.ErlangContext;
+import org.backend.erlang.ErlangHelper;
 import java.io.IOException;
 
 public class StartCommand implements Command {
@@ -31,7 +31,9 @@ public class StartCommand implements Command {
             context.otpConnection = self.connect(master);
             context.javaPid = self.pid();
         } catch (IOException | OtpAuthException e) {
+            context.erlangProcess.destroyForcibly();
             throw new RuntimeException("Cannot start correctly the connection with erlang", e);
+
         }
 
         ErlangHelper.call(context.otpConnection, new OtpErlangObject[]{context.javaPid}, "master_supervisor", "start_link_shell");

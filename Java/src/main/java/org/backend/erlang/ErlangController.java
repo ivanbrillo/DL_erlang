@@ -1,8 +1,9 @@
-package org.backend;
+package org.backend.erlang;
 
 import com.ericsson.otp.erlang.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.backend.MessageQueues;
 import org.backend.commands.Command;
 import org.backend.commands.StopCommand;
 import org.backend.commands.CommandFactory;

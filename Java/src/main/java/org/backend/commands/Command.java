@@ -1,6 +1,6 @@
 package org.backend.commands;
 
-import org.backend.ErlangContext;
+import org.backend.erlang.ErlangContext;
 
 public interface Command {
 

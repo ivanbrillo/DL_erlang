@@ -1,4 +1,4 @@
-package org.backend;
+package org.backend.erlang;
 
 
 import com.ericsson.otp.erlang.*;
@@ -22,6 +22,7 @@ public class ErlangHelper {
         Thread.sleep(timeout);
 
         if (!process.isAlive()) {
+            process.destroyForcibly();
             throw new RuntimeException("[Java] Erlang node did not start correctly in 10 seconds.");
         }
 

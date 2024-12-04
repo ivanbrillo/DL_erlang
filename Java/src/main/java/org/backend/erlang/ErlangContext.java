@@ -1,4 +1,4 @@
-package org.backend;
+package org.backend.erlang;
 
 import com.ericsson.otp.erlang.OtpConnection;
 import com.ericsson.otp.erlang.OtpErlangPid;
