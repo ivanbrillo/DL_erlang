@@ -13,8 +13,6 @@ init([JavaPid]) ->
     
     python_helper:python_register_handler(PythonModel, master, self()),
     timer:send_after(10000, self(), check_nodes),  % check the connected nodes in 10s, useful for handling reconnection and new nodes
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {self(), "yooyoyoyoyo"}),
-
     {ok, State}.
 
 
@@ -60,7 +58,7 @@ handle_call(distribute_weights, _From, State) ->
     {reply, {ok, ResponseList}, State}.
 
 
-handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when EpochsLeft > 0, CurrentEpoch >= 0 ->
+handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when EpochsLeft > 0, CurrentEpoch >= 0, length(State#mstate.currentUpNodes) > 0 ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     {Nodes, MeanAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes),
     message_primitives:notify_ui(State#mstate.pythonUiPID, {train_completed, Nodes}),
@@ -74,7 +72,13 @@ handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when Ep
             message_primitives:notify_ui(State#mstate.pythonUiPID, {training_completed, MeanAccuracy})
     end,
 
-    {noreply, State}.
+    {noreply, State};
+
+handle_cast({train, _EpochsLeft, _CurrentEpoch, _AccuracyThreshold}, State) ->
+        message_primitives:notify_ui(State#mstate.pythonUiPID, {train_refused}),
+        io:format("--- MASTER: training refused, possible causes: no nodes connected or illegal param ---~n"),
+        {noreply, State}.
+
 
 
 handle_info({nodeup, Node}, State) ->
@@ -114,8 +118,6 @@ handle_info({python_unhandled, Cause}, State) ->   % TODO: to be removed
 
 handle_info(check_nodes, State) ->
     _Nodes = network_helper:get_cluster_nodes(),
-    State#mstate.pythonUiPID ! {ok, "--------------------------"},   % TODO remove
-
     timer:send_after(10000, self(), check_nodes),  % periodic node check each 10s
     {noreply, State};
 

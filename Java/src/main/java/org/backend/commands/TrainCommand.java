@@ -34,13 +34,9 @@ public class TrainCommand implements Command {
 
         return null;
     }
-
-
+    
     @Override
     public void execute(ErlangContext context) throws RuntimeException {
-
-        System.out.println("START TRAIN"); // todo remove
-
         if (!context.isConnected())
             throw new RuntimeException("Erlang process is not connected, unable to perform the train");
 

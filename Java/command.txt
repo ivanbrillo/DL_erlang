@@ -1,4 +1,10 @@
  mvn compile exec:java
 
- in /etc/hosts modify the file in this way:
- 127.0.0.1       localhost  localhost.localdomain
+connect to the websocket with:
+1) ws://localhost:8080/erlang-socket    if on the same machine
+2) if run in WSL the java but postman in windows 'ip addr show eth0' to get the IP of WSL and substitute to localhost
+
+
+{"command": "start", "parameters": ""}
+{"command": "train", "parameters": "targetAccuracy=0.99,epochs=3"}
+{"command": "stop", "parameters": ""}

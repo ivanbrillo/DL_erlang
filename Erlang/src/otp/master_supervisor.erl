@@ -1,7 +1,7 @@
 -module(master_supervisor).
 -behaviour(supervisor).
 
--export([start_link/1, init/1, start_link_shell/1, terminate/1]).
+-export([start_link/1, init/1, start_link_shell/1, terminate/0]).
 
 start_link(JavaPid) ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, [JavaPid]).
@@ -9,11 +9,10 @@ start_link(JavaPid) ->
 start_link_shell(JavaPid) ->
     {ok, Pid} = start_link(JavaPid),
     unlink(Pid),
-    {ok, Pid}.
+    {ok, started}.
 
-terminate(MasterSup) ->
-    gen_server:stop(erlang_master),  % exit with normal exit code, so its not restarted since the policy is transient
-    exit(MasterSup, shutdown).
+terminate() ->
+    gen_server:stop(erlang_master).  % exit with normal exit code, so its not restarted since the policy is transient
 
 
 init([JavaPid]) ->

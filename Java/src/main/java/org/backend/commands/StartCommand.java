@@ -34,7 +34,7 @@ public class StartCommand implements Command {
             throw new RuntimeException("Cannot start correctly the connection with erlang", e);
         }
 
-        context.supervisorPid = ErlangHelper.call(context.otpConnection, new OtpErlangObject[]{context.javaPid}, "master_supervisor", "start_link_shell");
-        System.out.println("STARTED"); // todo remove and handle the retarded connection
+        ErlangHelper.call(context.otpConnection, new OtpErlangObject[]{context.javaPid}, "master_supervisor", "start_link_shell");
+
     }
 }

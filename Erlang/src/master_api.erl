@@ -5,8 +5,6 @@
 % start the master server and the python model and initialize the nodes with the model, weights and db
 start_link(JavaPid) ->
     Response = gen_server:start_link({local, erlang_master}, master, [JavaPid], []),
-    io:format("--- MASTER:  responsonse ~p ---~n", [Response]),   % TODO remove
-
     initialize_nodes(),
     load_nodes(),
     Response.
