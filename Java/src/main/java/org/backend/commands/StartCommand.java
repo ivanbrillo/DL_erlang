@@ -20,7 +20,7 @@ public class StartCommand implements Command {
         System.out.println(cookie + " " + javaNodeName + " " + erlangNodeName);
         String beamPath = System.getProperty("user.dir") + "/../Erlang";
         try {
-            context.erlangProcess = ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 10000);
+            context.setErlangProcess(ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 10000));
         } catch (IOException | InterruptedException | RuntimeException e) {
             throw new RuntimeException("Cannot start Erlang node " + e.getMessage(), e);
         }
@@ -28,15 +28,15 @@ public class StartCommand implements Command {
         try {
             OtpSelf self = new OtpSelf(javaNodeName, cookie);
             OtpPeer master = new OtpPeer(erlangNodeName);
-            context.otpConnection = self.connect(master);
-            context.javaPid = self.pid();
+            context.setOtpConnection(self.connect(master));
+            context.setJavaPid(self.pid());
         } catch (IOException | OtpAuthException e) {
-            context.erlangProcess.destroyForcibly();
+            context.getErlangProcess().destroyForcibly();
             throw new RuntimeException("Cannot start correctly the connection with erlang", e);
 
         }
 
-        ErlangHelper.call(context.otpConnection, new OtpErlangObject[]{context.javaPid}, "master_supervisor", "start_link_shell");
+        ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{context.getJavaPid()}, "master_supervisor", "start_link_shell");
 
     }
 }

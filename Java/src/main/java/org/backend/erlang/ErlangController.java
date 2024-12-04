@@ -19,8 +19,8 @@ public class ErlangController implements Runnable {
 
     @PostConstruct
     public void init() {
-        erlangContext.erlangControllerThread = new Thread(this);
-        erlangContext.erlangControllerThread.start();
+        erlangContext.setErlangControllerThread(new Thread(this));
+        erlangContext.getErlangControllerThread().start();
     }
 
     @Override
@@ -34,8 +34,8 @@ public class ErlangController implements Runnable {
 
     private void receiveErlangMessage() {
         try {
-            if (erlangContext.isConnected() && erlangContext.otpConnection.msgCount() > 0) {
-                OtpErlangObject msg = erlangContext.otpConnection.receive();
+            if (erlangContext.isConnected() && erlangContext.getOtpConnection().msgCount() > 0) {
+                OtpErlangObject msg = erlangContext.getOtpConnection().receive();
 
                 if (!msg.toString().startsWith("{rex,{")) {   // otherwise RPC return value
                     MessageQueues.erlangQueue.put(msg.toString());
@@ -61,9 +61,9 @@ public class ErlangController implements Runnable {
 
     @PreDestroy
     public void cleanup() throws InterruptedException, OtpAuthException, OtpErlangExit, IOException {
-        if (erlangContext.erlangControllerThread.isAlive()) {
-            erlangContext.erlangControllerThread.interrupt();
-            erlangContext.erlangControllerThread.join();
+        if (erlangContext.getErlangControllerThread().isAlive()) {
+            erlangContext.getErlangControllerThread().interrupt();
+            erlangContext.getErlangControllerThread().join();
             try {
                 new StopCommand().execute(erlangContext);
             } catch (RuntimeException ignored) {

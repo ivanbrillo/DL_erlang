@@ -12,8 +12,8 @@ public class StopCommand implements Command {
         if (!context.isConnected())
             throw new RuntimeException("Erlang process is not connected so it cannot be stopped");
 
-        ErlangHelper.call(context.otpConnection, new OtpErlangObject[]{}, "master_supervisor", "terminate");
-        context.otpConnection.close();
-        context.erlangProcess.destroy();
+        ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{}, "master_supervisor", "terminate");
+        context.getOtpConnection().close();
+        context.getErlangProcess().destroy();
     }
 }

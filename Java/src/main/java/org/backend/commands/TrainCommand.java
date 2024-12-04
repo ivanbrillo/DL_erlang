@@ -40,7 +40,7 @@ public class TrainCommand implements Command {
         if (!context.isConnected())
             throw new RuntimeException("Erlang process is not connected, unable to perform the train");
 
-        ErlangHelper.call(context.otpConnection, new OtpErlangObject[]{
+        ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{
                 new OtpErlangInt(epochs),
                 new OtpErlangDouble(targetAccuracy)
         }, "master_api", "train");
