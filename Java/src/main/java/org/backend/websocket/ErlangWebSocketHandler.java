@@ -1,16 +1,18 @@
-package org.backend.erlang;
+package org.backend.websocket;
 
 import jakarta.annotation.PreDestroy;
 import org.backend.MessageQueues;
-import org.backend.websocket.WebSocketListener;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static org.springframework.web.socket.CloseStatus.SERVER_ERROR;
 
 @Component
 public class ErlangWebSocketHandler extends TextWebSocketHandler {
@@ -23,7 +25,15 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionEstablished(@NonNull WebSocketSession session) {
+    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws IOException {
+
+        var principal = session.getPrincipal();
+
+        if (principal == null || principal.getName() == null) {
+            session.close(SERVER_ERROR.withReason("User must be authenticated"));
+            return;
+        }
+
         sessions.add(session);
         System.out.println("[WebSocket] New session connected: " + session.getId());
     }

@@ -14,6 +14,7 @@ public class WebSocketListener implements Runnable {
         this.sessions = sessions;
     }
 
+
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
