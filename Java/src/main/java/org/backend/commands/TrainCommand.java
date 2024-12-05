@@ -34,12 +34,13 @@ public class TrainCommand implements Command {
 
         return null;
     }
-    
+
     @Override
     public void execute(ErlangContext context) throws RuntimeException {
-        if (!context.isConnected())
-            throw new RuntimeException("Erlang process is not connected, unable to perform the train");
+        if (!context.isConnected() || context.isTraining())
+            throw new RuntimeException("Erlang process is not connected or already in training, unable to perform the train");
 
+        context.setTraining(true);
         ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{
                 new OtpErlangInt(epochs),
                 new OtpErlangDouble(targetAccuracy)

@@ -61,15 +61,15 @@ handle_call(distribute_weights, _From, State) ->
 handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when EpochsLeft > 0, CurrentEpoch >= 0, length(State#mstate.currentUpNodes) > 0 ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     {Nodes, MeanAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes),
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {train_completed, Nodes}),
+    message_primitives:notify_ui(State#mstate.pythonUiPID, {train_epoch_completed, Nodes}),
 
     case {EpochsLeft > 1, AccuracyThreshold >= MeanAccuracy } of
         {true, true} -> 
             gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1, AccuracyThreshold});
         {true, false} -> 
-            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_completed, MeanAccuracy});
+            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_total_completed, MeanAccuracy});
         {false, _} -> 
-            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_completed, MeanAccuracy})
+            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_total_completed, MeanAccuracy})
     end,
 
     {noreply, State};

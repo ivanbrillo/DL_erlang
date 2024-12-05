@@ -13,6 +13,7 @@ public class ErlangContext {
 
     private Thread erlangControllerThread;
     private Process erlangProcess;
+    private boolean isTraining = false;
 
     public boolean isConnected() {
         return otpConnection != null && otpConnection.isConnected();

@@ -1,8 +1,7 @@
-package org.backend.erlang;
+package org.backend.websocket;
 
 import jakarta.annotation.PreDestroy;
 import org.backend.MessageQueues;
-import org.backend.websocket.WebSocketListener;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;

@@ -40,6 +40,9 @@ public class ErlangController implements Runnable {
                 if (!msg.toString().startsWith("{rex,{")) {   // otherwise RPC return value
                     MessageQueues.erlangQueue.put(msg.toString());
                     System.out.println("Message received from Erlang: " + msg);
+
+                    if (msg.toString().startsWith("{training_total_completed,"))
+                        erlangContext.setTraining(false);
                 }
             }
         } catch (OtpAuthException | OtpErlangExit | IOException | InterruptedException e) {
