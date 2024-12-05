@@ -3,13 +3,28 @@ package org.backend.commands;
 import com.ericsson.otp.erlang.*;
 import org.backend.erlang.ErlangContext;
 import org.backend.erlang.ErlangHelper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 
+@Component
 public class StartCommand implements Command {
 
-    private final String cookie = "cookie";
-    private final String javaNodeName = "java_node";
-    private final String erlangNodeName = "master@localhost";
+    private final String cookie;
+    private final String javaNodeName;
+    private final String erlangNodeName;
+    private final String beamPath = System.getProperty("user.dir") + "/../Erlang";
+
+    public StartCommand(@Value("${node.cookie}") String cookie,
+                        @Value("${node.javaNodeName}") String javaNodeName,
+                        @Value("${node.erlangNodeName}") String erlangNodeName) {
+        this.cookie = cookie;
+        this.javaNodeName = javaNodeName;
+        this.erlangNodeName = erlangNodeName;
+    }
+
 
     @Override
     public void execute(ErlangContext context) throws RuntimeException {
@@ -17,8 +32,6 @@ public class StartCommand implements Command {
         if (context.isConnected())
             throw new RuntimeException("Erlang process is already started and connected");
 
-        System.out.println(cookie + " " + javaNodeName + " " + erlangNodeName);
-        String beamPath = System.getProperty("user.dir") + "/../Erlang";
         try {
             context.setErlangProcess(ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 10000));
         } catch (IOException | InterruptedException | RuntimeException e) {

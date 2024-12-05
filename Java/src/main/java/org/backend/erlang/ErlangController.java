@@ -7,6 +7,7 @@ import org.backend.MessageQueues;
 import org.backend.commands.Command;
 import org.backend.commands.StopCommand;
 import org.backend.commands.CommandFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,6 +17,14 @@ import java.io.IOException;
 public class ErlangController implements Runnable {
 
     private final ErlangContext erlangContext = new ErlangContext();
+    private final CommandFactory commandFactory;
+    private final ApplicationContext appContext;
+
+
+    public ErlangController(CommandFactory commandFactory, ApplicationContext appContext) {
+        this.commandFactory = commandFactory;
+        this.appContext = appContext;
+    }
 
     @PostConstruct
     public void init() {
@@ -54,7 +63,7 @@ public class ErlangController implements Runnable {
         String commandJSON = MessageQueues.webSocketQueue.poll();
         try {
             if (commandJSON != null) {
-                Command command = CommandFactory.createCommand(commandJSON);
+                Command command = commandFactory.createCommand(commandJSON);
                 command.execute(erlangContext);
             }
         } catch (RuntimeException e) {
@@ -68,7 +77,7 @@ public class ErlangController implements Runnable {
             erlangContext.getErlangControllerThread().interrupt();
             erlangContext.getErlangControllerThread().join();
             try {
-                new StopCommand().execute(erlangContext);
+                appContext.getBean(StopCommand.class).execute(erlangContext);
             } catch (RuntimeException ignored) {
             }
         }

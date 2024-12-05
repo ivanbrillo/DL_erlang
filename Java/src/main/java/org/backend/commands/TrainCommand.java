@@ -11,10 +11,11 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class TrainCommand implements Command {
 
-    int epochs;
-    double targetAccuracy;
+    private final int epochs;
+    private final double targetAccuracy;
 
     public TrainCommand(String parameters) {
         try {

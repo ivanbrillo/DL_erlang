@@ -3,7 +3,10 @@ package org.backend.commands;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import org.backend.erlang.ErlangContext;
 import org.backend.erlang.ErlangHelper;
+import org.springframework.stereotype.Component;
 
+
+@Component
 public class StopCommand implements Command {
 
     @Override
