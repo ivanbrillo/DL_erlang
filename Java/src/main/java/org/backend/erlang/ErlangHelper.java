@@ -30,11 +30,10 @@ public class ErlangHelper {
     }
 
 
-    public static OtpErlangObject call(OtpConnection otpConnection, OtpErlangObject[] parameters, String module, String methodName) throws RuntimeException {
+    public static void call(OtpConnection otpConnection, OtpErlangObject[] parameters, String module, String methodName) throws RuntimeException {
         try {
             otpConnection.sendRPC(module, methodName, new OtpErlangList(parameters));
-            return otpConnection.receiveRPC();
-        } catch (IOException | OtpAuthException | OtpErlangExit e) {
+        } catch (IOException e) {
             throw new RuntimeException("Cannot perform correctly the call", e);
         }
     }

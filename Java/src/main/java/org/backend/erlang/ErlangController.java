@@ -72,7 +72,7 @@ public class ErlangController implements Runnable {
     }
 
     @PreDestroy
-    public void cleanup() throws InterruptedException, OtpAuthException, OtpErlangExit, IOException {
+    public void cleanup() throws InterruptedException {
         if (erlangContext.getErlangControllerThread().isAlive()) {
             erlangContext.getErlangControllerThread().interrupt();
             erlangContext.getErlangControllerThread().join();
