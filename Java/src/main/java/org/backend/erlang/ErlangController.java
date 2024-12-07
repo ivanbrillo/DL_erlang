@@ -50,7 +50,7 @@ public class ErlangController implements Runnable {
                     MessageQueues.erlangQueue.put(msg.toString());
                     System.out.println("Message received from Erlang: " + msg);
 
-                    if (msg.toString().startsWith("{train_refused}") || msg.toString().startsWith("{training_total_completed,"))
+                    if (msg.toString().equals("{train_refused}") || msg.toString().startsWith("{training_total_completed,"))
                         erlangContext.setTraining(false);
                 }
             }

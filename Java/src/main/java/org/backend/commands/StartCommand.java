@@ -24,6 +24,17 @@ public class StartCommand implements Command {
         this.erlangNodeName = erlangNodeName;
     }
 
+    private void createConnection(ErlangContext context) {
+        try {
+            OtpSelf self = new OtpSelf(javaNodeName, cookie);
+            OtpPeer master = new OtpPeer(erlangNodeName);
+            context.setOtpConnection(self.connect(master));
+            context.setJavaPid(self.pid());
+        } catch (IOException | OtpAuthException e) {
+            context.getErlangProcess().destroyForcibly();
+            throw new RuntimeException("Cannot start correctly the connection with erlang", e);
+        }
+    }
 
     @Override
     public void execute(ErlangContext context) throws RuntimeException {
@@ -37,17 +48,7 @@ public class StartCommand implements Command {
             throw new RuntimeException("Cannot start Erlang node " + e.getMessage(), e);
         }
 
-        try {
-            OtpSelf self = new OtpSelf(javaNodeName, cookie);
-            OtpPeer master = new OtpPeer(erlangNodeName);
-            context.setOtpConnection(self.connect(master));
-            context.setJavaPid(self.pid());
-        } catch (IOException | OtpAuthException e) {
-            context.getErlangProcess().destroyForcibly();
-            throw new RuntimeException("Cannot start correctly the connection with erlang", e);
-
-        }
-
+        createConnection(context);
         ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{context.getJavaPid()}, "master_supervisor", "start_link_shell");
 
     }

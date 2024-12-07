@@ -29,7 +29,6 @@ public class ErlangHelper {
         return process;
     }
 
-
     public static void call(OtpConnection otpConnection, OtpErlangObject[] parameters, String module, String methodName) throws RuntimeException {
         try {
             otpConnection.sendRPC(module, methodName, new OtpErlangList(parameters));

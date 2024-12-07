@@ -29,7 +29,6 @@ public class TrainCommand implements Command {
         return null;
     }
 
-
     public void setParameters(String parameters) {
         try {
             epochs = Integer.parseInt(Objects.requireNonNull(getParamValue(parameters, "epochs")));

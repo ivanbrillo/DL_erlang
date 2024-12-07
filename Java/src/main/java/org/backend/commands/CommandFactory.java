@@ -20,16 +20,18 @@ public class CommandFactory {
         this.context = context;
     }
 
-    public Command createCommand(String commandJSON) throws IllegalArgumentException {
-
-        Map<String, String> map;
-
+    private Map<String, String> parseCommand(String commandJSON) {
         try {
-            map = objectMapper.readValue(commandJSON, new TypeReference<Map<String, String>>() {
+            return objectMapper.readValue(commandJSON, new TypeReference<Map<String, String>>() {
             });
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Command discarded with reason: " + e.getMessage());
         }
+    }
+
+    public Command createCommand(String commandJSON) throws IllegalArgumentException {
+
+        Map<String, String> map = parseCommand(commandJSON);
 
         return switch (map.get("command")) {
             case "start" -> context.getBean(StartCommand.class);
