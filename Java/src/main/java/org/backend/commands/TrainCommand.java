@@ -6,25 +6,18 @@ import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import org.backend.erlang.ErlangContext;
 import org.backend.erlang.ErlangHelper;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
+@Component
 public class TrainCommand implements Command {
 
-    private final int epochs;
-    private final double targetAccuracy;
-
-    public TrainCommand(String parameters) {
-        try {
-            epochs = Integer.parseInt(Objects.requireNonNull(getParamValue(parameters, "epochs")));
-            targetAccuracy = Double.parseDouble(Objects.requireNonNull(getParamValue(parameters, "targetAccuracy")));
-        } catch (NumberFormatException | NullPointerException e) {
-            throw new IllegalArgumentException("Train Command discarded for bad arguments", e);
-        }
-    }
+    private int epochs = 0;
+    private double targetAccuracy = 1.0;
 
     private String getParamValue(String parameters, String parametersName) {
         Pattern pattern = Pattern.compile(parametersName + "=([^,]+)");
@@ -34,6 +27,16 @@ public class TrainCommand implements Command {
             return matcher.group(1);
 
         return null;
+    }
+
+
+    public void setParameters(String parameters) {
+        try {
+            epochs = Integer.parseInt(Objects.requireNonNull(getParamValue(parameters, "epochs")));
+            targetAccuracy = Double.parseDouble(Objects.requireNonNull(getParamValue(parameters, "targetAccuracy")));
+        } catch (NumberFormatException | NullPointerException e) {
+            throw new IllegalArgumentException("Train Command discarded for bad arguments", e);
+        }
     }
 
     @Override
