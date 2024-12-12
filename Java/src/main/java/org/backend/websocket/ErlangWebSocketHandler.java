@@ -13,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class ErlangWebSocketHandler extends TextWebSocketHandler {
-    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();   // thread-safe structure
+    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();   // thread-safe structure for add and remove
     private final Thread erlangMessageForwarder = new Thread(new WebSocketListener(sessions));
 
     // Start message forwarder when handler is initialized

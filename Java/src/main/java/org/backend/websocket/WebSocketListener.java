@@ -3,6 +3,7 @@ package org.backend.websocket;
 import org.backend.MessageQueues;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class WebSocketListener implements Runnable {
                 System.out.println("[WebSocket] Send erlang message to active sessions " + erlangMessage);
 
                 // Broadcast to all active WebSocket sessions
-                for (WebSocketSession session : sessions)
+                for (WebSocketSession session : sessions)    // no need to syncronize since only one thread will access to a session obj
                     if (session.isOpen())
                         session.sendMessage(new TextMessage(erlangMessage));
 
