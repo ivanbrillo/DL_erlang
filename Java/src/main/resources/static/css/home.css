@@ -1,0 +1,213 @@
+body{
+    height: 100vh;
+    width:100vw;
+    padding:0px;
+    margin:0px;
+
+    position:relative;
+
+    font-family: 'Roboto';
+    color: white;
+
+    background-image: url("../img/background.jpg");
+    background-position: center;
+    background-size: cover;
+}
+
+
+
+
+
+/*******************
+TOP MENU
+*******************/
+
+#top_menu{
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+    backdrop-filter: blur(10px);
+    height: 5%;
+    width:70%;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4); /* Colore traslucido del contorno */
+    padding-left:2%;
+    padding-right:2%;
+    padding-top:1%;
+    padding-bottom:1%;
+    display:flex;
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+    position:absolute;
+    top: 5%;
+    right:5%;
+    z-index: 1000;
+}
+
+
+/* Style the list */
+ul.breadcrumb {
+    padding: 10px 16px;
+    list-style: none;
+}
+
+/* Display list items side by side */
+ul.breadcrumb li {
+    display: inline;
+    font-size: 18px;
+    color: white;
+    font-weight: lighter;
+    text-decoration: none;
+}
+
+ul.breadcrumb li:last-child {
+    font-weight: bold;
+}
+
+ul.breadcrumb li+li:before {
+    padding: 8px;
+    color: white;
+    content: "/\00a0";  /* Add a slash symbol (/) before/behind each list item */
+}
+
+ul.breadcrumb li:not(:first-child) a:hover {
+    text-decoration: underline;
+}
+
+
+#menu{
+    display:flex;
+    flex-direction:row;
+    justify-content:flex-start;
+    align-items:center;
+    gap:13px;
+    position:relative;
+}
+
+
+
+/*******************
+LEFT MENU
+*******************/
+#left_menu {
+    height: 90%;
+    width: 13%;
+    border-radius: 20px;
+    top: 5%;
+    left: 17px;
+    position: absolute;
+    padding-left: 15px;
+    padding-right: 15px;
+
+    background: linear-gradient(111.47deg, rgba(5, 9, 46, 1) 30.59%, rgba(0, 0, 0, 0.2) 100%);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+#inner {
+    position: relative;
+    width: 100%;
+    top: 40px;
+    display: flex;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    gap: 36px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+#inner line {
+    position: absolute;
+
+    width: 100%;
+    top: 70px;
+    left: 0px;
+    border: 1px solid;
+}
+
+#inner h1 {
+    display: flex;
+    justify-content: center;    /* Allinea il testo orizzontalmente */
+    align-items: center;        /* Allinea il testo verticalmente */
+    text-align: center;         /* Assicurati che il testo sia centrato nel suo contenitore */
+    font-size: 20px;
+    font-family: 'Roboto';
+    font-weight: bold;
+    border-style: hidden;
+    outline: none;
+    background: linear-gradient(1.6134rad, rgba(254, 244, 229, 1) 0%, rgba(152, 146, 137, 0.47) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+
+#elements{
+    width: 158px;
+    height: 87px;
+    padding:0px;
+    display:flex;
+    flex-direction:column;
+    gap:15%;
+    position: relative;
+    align-items: flex-start;
+}
+
+#elements button.active {
+    background-color: #0a115b;
+    filter: drop-shadow(4px 5px 5.699999809265137px rgba(1, 1, 1, 0.10000000149011612));
+    border-radius: 20px;
+}
+
+.btn_text{
+    color:#fef4e5;
+    font-size:18px;
+    font-family:Roboto;
+}
+
+
+
+
+
+/*****************************
+BUTTON TOP MENU AND LEFT MENU
+*****************************/
+
+#menu button, #elements button {
+    background-color: transparent;
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    border-width: 0;
+    border-style:none;
+}
+
+#menu button:hover, #elements button:hover {
+    cursor:pointer;
+}
+
+#menu button img, #elements button img{
+    transition: cubic-bezier(0.075, 0.82, 0.165, 1) 0.5s;
+}
+
+#menu button:hover img, #menu button:hover span
+#elements button:hover img, #elemets button:hover span{
+    transform: scale(1.1);
+}
+
+#menu button:active img,  #elemets button:active img{
+    transform: scale(0.9);
+}
+
+
+button:disabled {
+    background-color: #cccccc; /* Colore di sfondo più chiaro */
+    color: #666666; /* Colore del testo sbiadito */
+    cursor: not-allowed; /* Icona del cursore a forma di divieto */
+    opacity: 0.6; /* Leggera trasparenza */
+}

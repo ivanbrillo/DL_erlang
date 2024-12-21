@@ -62,6 +62,8 @@ handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when Ep
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     {Nodes, MeanAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes),
     message_primitives:notify_ui(State#mstate.pythonUiPID, {train_epoch_completed, Nodes}),
+    message_primitives:notify_ui(State#mstate.pythonUiPID, {train_mean_accuracy, MeanAccuracy}),
+
 
     case {EpochsLeft > 1, AccuracyThreshold >= MeanAccuracy } of
         {true, true} -> 

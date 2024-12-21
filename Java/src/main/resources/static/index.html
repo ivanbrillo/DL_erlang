@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/node.css">
+    <link rel="stylesheet" href="css/analytics.css">
+
+    <script src="js/home.js" defer></script>
+    <script src="js/node.js" defer></script>
+    <script src="js/analytics.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script> <!-- Chart.js -->
+    <title>Federated Machine Learning</title>
+</head>
+<body>
+<div id="top_menu">
+    <ul class="breadcrumb">
+        <li>Pages</li>
+        <li>Dashboard</li>
+    </ul>
+
+    <div id="menu">
+        <button id="user">
+            <img src="img/user.svg" alt="">
+        </button>
+        <button id="settings">
+            <img src="img/settings.svg" alt="">
+        </button>
+        <button id="notify">
+            <img src="img/notify.svg" alt="">
+        </button>
+    </div>
+</div>
+
+<div id="left_menu">
+    <div id="inner">
+        <div>
+            <h1>FEDERATED MACHINE LEARNING</h1>
+            <line></line>
+        </div>
+
+        <div id="elements">
+            <button id="homepage_btn" class="active">
+                <img src="img/homepage_icon.svg" alt="">
+                <span class="btn_text">Homepage</span>
+            </button>
+
+            <button id="analytics_btn">
+                <img src="img/analytics_icon.svg" alt="">
+                <span class="btn_text">Analytics</span>
+            </Button>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="container">
+    <div id="containerNodes">
+
+    </div>
+
+    <div id="containerButton">
+        <button id="connectButton">Start</button>
+        <button id="closeButton">Close</button>
+    </div>
+</div>
+
+<!-- <div id="accuracy_level">
+    <img src="accuracy_icon" alt="">
+    <div id="accuracy_inner">
+        <circle id="accuracy_level"></circle>
+        <div id="score">
+            68%
+            Accuracy
+        </div>
+        <div id="time">
+            0h 58m
+            Time active
+        </div>
+
+    </div>
+</div> -->
+
+<!--
+<button id="update_btn"></button>
+<button id="distribute_btn"></button>
+-->
+
+<!-- <div id="log_frame">
+    Log
+    <textarea name="Log" id="log"></textarea>
+</div> -->
+
+<div id="dashboard">
+    <h3>NEURAL NETWORK TRAINING PROGRESS</h3>
+    <div class="controls">
+        <div>
+            <label for="epochsInput">Number of epochs:</label>
+            <input type="number" id="epochsInput" min="0" value="3">
+        </div>
+        <div>
+            <label for="accuracyTarget">Accuracy target:</label>
+            <input type="number" id="accuracyTarget" step="0.01" min="0" max="1" value="0.99">
+        </div>
+
+        <div>
+            <button class="button start-btn" id="startBtn">Start Training</button>
+        </div>
+        <div class="epoch-counter">Epoch: <span id="epochCounter">0</span>/<span id="epochTot">0</span></div>
+    </div>
+    <canvas id="accuracyChart"></canvas>
+</div>
+
+
+</body>
+</html>

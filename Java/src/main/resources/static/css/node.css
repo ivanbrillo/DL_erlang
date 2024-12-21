@@ -1,0 +1,155 @@
+#container {
+    height: 73%;
+    width: 74%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: absolute;
+    top: 17%;
+    right: 5%;
+    z-index: 1000;
+}
+
+#containerNodes {
+    width: 56%;
+    height: 70%;
+
+    overflow-y: auto;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 28px;
+    padding-right: 0px;
+
+
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+#containerNodes::-webkit-scrollbar {
+    width: 8px;
+}
+
+#containerNodes::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0);
+    border-radius: 4px;
+}
+
+#containerNodes::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0);
+    border-radius: 4px;
+}
+
+
+.elemNode {
+    height: 55%;
+    width: 40%;
+    padding: 20px;
+    border-radius: 15px;
+    background: linear-gradient(111.47deg, rgba(5, 9, 46, 1) 30.59%, rgba(0, 0, 0, 0.2) 100%);
+    border: 1px solid white;
+    color: white;
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+}
+
+.elemNode h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    margin: 0px;
+    text-align: center;
+}
+
+.metrics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.metric-item {
+    color: white;
+    font-size: 14px;
+}
+
+
+.status-container {
+    position: absolute;
+    top: 86%;
+    right: 13%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #10B981;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-text {
+    font-size: 14px;
+    color: #10B981;
+}
+
+
+#containerButton{
+    display: flex;
+    flex-direction: row;
+
+    width: 30%;
+}
+
+#containerButton button {
+    background-color: #0a115b;
+    padding: 15px 20px;
+
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    width: 100%;
+
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+
+    border-radius: 15px;
+    border-style: none;
+
+    color: #fef4e5;
+    font-size: 18px;
+    font-family: Roboto;
+
+    margin-left: 3%;
+}
+
+#containerButton button:hover {
+    cursor:pointer;
+}
+
+
+
+
+
+@media (max-width: 768px) {
+    #top_menu{
+        padding: 10px 5px; /* Riduce il padding per schermi piccoli */
+        height: 5%;
+    }
+
+    #top_menu img, #top_menu span {
+        font-size: 14px; /* Ridimensiona il testo e le icone */
+    }
+}
