@@ -37,19 +37,22 @@ train(CurrentEpoch, PythonModelPid, Nodes) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
     lists:foreach(fun(Pid) -> node_api:train_pipeline(Pid, Weights) end, Nodes),
     ResponseList = message_primitives:wait_response(length(Nodes), train_pipeline_ack),
-    {PidList, Messages} = lists:unzip(ResponseList),
-    {NewWeights, Accuracy} = lists:unzip(Messages),
-    {TrainAccuracy, TestAccuracy} = lists:unzip(Accuracy),
 
-
-    message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack),
-    io:format("--- MASTER: train completed for epochs: ~p, resulting nodes train accuracy: ~p, resulting nodes test accuracy: ~p,  ---~n", [CurrentEpoch, TrainAccuracy, TestAccuracy]),
-    {PidList, (lists:sum(TrainAccuracy) / length(TrainAccuracy)), (lists:sum(TestAccuracy) / length(TestAccuracy))}.
+    case ResponseList of
+        [] -> {[], {0, 0}};
+        _ ->
+            {PidList, Messages} = lists:unzip(ResponseList),
+            {NewWeights, Accuracy} = lists:unzip(Messages),
+            {TrainAccuracy, TestAccuracy} = lists:unzip(Accuracy),
+            message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack),
+            io:format("--- MASTER: train completed for epochs: ~p, resulting nodes train accuracy: ~p, resulting nodes test accuracy: ~p,  ---~n", [CurrentEpoch, TrainAccuracy, TestAccuracy]),
+            {PidList, (lists:sum(TrainAccuracy) / length(TrainAccuracy)), (lists:sum(TestAccuracy) / length(TestAccuracy))}
+    end.
 
 
 load_nodes(ListsPidNodes, PythonModelPid) ->
     {Pids, _Nodes} = lists:unzip(ListsPidNodes),
-    load_db(Pids, async),  % the acks sended by the nodes will be discarded in the master server loop and the next iteration
+    load_db(Pids, async),  % the acks sent by the nodes will be discarded in the master server loop and the next iteration
     distribute_model(PythonModelPid, Pids, async),
     distribute_model_weights(PythonModelPid, Pids, sync).
 

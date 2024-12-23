@@ -64,14 +64,13 @@ handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when Ep
     message_primitives:notify_ui(State#mstate.pythonUiPID, {train_epoch_completed, Nodes}),
     message_primitives:notify_ui(State#mstate.pythonUiPID, {train_mean_accuracy, TrainMeanAccuracy, test_mean_accuracy, TestMeanAccuracy}),
 
-
-    case {EpochsLeft > 1, AccuracyThreshold >= TrainMeanAccuracy } of
-        {true, true} -> 
+    case {EpochsLeft > 1, AccuracyThreshold >= TrainMeanAccuracy, length(Nodes) > 0 } of
+        {true, true, true} ->
             gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1, AccuracyThreshold});
-        {true, false} -> 
+        {_, _, true} ->
             message_primitives:notify_ui(State#mstate.pythonUiPID, {training_total_completed, TrainMeanAccuracy});
-        {false, _} -> 
-            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_total_completed, TrainMeanAccuracy})
+        {_, _, false} ->
+            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_error})
     end,
 
     {noreply, State};
@@ -80,7 +79,6 @@ handle_cast({train, _EpochsLeft, _CurrentEpoch, _AccuracyThreshold}, State) ->
         message_primitives:notify_ui(State#mstate.pythonUiPID, {train_refused}),
         io:format("--- MASTER: training refused, possible causes: no nodes connected or illegal param ---~n"),
         {noreply, State}.
-
 
 
 handle_info({nodeup, Node}, State) ->
