@@ -9,7 +9,7 @@ init([JavaPid]) ->
     io:format("--- MASTER: Starting erlang process, Java pid: ~p ---~n", [JavaPid]),
 
     PythonModel = python_helper:init_python_process(),
-    State = #mstate{pythonModelPID = PythonModel, pythonUiPID = JavaPid},   % TODO change names!
+    State = #mstate{pythonModelPID = PythonModel, javaUiPid = JavaPid},   % TODO change names!
     
     python_helper:python_register_handler(PythonModel, master, self()),
     timer:send_after(10000, self(), check_nodes),  % check the connected nodes in 10s, useful for handling reconnection and new nodes
@@ -26,7 +26,7 @@ handle_call(get_pid, _From, State) ->
 
 handle_call(load_nodes, _From, State) ->
     Pids = master_utils:load_nodes(State#mstate.currentUpNodes, State#mstate.pythonModelPID),
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {loaded_nodes, Pids}),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {loaded_nodes, Pids}),
     io:format("--- MASTER: node loaded ---~n"),   % TODO remove
 
     {reply, ok, State};
@@ -34,13 +34,13 @@ handle_call(load_nodes, _From, State) ->
 handle_call(load_db, _From, State) ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     {PidList, Infos} = master_utils:load_db(PidNodes, sync),
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {db_loaded, PidList}),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {db_loaded, PidList}),
     {reply, {ok, Infos}, State};
 
 handle_call(initialize_nodes, _From, State) ->
     InitializedNodes = network_helper:initialize_nodes(),
     net_kernel:monitor_nodes(true),  % send messages nodeup/nodedown when a node connects/disconnects
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {initialized_nodes, InitializedNodes}),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {initialized_nodes, InitializedNodes}),
     io:format("--- MASTER: node initialized ~p ---~n", [InitializedNodes]),   % TODO remove
 
     {reply, {ok, InitializedNodes}, State#mstate{currentUpNodes = InitializedNodes, previousInitializedNodes = InitializedNodes}};
@@ -48,35 +48,35 @@ handle_call(initialize_nodes, _From, State) ->
 handle_call(distribute_model, _From, State) ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     ResponseList = master_utils:distribute_model(State#mstate.pythonModelPID, PidNodes, sync),
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {distributed_nodes, ResponseList}),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {distributed_nodes, ResponseList}),
     {reply, {ok, ResponseList}, State};
 
 handle_call(distribute_weights, _From, State) ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     ResponseList = master_utils:distribute_model_weights(State#mstate.pythonModelPID, PidNodes, sync),
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {weights_updated_nodes, ResponseList}),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {weights_updated_nodes, ResponseList}),
     {reply, {ok, ResponseList}, State}.
 
 
 handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when EpochsLeft > 0, CurrentEpoch >= 0, length(State#mstate.currentUpNodes) > 0 ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     {Nodes, TrainMeanAccuracy, TestMeanAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes),
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {train_epoch_completed, Nodes}),
-    message_primitives:notify_ui(State#mstate.pythonUiPID, {train_mean_accuracy, TrainMeanAccuracy, test_mean_accuracy, TestMeanAccuracy}),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {train_epoch_completed, Nodes}),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {train_mean_accuracy, TrainMeanAccuracy, test_mean_accuracy, TestMeanAccuracy}),
 
     case {EpochsLeft > 1, AccuracyThreshold >= TrainMeanAccuracy, length(Nodes) > 0 } of
         {true, true, true} ->
             gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1, AccuracyThreshold});
         {_, _, true} ->
-            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_total_completed, TrainMeanAccuracy});
+            message_primitives:notify_ui(State#mstate.javaUiPid, {training_total_completed, TrainMeanAccuracy});
         {_, _, false} ->
-            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_error})
+            message_primitives:notify_ui(State#mstate.javaUiPid, {training_error})
     end,
 
     {noreply, State};
 
 handle_cast({train, _EpochsLeft, _CurrentEpoch, _AccuracyThreshold}, State) ->
-        message_primitives:notify_ui(State#mstate.pythonUiPID, {train_refused}),
+        message_primitives:notify_ui(State#mstate.javaUiPid, {train_refused}),
         io:format("--- MASTER: training refused, possible causes: no nodes connected or illegal param ---~n"),
         {noreply, State}.
 
@@ -133,7 +133,7 @@ handle_info({'DOWN', _MonitorRef, process, Pid, Reason}, State) when Reason =/= 
     {noreply, State#mstate{currentUpNodes = UpdatedUpNodes}};
 
 handle_info({node_metrics, Metrics}, State) ->
-    State#mstate.pythonUiPID ! {node_metrics, Metrics},
+    State#mstate.javaUiPid ! {node_metrics, Metrics},
     {noreply, State};
 
 handle_info(Info, State) ->

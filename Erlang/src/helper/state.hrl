@@ -1,6 +1,6 @@
 -record(mstate, {
     pythonModelPID :: pid(),
-    pythonUiPID :: pid(),
+    javaUiPid :: pid(),
     currentUpNodes = [] :: [{pid(), node()}],
     previousInitializedNodes = [] :: [{pid(), node()}]
 }).
