@@ -132,6 +132,10 @@ handle_info({'DOWN', _MonitorRef, process, Pid, Reason}, State) when Reason =/= 
     UpdatedUpNodes = lists:keydelete(Pid, 1, State#mstate.currentUpNodes),
     {noreply, State#mstate{currentUpNodes = UpdatedUpNodes}};
 
+handle_info({node_metrics, Metrics}, State) ->
+    State#mstate.pythonUiPID ! {node_metrics, Metrics},
+    {noreply, State};
+
 handle_info(Info, State) ->
     io:format("--- MASTER: received unhandled message: ~p ---~n", [Info]),
     {noreply, State}.

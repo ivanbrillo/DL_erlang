@@ -19,7 +19,7 @@ To start slave nodes:
 
 ### Basic Commands
 To start the environment, passing models and weights and loading the db in each node the command is:
-```master_supervisor:start_link_shell().``` 
+```master_supervisor:start_link_shell(self()).``` 
 
 To train the model for 1 epoch, the command is:
 ```master_api:train().```

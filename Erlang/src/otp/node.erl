@@ -7,7 +7,8 @@
 
 init([MasterPid, MasterNode]) ->
     PythonPid = python_helper:init_python_process(),
-    {ok, _Name} = python:call(PythonPid, node, register_handler, [self(), node()]),
+
+    {ok, _Name} = python:call(PythonPid, node, register_handler, [self(), node(), network_helper:get_ip_node()]),
     net_kernel:monitor_nodes(true),  % nodeup/nodedown messages
     State = #nstate{masterPid = MasterPid, masterNode = MasterNode, pythonPid = PythonPid},
     io:format("--- NODE ~p: Initialized correctly ---~n", [node()]),
@@ -69,6 +70,10 @@ handle_info(terminate, State) ->
 handle_info({nodeup, MasterNode}, State) when MasterNode == State#nstate.masterNode ->
     io:format("--- NODE ~p: MASTER node reconnected.~n", [node()]),
     erlang:cancel_timer(State#nstate.termination_timer),
+    {noreply, State};
+
+handle_info({node_metrics, Metrics}, State) when undefined =/= State#nstate.masterPid->
+    State#nstate.masterPid ! {node_metrics, Metrics},
     {noreply, State};
 
 handle_info(Info, State) ->
