@@ -39,6 +39,16 @@ function initChart() {
                 pointRadius: 4,
                 tension: 0.1,
                 borderWidth: 4
+            },
+            {
+                label: 'Test Accuracy',
+                borderColor: '#e74c3c',
+                backgroundColor: '#e74c3c',
+                pointBackgroundColor: '#e74c3c',
+                pointBorderColor: '#e74c3c',
+                pointRadius: 4,
+                tension: 0.1,
+                borderWidth: 4
             }]
         },
         options: {
@@ -94,17 +104,24 @@ function initChart() {
             },
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: textColor,
+                        font: {
+                            size: 14
+                        }
+                    }
                 },
                 tooltip: {
                     enabled: true,
-                    displayColors: false,
+                    displayColors: true,
                     callbacks: {
                         title: (tooltipItems) => {
                             return `Epoch: ${tooltipItems[0].label}`;
                         },
                         label: (tooltipItem) => {
-                            return `Accuracy: ${tooltipItem.raw}`;
+                            return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
                         }
                     },
                     backgroundColor: mainColor,
@@ -122,19 +139,18 @@ function initChart() {
     });
 }
 
-
-// Update graph
 function updateChart(newData) {
     chart.data.labels.push(newData.epoch);
-    chart.data.datasets[0].data.push(newData.accuracy);
+    chart.data.datasets[0].data.push(newData.trainAccuracy);
+    chart.data.datasets[1].data.push(newData.testAccuracy);
     chart.update();
 }
 
-// handler
-function handleTraining(input) {
+function handleTraining(trainAcc, testAcc) {
     const data = {
         epoch: currentEpoch + 1,
-        accuracy: parseFloat(input).toFixed(3)
+        trainAccuracy: parseFloat(trainAcc).toFixed(3),
+        testAccuracy: parseFloat(testAcc).toFixed(3)
     }
 
     updateChart(data);

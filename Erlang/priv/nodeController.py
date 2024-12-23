@@ -65,7 +65,14 @@ class NodeController:
             verbose=0
         )
 
-        return train_result.history['accuracy'][0]  # one value since 1 epoch
+        # Get training accuracy
+        train_accuracy = train_result.history['accuracy'][0]
+
+        # Evaluate the model on the test dataset
+        test_loss, test_accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=0)
+
+
+        return (train_accuracy, test_accuracy)
 
 
     def get_weights(self, additional_infos: list) -> str:

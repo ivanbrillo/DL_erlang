@@ -39,10 +39,12 @@ train(CurrentEpoch, PythonModelPid, Nodes) ->
     ResponseList = message_primitives:wait_response(length(Nodes), train_pipeline_ack),
     {PidList, Messages} = lists:unzip(ResponseList),
     {NewWeights, Accuracy} = lists:unzip(Messages),
+    {TrainAccuracy, TestAccuracy} = lists:unzip(Accuracy),
+
 
     message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack),
-    io:format("--- MASTER: train completed for epochs: ~p, resulting nodes accuracy: ~p ---~n", [CurrentEpoch, Accuracy]),
-    {PidList, lists:sum(Accuracy) / length(Accuracy)}.
+    io:format("--- MASTER: train completed for epochs: ~p, resulting nodes train accuracy: ~p, resulting nodes test accuracy: ~p,  ---~n", [CurrentEpoch, TrainAccuracy, TestAccuracy]),
+    {PidList, (lists:sum(TrainAccuracy) / length(TrainAccuracy)), (lists:sum(TestAccuracy) / length(TestAccuracy))}.
 
 
 load_nodes(ListsPidNodes, PythonModelPid) ->

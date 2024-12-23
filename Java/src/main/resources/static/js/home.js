@@ -118,9 +118,12 @@ function initialized_nodes(input){
 
 function train_accuracy(input) {
     const elements = input.split(",");
-    const accuracy = elements[1];
+    const trainAccuracy = elements[1];
+    const testAccuracy = elements[3];
 
-    const cleanedAccuracy = accuracy.replace(/[\{\}]/g, '').trim();
 
-    handleTraining(cleanedAccuracy);
+    const cleanedTrainAccuracy = trainAccuracy.replace(/[\{\}]/g, '').trim();
+    const cleanedTestAccuracy = testAccuracy.replace(/[\{\}]/g, '').trim();
+
+    handleTraining(cleanedTrainAccuracy, cleanedTestAccuracy);
 }
