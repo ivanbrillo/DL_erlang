@@ -65,13 +65,13 @@ handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when Ep
     message_primitives:notify_ui(State#mstate.pythonUiPID, {train_mean_accuracy, MeanAccuracy}),
 
 
-    case {EpochsLeft > 1, AccuracyThreshold >= MeanAccuracy } of
-        {true, true} -> 
+    case {EpochsLeft > 1, AccuracyThreshold >= MeanAccuracy, length(Nodes) > 0 } of
+        {true, true, true} ->
             gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1, AccuracyThreshold});
-        {true, false} -> 
+        {_, _, true} ->
             message_primitives:notify_ui(State#mstate.pythonUiPID, {training_total_completed, MeanAccuracy});
-        {false, _} -> 
-            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_total_completed, MeanAccuracy})
+        {_, _, false} ->
+            message_primitives:notify_ui(State#mstate.pythonUiPID, {training_error})
     end,
 
     {noreply, State};
