@@ -1,9 +1,12 @@
 package org.backend.websocket;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import jakarta.annotation.PreDestroy;
 import org.backend.MessageQueues;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -22,9 +25,25 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionEstablished(@NonNull WebSocketSession session) {
-        sessions.add(session);
-        System.out.println("[WebSocket] New session connected: " + session.getId());
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+
+        String token = session.getUri().getQuery().split("=")[1];
+
+        if (token == null || !isValidToken(token)) {
+            session.close(CloseStatus.BAD_DATA);
+        } else{
+            sessions.add(session);
+            System.out.println("[WebSocket] New session connected: " + session.getId());
+        }
+    }
+
+    private boolean isValidToken(String token) {
+        try {
+            Jwts.parser().setSigningKey("secret").parseClaimsJws(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
     }
 
     @Override
