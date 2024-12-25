@@ -6,40 +6,35 @@ let socket;
 
 document.getElementById('connectButton').addEventListener('click', function() {
     let host = document.location.host;
-    const url = "ws://" + host + "/erlang-socket";
+    const url = "http://" + host + "/erlang-socket"; // Note: Changed to http:// for SockJS
 
-    // Connection to the backend using WebSocket
-    socket = new WebSocket(url);
-
+    // Connection to the backend using SockJS
+    socket = new SockJS(url);
 
     // Event handler when the connection is open
     socket.onopen = function() {
-        console.log('Connessione WebSocket stabilita');
-        socket.send('{"command": "start", "parameters": ""}');
+        console.log('SockJS connection established');
+        socket.send(JSON.stringify({command: "start", parameters: ""}));
     };
 
     // Event handler when a message is received
     socket.onmessage = function(event) {
-        console.log('Messaggio ricevuto:', event.data);
+        console.log('Message received:', event.data);
         processingInput(event.data);
     };
 
-    // TODO
     socket.onclose = function() {
-        console.log('Connessione WebSocket chiusa');
+        console.log('SockJS connection closed');
     };
 
-    // TODO
     socket.onerror = function(error) {
-        console.error('Errore WebSocket:', error);
+        console.error('SockJS error:', error);
     };
-
 });
 
 document.getElementById('closeButton').addEventListener('click', function() {
-    socket.send('{"command": "stop", "parameters": ""}');
+    socket.send(JSON.stringify({command: "stop", parameters: ""}));
 });
-
 
 document.getElementById('startBtn').addEventListener('click', function() {
     const epochsInput = document.getElementById('epochsInput').value;
@@ -47,13 +42,12 @@ document.getElementById('startBtn').addEventListener('click', function() {
 
     document.getElementById('epochTot').textContent = epochsInput;
 
-
-    const msg = '{"command": "train", "parameters": "targetAccuracy=' +  accuracyTargetInput + ',epochs=' +
-        epochsInput + '"}';
-    socket.send(msg);
+    const msg = {
+        command: "train",
+        parameters: `targetAccuracy=${accuracyTargetInput},epochs=${epochsInput}`
+    };
+    socket.send(JSON.stringify(msg));
 });
-
-
 
 /* left menu management */
 analyticsBtn.addEventListener("click", () => {
@@ -63,7 +57,6 @@ analyticsBtn.addEventListener("click", () => {
     analyticsBtn.classList.add("active");
 });
 
-
 homepageBtn.addEventListener("click", () => {
     container.style.display = "flex";
     dashboard.style.display = "none";
@@ -71,32 +64,29 @@ homepageBtn.addEventListener("click", () => {
     homepageBtn.classList.add("active");
 });
 
-
-
 function processingInput(input){
-    if (input.startsWith("{initialized_nodes")) {
-        initialized_nodes(input);
-    } else if (input.startsWith("{train_mean_accuracy")){
-        train_accuracy(input);
+    // Since SockJS automatically parses JSON, we need to stringify it back
+    // if the input is an object
+    const inputStr = typeof input === 'object' ? JSON.stringify(input) : input;
+
+    if (inputStr.startsWith("{initialized_nodes")) {
+        initialized_nodes(inputStr);
+    } else if (inputStr.startsWith("{train_mean_accuracy")){
+        train_accuracy(inputStr);
     }
 }
-
-
 
 function initialized_nodes(input){
     const startIdx = input.indexOf("[");
     const endIdx = input.lastIndexOf("]");
     const content = input.substring(startIdx + 1, endIdx).trim();
 
-    // Verifica se il contenuto tra parentesi quadre è vuoto
     if (!content) {
-        console.log("Non ci sono nodi attivi.");
+        console.log("No active nodes.");
         return;
     }
 
-
     // Split info nodes
-
     const elements = content.split("},");
     const result = [];
 
@@ -115,12 +105,10 @@ function initialized_nodes(input){
     result.forEach(createNode);
 }
 
-
 function train_accuracy(input) {
     const elements = input.split(",");
     const trainAccuracy = elements[1];
     const testAccuracy = elements[3];
-
 
     const cleanedTrainAccuracy = trainAccuracy.replace(/[\{\}]/g, '').trim();
     const cleanedTestAccuracy = testAccuracy.replace(/[\{\}]/g, '').trim();

@@ -13,10 +13,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class ErlangWebSocketHandler extends TextWebSocketHandler {
-    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();   // thread-safe structure for add and remove
+    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
     private final Thread erlangMessageForwarder = new Thread(new WebSocketListener(sessions));
 
-    // Start message forwarder when handler is initialized
     public ErlangWebSocketHandler() {
         erlangMessageForwarder.start();
     }
@@ -24,20 +23,20 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
         sessions.add(session);
-        System.out.println("[WebSocket] New session connected: " + session.getId());
+        System.out.println("[SockJS] New session connected: " + session.getId());
     }
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws Exception {
         String receivedMessage = message.getPayload();
         MessageQueues.webSocketQueue.put(receivedMessage);
-        System.out.println("[WebSocket] Received message: " + receivedMessage);
+        System.out.println("[SockJS] Received message: " + receivedMessage);
     }
 
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull org.springframework.web.socket.CloseStatus status) {
         sessions.remove(session);
-        System.out.println("[WebSocket] Session closed: " + session.getId() + ", Status: " + status);
+        System.out.println("[SockJS] Session closed: " + session.getId() + ", Status: " + status);
     }
 
     @PreDestroy
@@ -45,5 +44,4 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
         erlangMessageForwarder.interrupt();
         erlangMessageForwarder.join();
     }
-
 }

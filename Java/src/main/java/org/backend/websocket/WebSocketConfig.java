@@ -19,6 +19,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(erlangWebSocketHandler, "/erlang-socket")
-                .setAllowedOrigins("*");  // Adjust origin restrictions as needed
+                .setAllowedOriginPatterns("*")  // Use patterns instead of origins
+                .setAllowedOrigins()  // Clear any default origins
+                .withSockJS();
     }
 }
