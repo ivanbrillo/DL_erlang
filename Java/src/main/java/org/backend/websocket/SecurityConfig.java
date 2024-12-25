@@ -16,12 +16,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/erlang-socket/**").authenticated()
-                        .anyRequest().permitAll()
-                ).httpBasic(withDefaults());
+                        .requestMatchers("/login").permitAll() // Allow access to login and static resources
+                        .anyRequest().authenticated() // Require authentication for every other request
+                )
+                .formLogin(withDefaults())// Ensure the login page is the first thing they see
+                .httpBasic(withDefaults()); // Keep basic authentication if needed (but formLogin will take precedence)
 
         return http.build();
     }
+
 
 
 
