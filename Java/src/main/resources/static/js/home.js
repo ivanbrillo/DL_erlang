@@ -6,7 +6,7 @@ let socket;
 
 document.getElementById('connectButton').addEventListener('click', function() {
     let host = document.location.host;
-    const url = "http://" + host + "/erlang-socket"; // Note: Changed to http:// for SockJS
+    const url = "http://" + host + "/erlang-socket";
 
     // Connection to the backend using SockJS
     socket = new SockJS(url);

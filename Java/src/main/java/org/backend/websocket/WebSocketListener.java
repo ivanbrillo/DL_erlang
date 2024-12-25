@@ -24,7 +24,7 @@ public class WebSocketListener implements Runnable {
                 System.out.println("[WebSocket] Send erlang message to active sessions " + erlangMessage);
 
                 // Broadcast to all active WebSocket sessions
-                for (WebSocketSession session : sessions)    // no need to syncronize since only one thread will access to a session obj
+                for (WebSocketSession session : sessions)    // no need to synchronize since only one thread will access to a session obj
                     if (session.isOpen())
                         session.sendMessage(new TextMessage(erlangMessage));
 

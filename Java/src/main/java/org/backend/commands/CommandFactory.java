@@ -22,7 +22,7 @@ public class CommandFactory {
 
     private Map<String, String> parseCommand(String commandJSON) {
         try {
-            return objectMapper.readValue(commandJSON, new TypeReference<Map<String, String>>() {
+            return objectMapper.readValue(commandJSON, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Command discarded with reason: " + e.getMessage());

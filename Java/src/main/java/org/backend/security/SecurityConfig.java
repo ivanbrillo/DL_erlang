@@ -1,4 +1,4 @@
-package org.backend.websocket;
+package org.backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +17,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login").permitAll() // Allow access to login and static resources
-                        .anyRequest().authenticated() // Require authentication for every other request
+                        .requestMatchers("/login").permitAll() // Allow access to log in
+                        .anyRequest().authenticated() // Require authentication for every other request, including WebSocket connections
                 )
                 .formLogin(withDefaults()) // Use the default Spring Security login page
                 .httpBasic(withDefaults())
