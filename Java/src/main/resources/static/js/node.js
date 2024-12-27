@@ -1,18 +1,9 @@
 const metrics = [
-    'CPU:',
-    'Memory:',
-    'Disk I/O:',
-    'Response Time:',
-    'Throughput:',
-    'Accuracy:'
+    { label: 'CPU: ', id: 'cpu-metric' },
+    { label: 'Memory: ', id: 'memory-metric' },
+    { label: 'Response Time: ', id: 'response-time-metric' },
+    { label: 'Accuracy: ', id: 'accuracy-metric' }
 ];
-
-/*
-const results = {
-    accuracy: Math.random().toFixed(2),
-    loss: (Math.random() * 10).toFixed(2)
-};
-*/
 
 let numNodi = 0;
 
@@ -36,7 +27,16 @@ function createNode(Name){
     metrics.forEach(metric => {
         const metricDiv = document.createElement('span');
         metricDiv.className = 'metric-item';
-        metricDiv.textContent = metric;
+
+        const label = document.createElement('strong');
+        label.textContent = metric.label;
+
+        const value = document.createElement('span');
+        value.id = metric.id;
+        value.textContent = 'Loading...';
+
+        metricDiv.appendChild(label);
+        metricDiv.appendChild(value);
         metricsContainer.appendChild(metricDiv);
     });
 

@@ -73,6 +73,8 @@ function processingInput(input){
         initialized_nodes(inputStr);
     } else if (inputStr.startsWith("{train_mean_accuracy")){
         train_accuracy(inputStr);
+    } else if (inputStr.startsWith("{node_metrics")){
+        node_metrics(inputStr);
     }
 }
 
@@ -114,4 +116,27 @@ function train_accuracy(input) {
     const cleanedTestAccuracy = testAccuracy.replace(/[\{\}]/g, '').trim();
 
     handleTraining(cleanedTrainAccuracy, cleanedTestAccuracy);
+}
+
+
+
+function node_metrics(input){
+    let inputJSON = input.match(/"({.*})"/);
+
+    const metricsData = JSON.parse(inputJSON[1]);
+    let nodeId = metricsData.Node;
+
+    let nodeElem = document.getElementById(nodeId);
+    if (!nodeElem) {
+        console.log("Node name does not exist")
+    }
+
+
+
+    metrics.forEach(metric => {
+        const metricElem = nodeElem.querySelector(`#${metric.id}`);
+        if (metricElem) {
+            metricElem.textContent = metricsData[metric.label.replace(':', '').trim()] || 'N/A';
+        }
+    });
 }
