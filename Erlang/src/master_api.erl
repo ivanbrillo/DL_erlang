@@ -43,7 +43,7 @@ train() ->
 train(NEpochs) ->
     gen_server:cast(erlang_master, {train, NEpochs, 0, 1}).
 
-% train for at most NEPochs if the mean accuracy of the models are less than the AccuracyThreshold
+% train for at most NEpochs if the mean accuracy of the models are less than the AccuracyThreshold
 train(NEpochs, AccuracyThreshold) ->
     gen_server:cast(erlang_master, {train, NEpochs, 0, AccuracyThreshold}).
 

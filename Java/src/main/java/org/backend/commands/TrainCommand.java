@@ -19,7 +19,7 @@ public class TrainCommand implements Command {
     private int epochs = 0;
     private double targetAccuracy = 1.0;
 
-    private String getParamValue(String parameters, String parametersName) {
+    private static String getParamValue(String parameters, String parametersName) {
         Pattern pattern = Pattern.compile(parametersName + "=([^,]+)");
         Matcher matcher = pattern.matcher(parameters);
 
