@@ -1,5 +1,5 @@
 -module(master_utils).
--export([distribute_model/3, distribute_model_weights/3, load_db/2, train/3, load_nodes/2, check_node_alive/2]).
+-export([distribute_model/3, distribute_model_weights/3, load_db/2, train/4, load_nodes/2, check_node_alive/2]).
 
 
 
@@ -33,20 +33,26 @@ load_db(Pids, sync) ->
     lists:unzip(ResponseList).
 
 
-train(CurrentEpoch, PythonModelPid, Nodes) ->
+train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
     lists:foreach(fun(Pid) -> node_api:train_pipeline(Pid, Weights) end, Nodes),
     ResponseList = message_primitives:wait_response(length(Nodes), train_pipeline_ack),
 
     case ResponseList of
-        [] -> {[], {0, 0}};
+        [] -> {[], 0.0};
         _ ->
             {PidList, Messages} = lists:unzip(ResponseList),
             {NewWeights, Accuracy} = lists:unzip(Messages),
             {TrainAccuracy, TestAccuracy} = lists:unzip(Accuracy),
             message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack),
             io:format("--- MASTER: train completed for epochs: ~p, resulting nodes train accuracy: ~p, resulting nodes test accuracy: ~p,  ---~n", [CurrentEpoch, TrainAccuracy, TestAccuracy]),
-            {PidList, TrainAccuracy, TestAccuracy}
+
+            TrainMeanAccuracy = lists:sum(TrainAccuracy) / length(TrainAccuracy),
+            TestMeanAccuracy = lists:sum(TestAccuracy) / length(TestAccuracy),
+            message_primitives:notify_ui(JavaUiPid, {train_epoch_completed, Nodes, TrainAccuracy, TestAccuracy}),
+            message_primitives:notify_ui(JavaUiPid, {train_mean_accuracy, TrainMeanAccuracy, test_mean_accuracy, TestMeanAccuracy}),
+
+            {PidList, TrainMeanAccuracy}
     end.
 
 

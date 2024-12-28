@@ -51,6 +51,7 @@ document.getElementById('connectButton').addEventListener('click', function() {
 
     document.getElementById('connectButton').disabled = true;
     document.getElementById('closeButton').disabled = false;
+    document.getElementById('saveButton').disabled = false;
     document.getElementById('startBtn').disabled = false;
 });
 
@@ -66,7 +67,9 @@ document.getElementById('closeButton').addEventListener('click', function() {
 
     document.getElementById('connectButton').disabled = false;
     document.getElementById('closeButton').disabled = true;
+    document.getElementById('saveButton').disabled = true;
     document.getElementById('startBtn').disabled = true;
+
 });
 
 document.getElementById('startBtn').addEventListener('click', function() {
@@ -85,7 +88,12 @@ document.getElementById('startBtn').addEventListener('click', function() {
 
     document.getElementById('connectButton').disabled = true;
     document.getElementById('closeButton').disabled = false;
+    document.getElementById('saveButton').disabled = false;
     document.getElementById('startBtn').disabled = true;
+});
+
+document.getElementById('saveButton').addEventListener('click', function() {
+    socket.send(JSON.stringify({command: "save", parameters: ""}));
 });
 
 
