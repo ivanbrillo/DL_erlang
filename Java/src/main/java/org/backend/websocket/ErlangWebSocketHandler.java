@@ -4,6 +4,7 @@ import jakarta.annotation.PreDestroy;
 import org.backend.MessageQueues;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -29,12 +30,12 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws Exception {
         String receivedMessage = message.getPayload();
-        MessageQueues.webSocketQueue.put(receivedMessage);
+        MessageQueues.addWebSocketMessage(receivedMessage);
         System.out.println("[SockJS] Received message: " + receivedMessage);
     }
 
     @Override
-    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull org.springframework.web.socket.CloseStatus status) {
+    public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) {
         sessions.remove(session);
         System.out.println("[SockJS] Session closed: " + session.getId() + ", Status: " + status);
     }

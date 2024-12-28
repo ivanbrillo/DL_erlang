@@ -20,11 +20,13 @@ public class WebSocketListener implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
-                String erlangMessage = MessageQueues.erlangQueue.take();   // blocking call
-                System.out.println("[WebSocket] Send erlang message to active sessions " + erlangMessage);
+                String erlangMessage = MessageQueues.getErlangMessage();   // blocking call
+
+                if (!erlangMessage.startsWith("{node_metrics"))
+                    System.out.println("[WebSocket] Send erlang message to active sessions " + erlangMessage);
 
                 // Broadcast to all active WebSocket sessions
-                for (WebSocketSession session : sessions)    // no need to synchronize since only one thread will access to a session obj
+                for (WebSocketSession session : sessions)    // no need to synchronize since using snapshot iterator and session obj is thread safe
                     if (session.isOpen())
                         session.sendMessage(new TextMessage(erlangMessage));
 

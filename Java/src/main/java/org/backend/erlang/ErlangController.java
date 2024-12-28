@@ -47,10 +47,10 @@ public class ErlangController implements Runnable {
                 OtpErlangObject msg = erlangContext.getOtpConnection().receive();
 
                 if (!msg.toString().startsWith("{rex,")) {   // RPC return value
-                    MessageQueues.erlangQueue.put(msg.toString());
-                    System.out.println("Message received from Erlang: " + msg);
+                    MessageQueues.addErlangMessage(msg.toString());
 
-                    if (msg.toString().equals("{train_refused}") || msg.toString().startsWith("{training_total_completed,"))
+                    //TODO check this line
+                    if (msg.toString().equals("{train_refused}") || msg.toString().startsWith("{training_total_completed,") || msg.toString().startsWith("{train_error,"))
                         erlangContext.setTraining(false);
                 }
             }
@@ -60,12 +60,13 @@ public class ErlangController implements Runnable {
     }
 
     private void executeWebSocketCommand() {
-        String commandJSON = MessageQueues.webSocketQueue.poll();
+        String commandJSON = MessageQueues.getWebSocketMessage();
+        if (commandJSON == null)
+            return;
+
         try {
-            if (commandJSON != null) {
-                Command command = commandFactory.createCommand(commandJSON);
-                command.execute(erlangContext);
-            }
+            Command command = commandFactory.createCommand(commandJSON);
+            command.execute(erlangContext);
         } catch (RuntimeException e) {
             System.out.println("Cannot execute command for reason: " + e.getMessage());
         }
