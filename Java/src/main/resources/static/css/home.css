@@ -211,3 +211,11 @@ button:disabled {
     cursor: not-allowed; /* Icona del cursore a forma di divieto */
     opacity: 0.6; /* Leggera trasparenza */
 }
+
+
+button:disabled {
+    cursor: not-allowed;
+    color: black;
+    background-color: gray;
+    opacity: 0.6;
+}

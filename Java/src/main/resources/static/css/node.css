@@ -140,7 +140,12 @@
 }
 
 
-
+button:disabled {
+    cursor: not-allowed;
+    color: black;
+    background-color: gray;
+    opacity: 0.6;
+}
 
 
 @media (max-width: 768px) {

@@ -59,10 +59,16 @@
 .epoch-counter {
     color: white;
     font-size: 18px;
-    width: bold;
 }
 
 canvas {
     width: 100% !important;
     height: 80% !important;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    color: black;
+    background-color: gray;
+    opacity: 0.6;
 }

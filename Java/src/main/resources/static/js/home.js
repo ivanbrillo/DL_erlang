@@ -4,6 +4,24 @@ const container = document.getElementById("container");
 const dashboard = document.getElementById("dashboard");
 let socket;
 
+/* LEFT MENU MANAGEMENT*/
+analyticsBtn.addEventListener("click", () => {
+    container.style.display = "none";
+    dashboard.style.display = "inline-block";
+    homepageBtn.classList.remove("active");
+    analyticsBtn.classList.add("active");
+});
+
+homepageBtn.addEventListener("click", () => {
+    container.style.display = "flex";
+    dashboard.style.display = "none";
+    analyticsBtn.classList.remove("active");
+    homepageBtn.classList.add("active");
+});
+
+
+
+/* MESSAGE MANAGEMENT*/
 document.getElementById('connectButton').addEventListener('click', function() {
     let host = document.location.host;
     const url = "http://" + host + "/erlang-socket";
@@ -34,6 +52,10 @@ document.getElementById('connectButton').addEventListener('click', function() {
 
 document.getElementById('closeButton').addEventListener('click', function() {
     socket.send(JSON.stringify({command: "stop", parameters: ""}));
+
+   const container = document.getElementById('containerNodes');
+   const elements = container.querySelectorAll('.elemNode');
+   elements.forEach(elem => elem.remove());
 });
 
 document.getElementById('startBtn').addEventListener('click', function() {
@@ -46,24 +68,17 @@ document.getElementById('startBtn').addEventListener('click', function() {
         command: "train",
         parameters: `targetAccuracy=${accuracyTargetInput},epochs=${epochsInput}`
     };
+
     socket.send(JSON.stringify(msg));
+    clearChart();
+    document.getElementById('startBtn').disabled = true;
 });
 
-/* left menu management */
-analyticsBtn.addEventListener("click", () => {
-    container.style.display = "none";
-    dashboard.style.display = "inline-block";
-    homepageBtn.classList.remove("active");
-    analyticsBtn.classList.add("active");
-});
 
-homepageBtn.addEventListener("click", () => {
-    container.style.display = "flex";
-    dashboard.style.display = "none";
-    analyticsBtn.classList.remove("active");
-    homepageBtn.classList.add("active");
-});
 
+/*
+PRECESSING INPUT FROM BACK-END
+ */
 function processingInput(input){
     // Since SockJS automatically parses JSON, we need to stringify it back
     // if the input is an object
@@ -71,10 +86,16 @@ function processingInput(input){
 
     if (inputStr.startsWith("{initialized_nodes")) {
         initialized_nodes(inputStr);
-    } else if (inputStr.startsWith("{train_mean_accuracy")){
+    } else if (inputStr.startsWith("{train_mean_accuracy")) {
         train_accuracy(inputStr);
+    } else if (inputStr.startsWith("{training_total_completed")) {
+        document.getElementById('startBtn').disabled = false;
     } else if (inputStr.startsWith("{node_metrics")){
         node_metrics(inputStr);
+    } else if (inputStr.startsWith("{node_up")){
+        add_node(inputStr);
+    } else if (inputStr.startsWith("{node_down")){
+        delete_node(inputStr);
     }
 }
 
@@ -139,4 +160,16 @@ function node_metrics(input){
             metricElem.textContent = metricsData[metric.label.replace(':', '').trim()] || 'N/A';
         }
     });
+}
+
+
+
+function add_node(input){
+    const name = input.match(/,(.*?)}/)?.[1];
+    createNode(name);
+}
+
+function delete_node(input){
+    const name = input.match(/,(.*?)}/)?.[1];
+    removeNode(name);
 }

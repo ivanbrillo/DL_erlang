@@ -41,26 +41,19 @@ function createNode(Name){
     });
 
 
-    /* Status */
-    const statusContainer = document.createElement('div');
-    statusContainer.className = 'status-container';
-
-    const statusDot = document.createElement('span');
-    statusDot.className = 'status-dot';
-
-    const statusText = document.createElement('span');
-    statusText.textContent = 'Active';
-    statusText.className = 'status-text';
-
-
-    /* append */
-    statusContainer.appendChild(statusDot);
-    statusContainer.appendChild(statusText);
-
-
     node.appendChild(title);
     node.appendChild(metricsContainer);
-    node.appendChild(statusContainer);
 
     container.appendChild(node);
+}
+
+
+
+function removeNode(name){
+    const node = document.getElementById(name);
+    if (node) {
+        node.remove();
+        console.log(`${name} Node eliminated.`);
+    }
+    numNodi--;
 }

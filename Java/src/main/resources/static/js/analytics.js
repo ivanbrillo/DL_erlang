@@ -12,17 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// Reset training
-function resetTraining() {
-    stopTraining();
-    document.getElementById('startBtn').disabled = false;
-    currentEpoch = 0;
-    trainingData = [];
-    document.getElementById('epochCounter').textContent = '0';
-    chart.data.labels = [];
-    chart.data.datasets[0].data = [];
-}
-
 
 function initChart() {
     const ctx = document.getElementById('accuracyChart').getContext('2d');
@@ -144,6 +133,17 @@ function updateChart(newData) {
     chart.data.datasets[0].data.push(newData.trainAccuracy);
     chart.data.datasets[1].data.push(newData.testAccuracy);
     chart.update();
+}
+
+
+function clearChart() {
+    if (chart) {
+        chart.data.labels = []; // Svuota le etichette
+        chart.data.datasets.forEach(dataset => {
+            dataset.data = []; // Svuota i dati di ogni dataset
+        });
+        chart.update(); // Aggiorna il grafico per mostrare le modifiche
+    }
 }
 
 function handleTraining(trainAcc, testAcc) {

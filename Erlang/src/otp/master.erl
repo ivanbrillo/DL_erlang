@@ -105,11 +105,13 @@ handle_info({nodeup, Node}, State) ->
     [LoadedPidNew] = master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID),
     PidNodes1 = [{LoadedPidNew, Node} | State#mstate.currentUpNodes], % Add the new node to the connected node list
     PidNodes2 = [{LoadedPidNew, Node} | NewPidNodes], % Add the new node to the previous connected node list
+    message_primitives:notify_ui(State#mstate.javaUiPid, {node_up, Node}),
     {noreply, State#mstate{currentUpNodes = PidNodes1, previousInitializedNodes = PidNodes2}};
 
 handle_info({nodedown, Node}, State) ->
     io:format("--- MASTER: Node ~p disconnected ---~n", [Node]),
     UpdatedUpNodes = lists:keydelete(Node, 2, State#mstate.currentUpNodes),   % remove from the connected node lists the disconnected node
+    message_primitives:notify_ui(State#mstate.javaUiPid, {node_down, Node}),
     {noreply, State#mstate{currentUpNodes = UpdatedUpNodes}};
 
 handle_info({python_unhandled, Cause}, State) ->   % TODO: to be removed
