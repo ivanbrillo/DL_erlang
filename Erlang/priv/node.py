@@ -20,7 +20,7 @@ def register_handler(erlang_pid, node_id, master_ip):
     """
 
     nodeController.node_id = node_id.decode('utf-8')
-    nodeController.master_ip = ".".join(map(str, master_ip))
+    nodeController.master_ip = ".".join(map(str, master_ip))  # ip in the form {127.0.0.1}
     nodeController.erlang_pid = erlang_pid
 
     start_metrics_thread()
