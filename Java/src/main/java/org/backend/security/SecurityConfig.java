@@ -24,9 +24,9 @@ public class SecurityConfig {
                 .httpBasic(withDefaults())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .invalidSessionUrl("/login?expired")
+                        .invalidSessionUrl("/login")
                         .maximumSessions(1)
-                        .expiredUrl("/login?expired")
+                        .expiredUrl("/login")
                 );
 
         return http.build();

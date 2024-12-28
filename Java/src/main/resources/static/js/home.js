@@ -48,6 +48,10 @@ document.getElementById('connectButton').addEventListener('click', function() {
     socket.onerror = function(error) {
         console.error('SockJS error:', error);
     };
+
+    document.getElementById('connectButton').disabled = true;
+    document.getElementById('closeButton').disabled = false;
+    document.getElementById('startBtn').disabled = false;
 });
 
 document.getElementById('closeButton').addEventListener('click', function() {
@@ -56,6 +60,13 @@ document.getElementById('closeButton').addEventListener('click', function() {
    const container = document.getElementById('containerNodes');
    const elements = container.querySelectorAll('.elemNode');
    elements.forEach(elem => elem.remove());
+
+
+    clearChart();
+
+    document.getElementById('connectButton').disabled = false;
+    document.getElementById('closeButton').disabled = true;
+    document.getElementById('startBtn').disabled = true;
 });
 
 document.getElementById('startBtn').addEventListener('click', function() {
@@ -71,6 +82,9 @@ document.getElementById('startBtn').addEventListener('click', function() {
 
     socket.send(JSON.stringify(msg));
     clearChart();
+
+    document.getElementById('connectButton').disabled = true;
+    document.getElementById('closeButton').disabled = false;
     document.getElementById('startBtn').disabled = true;
 });
 
@@ -100,6 +114,12 @@ function processingInput(input){
 }
 
 function initialized_nodes(input){
+    /* delete old nodes, useful in restart due to errors */
+    const container = document.getElementById('containerNodes');
+    const oldElements = container.querySelectorAll('.elemNode');
+    oldElements.forEach(elem => elem.remove());
+
+
     const startIdx = input.indexOf("[");
     const endIdx = input.lastIndexOf("]");
     const content = input.substring(startIdx + 1, endIdx).trim();

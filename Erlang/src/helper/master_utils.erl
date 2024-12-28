@@ -46,7 +46,7 @@ train(CurrentEpoch, PythonModelPid, Nodes) ->
             {TrainAccuracy, TestAccuracy} = lists:unzip(Accuracy),
             message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack),
             io:format("--- MASTER: train completed for epochs: ~p, resulting nodes train accuracy: ~p, resulting nodes test accuracy: ~p,  ---~n", [CurrentEpoch, TrainAccuracy, TestAccuracy]),
-            {PidList, (lists:sum(TrainAccuracy) / length(TrainAccuracy)), (lists:sum(TestAccuracy) / length(TestAccuracy))}
+            {PidList, TrainAccuracy, TestAccuracy}
     end.
 
 

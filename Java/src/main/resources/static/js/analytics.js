@@ -137,12 +137,15 @@ function updateChart(newData) {
 
 
 function clearChart() {
+    currentEpoch = 0;
+    document.getElementById('epochCounter').textContent = 0;
+
     if (chart) {
-        chart.data.labels = []; // Svuota le etichette
+        chart.data.labels = [];
         chart.data.datasets.forEach(dataset => {
-            dataset.data = []; // Svuota i dati di ogni dataset
+            dataset.data = [];
         });
-        chart.update(); // Aggiorna il grafico per mostrare le modifiche
+        chart.update();
     }
 }
 

@@ -60,8 +60,10 @@ handle_call(distribute_weights, _From, State) ->
 
 handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when EpochsLeft > 0, CurrentEpoch >= 0, length(State#mstate.currentUpNodes) > 0 ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
-    {Nodes, TrainMeanAccuracy, TestMeanAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes),
-    message_primitives:notify_ui(State#mstate.javaUiPid, {train_epoch_completed, Nodes}),
+    {Nodes, TrainAccuracy, TestAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes),
+    TrainMeanAccuracy = lists:sum(TrainAccuracy) / length(TrainAccuracy),
+    TestMeanAccuracy = lists:sum(TestAccuracy) / length(TestAccuracy),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {train_epoch_completed, Nodes, TrainAccuracy, TestAccuracy}),
     message_primitives:notify_ui(State#mstate.javaUiPid, {train_mean_accuracy, TrainMeanAccuracy, test_mean_accuracy, TestMeanAccuracy}),
 
     case {EpochsLeft > 1, AccuracyThreshold >= TrainMeanAccuracy, length(Nodes) > 0 } of
