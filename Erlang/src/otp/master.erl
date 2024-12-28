@@ -25,7 +25,7 @@ handle_call(get_pid, _From, State) ->
     {reply, self(), State};
 
 handle_call(load_nodes, _From, State) ->
-    Pids = master_utils:load_nodes(State#mstate.currentUpNodes, State#mstate.pythonModelPID),
+    Pids = master_utils:load_nodes(State#mstate.currentUpNodes, State#mstate.pythonModelPID, State#mstate.javaUiPid),
     message_primitives:notify_ui(State#mstate.javaUiPid, {loaded_nodes, Pids}),
     io:format("--- MASTER: node loaded ---~n"),   % TODO remove
 
@@ -33,12 +33,12 @@ handle_call(load_nodes, _From, State) ->
 
 handle_call(load_db, _From, State) ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
-    {PidList, Infos} = master_utils:load_db(PidNodes, sync),
+    {PidList, Infos} = master_utils:load_db(PidNodes, State#mstate.javaUiPid, sync),
     message_primitives:notify_ui(State#mstate.javaUiPid, {db_loaded, PidList}),
     {reply, {ok, Infos}, State};
 
 handle_call(initialize_nodes, _From, State) ->
-    InitializedNodes = network_helper:initialize_nodes(),
+    InitializedNodes = network_helper:initialize_nodes(State#mstate.javaUiPid),
     net_kernel:monitor_nodes(true),  % send messages nodeup/nodedown when a node connects/disconnects
     message_primitives:notify_ui(State#mstate.javaUiPid, {initialized_nodes, InitializedNodes}),
     io:format("--- MASTER: node initialized ~p ---~n", [InitializedNodes]),   % TODO remove
@@ -47,13 +47,13 @@ handle_call(initialize_nodes, _From, State) ->
 
 handle_call(distribute_model, _From, State) ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
-    ResponseList = master_utils:distribute_model(State#mstate.pythonModelPID, PidNodes, sync),
+    ResponseList = master_utils:distribute_model(State#mstate.pythonModelPID, PidNodes, State#mstate.javaUiPid, sync),
     message_primitives:notify_ui(State#mstate.javaUiPid, {distributed_nodes, ResponseList}),
     {reply, {ok, ResponseList}, State};
 
 handle_call(distribute_weights, _From, State) ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
-    ResponseList = master_utils:distribute_model_weights(State#mstate.pythonModelPID, PidNodes, sync),
+    ResponseList = master_utils:distribute_model_weights(State#mstate.pythonModelPID, PidNodes, State#mstate.javaUiPid, sync),
     message_primitives:notify_ui(State#mstate.javaUiPid, {weights_updated_nodes, ResponseList}),
     {reply, {ok, ResponseList}, State}.
 
@@ -91,16 +91,16 @@ handle_info({nodeup, Node}, State) ->
                         erlang:monitor(process, Pid),   % the monitor is deactivated when a node is disconnected
                         Pid;
                 _ ->    io:format("--- MASTER: Node ~p server is dead, initializing ---~n", [Node]),
-                        [{PidN, Node}] = network_helper:initialize_nodes([Node]),
+                        [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
                          PidN
             end;
         false -> io:format("--- MASTER: Node ~p is newly connected, initializing ---~n", [Node]), 
-                [{PidN, Node}] = network_helper:initialize_nodes([Node]),
+                [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
                 PidN
     end,
 
     NewPidNodes = lists:keydelete(Node, 2, State#mstate.previousInitializedNodes), % remove to avoid two processes for the same node
-    [LoadedPidNew] = master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID),
+    [LoadedPidNew] = master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID, State#mstate.javaUiPid),
     PidNodes1 = [{LoadedPidNew, Node} | State#mstate.currentUpNodes], % Add the new node to the connected node list
     PidNodes2 = [{LoadedPidNew, Node} | NewPidNodes], % Add the new node to the previous connected node list
     message_primitives:notify_ui(State#mstate.javaUiPid, {node_up, Node}),

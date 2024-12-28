@@ -1,42 +1,42 @@
 -module(master_utils).
--export([distribute_model/3, distribute_model_weights/3, load_db/2, train/4, load_nodes/2, check_node_alive/2]).
+-export([distribute_model/4, distribute_model_weights/4, load_db/3, train/4, load_nodes/3, check_node_alive/2]).
 
 
 
-distribute_model(PythonModelPid, Pids, async) ->
-    Model = message_primitives:synch_message(PythonModelPid, get_model, null, model_definition),
+distribute_model(PythonModelPid, Pids, JavaUiPid, async) ->
+    Model = message_primitives:synch_message(PythonModelPid, get_model, null, model_definition, JavaUiPid),
     lists:foreach(fun(Pid) -> node_api:initialize_model(Pid, Model) end, Pids),
     ok;
 
-distribute_model(PythonModelPid, Pids, sync) ->
-    distribute_model(PythonModelPid, Pids, asyc),
-    message_primitives:wait_response(length(Pids), initialize_ack).
+distribute_model(PythonModelPid, Pids, JavaUiPid, sync) ->
+    distribute_model(PythonModelPid, Pids, JavaUiPid, asyc),
+    message_primitives:wait_response(length(Pids), initialize_ack, JavaUiPid).
 
 
-distribute_model_weights(PythonModelPid, Pids, async) ->
-    Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
+distribute_model_weights(PythonModelPid, Pids, JavaUiPid, async) ->
+    Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights, JavaUiPid),
     lists:foreach(fun(Pid) -> node_api:update_weights(Pid, Weights) end, Pids),
     ok;
 
-distribute_model_weights(PythonModelPid, Pids, sync) ->
-    distribute_model_weights(PythonModelPid, Pids, async),
-    message_primitives:wait_response(length(Pids), weights_ack).
+distribute_model_weights(PythonModelPid, Pids, JavaUiPid, sync) ->
+    distribute_model_weights(PythonModelPid, Pids, JavaUiPid, async),
+    message_primitives:wait_response(length(Pids), weights_ack, JavaUiPid).
 
 
-load_db(Pids, async) ->
+load_db(Pids, _JavaUiPid, async) ->
     lists:foreach(fun(Pid) -> node_api:load_db(Pid) end, Pids),
     ok;
 
-load_db(Pids, sync) ->
-    load_db(Pids, async),
-    ResponseList = message_primitives:wait_response(length(Pids), db_ack),
+load_db(Pids, JavaUiPid, sync) ->
+    load_db(Pids, JavaUiPid, async),
+    ResponseList = message_primitives:wait_response(length(Pids), db_ack, JavaUiPid),
     lists:unzip(ResponseList).
 
 
 train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
-    Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights),
+    Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights, JavaUiPid),
     lists:foreach(fun(Pid) -> node_api:train_pipeline(Pid, Weights) end, Nodes),
-    ResponseList = message_primitives:wait_response(length(Nodes), train_pipeline_ack),
+    ResponseList = message_primitives:wait_response(length(Nodes), train_pipeline_ack, JavaUiPid),
 
     case ResponseList of
         [] -> {[], 0.0};
@@ -44,7 +44,7 @@ train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
             {PidList, Messages} = lists:unzip(ResponseList),
             {NewWeights, Accuracy} = lists:unzip(Messages),
             {TrainAccuracy, TestAccuracy} = lists:unzip(Accuracy),
-            message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack),
+            message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack, JavaUiPid),
             io:format("--- MASTER: train completed for epochs: ~p, resulting nodes train accuracy: ~p, resulting nodes test accuracy: ~p,  ---~n", [CurrentEpoch, TrainAccuracy, TestAccuracy]),
 
             TrainMeanAccuracy = lists:sum(TrainAccuracy) / length(TrainAccuracy),
@@ -56,11 +56,11 @@ train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
     end.
 
 
-load_nodes(ListsPidNodes, PythonModelPid) ->
+load_nodes(ListsPidNodes, PythonModelPid, JavaUiPid) ->
     {Pids, _Nodes} = lists:unzip(ListsPidNodes),
-    load_db(Pids, async),  % the acks sent by the nodes will be discarded in the master server loop and the next iteration
-    distribute_model(PythonModelPid, Pids, async),
-    distribute_model_weights(PythonModelPid, Pids, sync).
+    load_db(Pids, JavaUiPid, async),  % the acks sent by the nodes will be discarded in the master server loop and the next iteration
+    distribute_model(PythonModelPid, Pids, JavaUiPid, async),
+    distribute_model_weights(PythonModelPid, Pids, JavaUiPid, sync).
 
 
 check_node_alive(Pid, Node) ->
