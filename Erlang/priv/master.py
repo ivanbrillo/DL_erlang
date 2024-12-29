@@ -43,6 +43,9 @@ def register_handler(master_pid):
         elif code == "update_weights":
             federatedController.update_weights(payload)
             cast(master_pid, (encode_status_code("update_weights_ack"), None))
+        elif code == "save_model":
+            federatedController.save_model()
+            cast(master_pid, (encode_status_code("model_saved"), None))
         else:
             cast(master_pid, (encode_status_code("python_unhandled"), "NODE master, invalid message code " + code))
         

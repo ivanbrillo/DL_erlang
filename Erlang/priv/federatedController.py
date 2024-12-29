@@ -84,3 +84,7 @@ class FederatedController():
                 averaged_weights[layer_idx] += np.array(layer_weights) * weight
         
         return averaged_weights
+    
+    def save_model(self, path = "model.keras") -> None:
+        self.model.save(path)
+

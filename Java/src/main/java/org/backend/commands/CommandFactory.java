@@ -36,6 +36,7 @@ public class CommandFactory {
         return switch (map.get("command")) {
             case "start" -> context.getBean(StartCommand.class);
             case "stop" -> context.getBean(StopCommand.class);
+            case "save" -> context.getBean(SaveCommand.class);
             case "train" -> {
                 TrainCommand train = context.getBean(TrainCommand.class);
                 train.setParameters(map.get("parameters"));

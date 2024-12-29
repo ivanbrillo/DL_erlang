@@ -74,9 +74,16 @@ handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when Ep
     {noreply, State};
 
 handle_cast({train, _EpochsLeft, _CurrentEpoch, _AccuracyThreshold}, State) ->
-        message_primitives:notify_ui(State#mstate.javaUiPid, {train_refused}),
-        io:format("--- MASTER: training refused, possible causes: no nodes connected or illegal param ---~n"),
-        {noreply, State}.
+    message_primitives:notify_ui(State#mstate.javaUiPid, {train_refused}),
+    io:format("--- MASTER: training refused, possible causes: no nodes connected or illegal param ---~n"),
+    {noreply, State};
+
+handle_cast(save_model, State) ->
+    _Ack = message_primitives:synch_message(State#mstate.pythonModelPID, save_model, null, model_saved, State#mstate.javaUiPid),
+
+    message_primitives:notify_ui(State#mstate.javaUiPid, {model_saved}),
+    io:format("--- MASTER: model saved ---~n"),
+    {noreply, State}.
 
 
 handle_info({nodeup, Node}, State) ->
