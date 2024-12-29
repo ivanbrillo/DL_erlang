@@ -65,10 +65,3 @@ canvas {
     width: 100% !important;
     height: 80% !important;
 }
-
-button:disabled {
-    cursor: not-allowed;
-    color: black;
-    background-color: gray;
-    opacity: 0.6;
-}

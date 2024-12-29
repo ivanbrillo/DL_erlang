@@ -61,43 +61,19 @@
 
 
 <div id="container">
-    <div id="containerNodes">
-
+    <div class="container_info">
+        <div id="containerNodes"></div>
+        <div id="log"></div>
     </div>
 
     <div id="containerButton">
         <button id="connectButton">Start</button>
         <button id="closeButton" disabled>Close</button>
-        <button id="loadButton">Load Model</button>
+        <button id="loadButton" disabled>Load Model</button>
         <button id="saveButton" disabled>Save Model</button>
     </div>
 </div>
 
-<!-- <div id="accuracy_level">
-    <img src="accuracy_icon" alt="">
-    <div id="accuracy_inner">
-        <circle id="accuracy_level"></circle>
-        <div id="score">
-            68%
-            Accuracy
-        </div>
-        <div id="time">
-            0h 58m
-            Time active
-        </div>
-
-    </div>
-</div> -->
-
-<!--
-<button id="update_btn"></button>
-<button id="distribute_btn"></button>
--->
-
-<!-- <div id="log_frame">
-    Log
-    <textarea name="Log" id="log"></textarea>
-</div> -->
 
 <div id="dashboard">
     <h3>NEURAL NETWORK TRAINING PROGRESS</h3>
@@ -113,7 +89,7 @@
 
         <div>
             <button class="button start-btn" id="startBtn" disabled>Start Training</button>
-            <button class="button start-btn" id="stopBtn">Stop Training</button>
+            <button class="button start-btn" id="stopBtn" disabled>Stop Training</button>
         </div>
         <div class="epoch-counter">Epoch: <span id="epochCounter">0</span>/<span id="epochTot">0</span></div>
     </div>

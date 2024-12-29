@@ -38,7 +38,7 @@ function createNode(Name){
         value.id = metric.id;
 
         if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric") {
-            value.textContent = 'Training not started...';
+            value.textContent = 'N/A';
         } else {
             value.textContent = 'Loading...';
         }

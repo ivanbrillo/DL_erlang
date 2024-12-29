@@ -12,7 +12,7 @@
 }
 
 #containerNodes {
-    width: 56%;
+    width: 60%;
     height: 70%;
 
     overflow-y: auto;
@@ -137,14 +137,6 @@
 
 #containerButton button:hover {
     cursor:pointer;
-}
-
-
-button:disabled {
-    cursor: not-allowed;
-    color: black;
-    background-color: gray;
-    opacity: 0.6;
 }
 
 
