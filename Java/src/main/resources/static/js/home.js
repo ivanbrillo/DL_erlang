@@ -108,7 +108,7 @@ function processingInput(input){
 
     if (inputStr.startsWith("{initialized_nodes")) {
         initialized_nodes(inputStr);
-    } else if (inputStr.startsWith("{train_mean_accuracy")) {
+    } else if (inputStr.startsWith("{train_epoch_completed")) {
         train_accuracy(inputStr);
     } else if (inputStr.startsWith("{training_total_completed")) {
         document.getElementById('startBtn').disabled = false;
@@ -118,6 +118,11 @@ function processingInput(input){
         add_node(inputStr);
     } else if (inputStr.startsWith("{node_down")){
         delete_node(inputStr);
+    } else if (inputStr.startsWith("{start uncorrectly")){
+        document.getElementById('connectButton').disabled = false;
+        document.getElementById('closeButton').disabled = true;
+    } else if (inputStr.startsWith("{train_refused")){
+        document.getElementById('startBtn').disabled = false;
     }
 }
 
@@ -157,14 +162,36 @@ function initialized_nodes(input){
 }
 
 function train_accuracy(input) {
-    const elements = input.split(",");
-    const trainAccuracy = elements[1];
-    const testAccuracy = elements[3];
+    const content = input.substring(input.indexOf('['));
+    const parts = content.split(/\],\[/).map(part => part.replace(/[\[\]{}]/g, ''));
 
-    const cleanedTrainAccuracy = trainAccuracy.replace(/[\{\}]/g, '').trim();
-    const cleanedTestAccuracy = testAccuracy.replace(/[\{\}]/g, '').trim();
+    // Array PID
+    const pids = parts[0].split(',').map(pid =>pid.match(/<([^.]+)/)[1]);
+    // Array Train Accuracy
+    const trainAccuracies = parts[1].split(',').map(Number);
+    // Array Test Accuracy
+    const testAccuracies = parts[2].split(',').map(Number);
 
-    handleTraining(cleanedTrainAccuracy, cleanedTestAccuracy);
+    pids.forEach((pid, index) => {
+        let nodeElem = document.getElementById(pid);
+        if (!nodeElem) {
+            console.log(`Node with PID ${pid} does not exist`);
+            return;
+        }
+
+        const trainElem = nodeElem.querySelector("#train-accuracy-metric");
+        const testElem = nodeElem.querySelector("#test-accuracy-metric");
+
+        trainElem.textContent = trainAccuracies[index]?.toFixed(3) || "N/A";
+        testElem.textContent = testAccuracies[index]?.toFixed(3) || "N/A";
+    });
+
+    // Mean
+    const trainMeanAccuracy = trainAccuracies.reduce((sum, val) => sum + val, 0) / trainAccuracies.length;
+    const testMeanAccuracy = testAccuracies.reduce((sum, val) => sum + val, 0) / testAccuracies.length;
+
+
+    handleTraining(trainMeanAccuracy, testMeanAccuracy);
 }
 
 
@@ -183,6 +210,10 @@ function node_metrics(input){
 
 
     metrics.forEach(metric => {
+        if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric") {
+            return;
+        }
+
         const metricElem = nodeElem.querySelector(`#${metric.id}`);
         if (metricElem) {
             metricElem.textContent = metricsData[metric.label.replace(':', '').trim()] || 'N/A';

@@ -2,7 +2,10 @@ const metrics = [
     { label: 'CPU: ', id: 'cpu-metric' },
     { label: 'Memory: ', id: 'memory-metric' },
     { label: 'Response Time: ', id: 'response-time-metric' },
-    { label: 'Accuracy: ', id: 'accuracy-metric' }
+    { label: 'Train Accuracy: ', id: 'train-accuracy-metric' },
+    { label: 'Test Accuracy: ', id: 'test-accuracy-metric' },
+    { label: 'Training Dataset Size: ', id: 'train-dataset-size' },
+    { label: 'Test Dataset Size: ', id: 'test-dataset-size' }
 ];
 
 let numNodi = 0;
@@ -33,7 +36,12 @@ function createNode(Name){
 
         const value = document.createElement('span');
         value.id = metric.id;
-        value.textContent = 'Loading...';
+
+        if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric") {
+            value.textContent = 'Training not started...';
+        } else {
+            value.textContent = 'Loading...';
+        }
 
         metricDiv.appendChild(label);
         metricDiv.appendChild(value);

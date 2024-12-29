@@ -47,11 +47,8 @@ train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
             message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack, JavaUiPid),
             io:format("--- MASTER: train completed for epochs: ~p, resulting nodes train accuracy: ~p, resulting nodes test accuracy: ~p,  ---~n", [CurrentEpoch, TrainAccuracy, TestAccuracy]),
 
-            TrainMeanAccuracy = lists:sum(TrainAccuracy) / length(TrainAccuracy),
-            TestMeanAccuracy = lists:sum(TestAccuracy) / length(TestAccuracy),
             message_primitives:notify_ui(JavaUiPid, {train_epoch_completed, Nodes, TrainAccuracy, TestAccuracy}),
-            message_primitives:notify_ui(JavaUiPid, {train_mean_accuracy, TrainMeanAccuracy, test_mean_accuracy, TestMeanAccuracy}),
-
+            TrainMeanAccuracy = lists:sum(TrainAccuracy) / length(TrainAccuracy),
             {PidList, TrainMeanAccuracy}
     end.
 
