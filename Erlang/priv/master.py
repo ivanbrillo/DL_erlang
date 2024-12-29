@@ -46,6 +46,9 @@ def register_handler(master_pid):
         elif code == "save_model":
             federatedController.save_model()
             cast(master_pid, (encode_status_code("model_saved"), None))
+        elif code == "load_model":
+            result = federatedController.load_model()
+            cast(master_pid, (encode_status_code("model_loaded"), encode_status_code(result)))
         else:
             cast(master_pid, (encode_status_code("python_unhandled"), "NODE master, invalid message code " + code))
         

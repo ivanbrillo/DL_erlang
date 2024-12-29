@@ -37,6 +37,8 @@ public class CommandFactory {
             case "start" -> context.getBean(StartCommand.class);
             case "stop" -> context.getBean(StopCommand.class);
             case "save" -> context.getBean(SaveCommand.class);
+            case "load" -> context.getBean(LoadCommand.class);
+            case "stop_training" -> context.getBean(StopTrainingCommand.class);
             case "train" -> {
                 TrainCommand train = context.getBean(TrainCommand.class);
                 train.setParameters(map.get("parameters"));
@@ -44,7 +46,6 @@ public class CommandFactory {
             }
             default -> throw new IllegalArgumentException("Unknown command: " + map.get("command"));
         };
-
     }
 
 

@@ -96,6 +96,14 @@ document.getElementById('saveButton').addEventListener('click', function() {
     socket.send(JSON.stringify({command: "save", parameters: ""}));
 });
 
+document.getElementById('loadButton').addEventListener('click', function() {
+    socket.send(JSON.stringify({command: "load", parameters: ""}));
+});
+
+document.getElementById('stopBtn').addEventListener('click', function() {
+    socket.send(JSON.stringify({command: "stop_training", parameters: ""}));
+});
+
 
 
 /*

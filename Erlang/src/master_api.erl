@@ -1,5 +1,5 @@
 -module(master_api).
--export([start_link/1, get_nodes/0, get_server_pid/0, load_db/0, initialize_nodes/0, distribute_model/0, distribute_weights/0, train/0, train/1, train/2, load_nodes/0, save_model/0]).
+-export([start_link/1, get_nodes/0, get_server_pid/0, load_db/0, initialize_nodes/0, distribute_model/0, distribute_weights/0, train/0, train/1, train/2, load_nodes/0, save_model/0, load_model/0]).
 
 
 % start the master server and the python model and initialize the nodes with the model, weights and db
@@ -47,6 +47,10 @@ train(NEpochs) ->
 train(NEpochs, AccuracyThreshold) ->
     gen_server:cast(erlang_master, {train, NEpochs, 0, AccuracyThreshold}).
 
-% save the model as model.h5
+% save the model as model.keras
 save_model() ->
     gen_server:cast(erlang_master, save_model).
+
+% load the model from model.keras
+load_model() ->
+    gen_server:cast(erlang_master, load_model).

@@ -45,6 +45,7 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, Timeout) ->
                     io:format("--- WARNING: nodedown occurs during waiting the responses ---~n"),
                     wait_response(N-1, RespList, AckCode, DestinationNodeMetrics, Timeout);
                 _ ->
+                    % also other nodes receives the nodedown msg from other nodes, but this should interfere
                     wait_response(N, RespList, AckCode, DestinationNodeMetrics, Timeout)
             end
 
@@ -52,6 +53,8 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, Timeout) ->
         io:format("--- ERROR: timeout occurs ---~n"),
         RespList
     end.
+
+
 
 
 notify_ui(UiPid, Message) ->
