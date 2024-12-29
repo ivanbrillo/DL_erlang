@@ -57,17 +57,20 @@ handle_call(distribute_weights, _From, State) ->
     message_primitives:notify_ui(State#mstate.javaUiPid, {weights_updated_nodes, ResponseList}),
     {reply, {ok, ResponseList}, State}.
 
+handle_cast({new_train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) ->
+    gen_server:cast(erlang_master, {train, EpochsLeft, CurrentEpoch, AccuracyThreshold}),
+    {noreply, State#mstate{terminateTraining = false}};   % clear the terminateTraining flag of a possible previous training
 
 handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when EpochsLeft > 0, CurrentEpoch >= 0, length(State#mstate.currentUpNodes) > 0 ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     {Nodes, TrainMeanAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes, State#mstate.javaUiPid),
 
-    case {EpochsLeft > 1, AccuracyThreshold >= TrainMeanAccuracy, length(Nodes) > 0 } of
-        {true, true, true} ->
+    case {EpochsLeft > 1, AccuracyThreshold >= TrainMeanAccuracy, length(Nodes) > 0, State#mstate.terminateTraining } of
+        {true, true, true, false} ->
             gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1, AccuracyThreshold});
-        {_, _, true} ->
+        {_, _, true, _} ->
             message_primitives:notify_ui(State#mstate.javaUiPid, {training_total_completed, TrainMeanAccuracy});
-        {_, _, false} ->
+        {_, _, false, _} ->
             message_primitives:notify_ui(State#mstate.javaUiPid, {training_error})
     end,
 
@@ -90,7 +93,11 @@ handle_cast(load_model, State) ->
 
     message_primitives:notify_ui(State#mstate.javaUiPid, {model_loaded, Result}),
     io:format("--- MASTER: model loaded ~p ---~n", [Result]),
-    {noreply, State}.
+    {noreply, State};
+
+handle_cast(stop_training, State) ->
+    io:format("--- MASTER: train set to stop on next epoch or two ---~n"),
+    {noreply, State#mstate{terminateTraining = true}}.
 
 
 handle_info({nodeup, Node}, State) ->

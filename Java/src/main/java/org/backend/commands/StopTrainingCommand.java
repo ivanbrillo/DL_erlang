@@ -14,7 +14,7 @@ public class StopTrainingCommand implements Command {
         if (!context.isConnected() || !context.isTraining())
             throw new RuntimeException("Erlang process is not connected or in training so i cannot stop the training");
 
-        ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{}, "master_api", "save_model");
+        ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{}, "master_api", "stop_training");
 
     }
 }

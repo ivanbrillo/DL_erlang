@@ -2,7 +2,8 @@
     pythonModelPID :: pid(),
     javaUiPid :: pid(),
     currentUpNodes = [] :: [{pid(), node()}],
-    previousInitializedNodes = [] :: [{pid(), node()}]
+    previousInitializedNodes = [] :: [{pid(), node()}],
+    terminateTraining = false
 }).
 
 

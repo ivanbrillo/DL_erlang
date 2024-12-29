@@ -34,10 +34,7 @@ public class StartCommand implements Command {
             context.setJavaPid(self.pid());
         } catch (IOException | OtpAuthException e) {
             context.getErlangProcess().destroyForcibly();
-
-            String errorMessage = "{start uncorrectly}";
-            sendErrorMessage(errorMessage);
-
+            sendErrorMessage();
             throw new RuntimeException("Cannot start correctly the connection with erlang", e);
         }
     }
@@ -51,6 +48,7 @@ public class StartCommand implements Command {
         try {
             context.setErlangProcess(ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 10000));
         } catch (IOException | InterruptedException | RuntimeException e) {
+            sendErrorMessage();
             throw new RuntimeException("Cannot start Erlang node " + e.getMessage(), e);
         }
 
@@ -59,9 +57,9 @@ public class StartCommand implements Command {
 
     }
 
-    private void sendErrorMessage(String errorMessage) {
+    private void sendErrorMessage() {
         try {
-            MessageQueues.addErlangMessage(errorMessage);
+            MessageQueues.addErlangMessage("{start uncorrectly}");
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
