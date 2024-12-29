@@ -51,8 +51,10 @@ document.getElementById('connectButton').addEventListener('click', function() {
 
     document.getElementById('connectButton').disabled = true;
     document.getElementById('closeButton').disabled = false;
+    document.getElementById('loadButton').disabled = false;
     document.getElementById('saveButton').disabled = false;
     document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
 });
 
 document.getElementById('closeButton').addEventListener('click', function() {
@@ -67,8 +69,10 @@ document.getElementById('closeButton').addEventListener('click', function() {
 
     document.getElementById('connectButton').disabled = false;
     document.getElementById('closeButton').disabled = true;
+    document.getElementById('loadButton').disabled = true;
     document.getElementById('saveButton').disabled = true;
     document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = true;
 
 });
 
@@ -88,8 +92,10 @@ document.getElementById('startBtn').addEventListener('click', function() {
 
     document.getElementById('connectButton').disabled = true;
     document.getElementById('closeButton').disabled = false;
+    document.getElementById('loadButton').disabled = false;
     document.getElementById('saveButton').disabled = false;
     document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
 });
 
 document.getElementById('saveButton').addEventListener('click', function() {
@@ -102,6 +108,9 @@ document.getElementById('loadButton').addEventListener('click', function() {
 
 document.getElementById('stopBtn').addEventListener('click', function() {
     socket.send(JSON.stringify({command: "stop_training", parameters: ""}));
+
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
 });
 
 
@@ -239,4 +248,26 @@ function add_node(input){
 function delete_node(input){
     const name = input.match(/,(.*?)}/)?.[1];
     removeNode(name);
+}
+
+
+
+
+
+/* LOG SECTION */
+function addLogMessage(type, message) {
+    const logContainer = document.getElementById('log');
+    const logEntry = document.createElement('div');
+
+    logEntry.classList.add('log-message');
+    if (type === 'received') {
+        logEntry.classList.add('received');
+        logEntry.textContent = "Received message: " + message;
+    } else if (type === 'sent') {
+        logEntry.classList.add('sent');
+        logEntry.innerHTML = "Received message: " + message;
+    }
+
+    logContainer.appendChild(logEntry);
+    logContainer.scrollTop = logContainer.scrollHeight; // Scroll to the bottom
 }
