@@ -36,11 +36,23 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, Timeout) ->
             wait_response(N-1, RespList ++ [Response], AckCode, DestinationNodeMetrics, Timeout);
         {node_metrics, Metrics} -> 
             DestinationNodeMetrics ! {node_metrics, Metrics},
-            wait_response(N, RespList, AckCode, DestinationNodeMetrics, Timeout)
+            wait_response(N, RespList, AckCode, DestinationNodeMetrics, Timeout);
+        {nodedown, Node} ->
+            self() ! {nodedown, Node},
+
+            case node() of
+                'master@localhost' ->    % TODO change to master@master !!!
+                    io:format("--- WARNING: nodedown occurs during waiting the responses ---~n"),
+                    wait_response(N-1, RespList, AckCode, DestinationNodeMetrics, Timeout);
+                _ ->
+                    wait_response(N, RespList, AckCode, DestinationNodeMetrics, Timeout)
+            end
+
     after Timeout ->
         io:format("--- ERROR: timeout occurs ---~n"),
         RespList
     end.
+
 
 notify_ui(UiPid, Message) ->
     UiPid ! Message.
