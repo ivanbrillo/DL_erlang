@@ -49,7 +49,7 @@ train(NEpochs, AccuracyThreshold) ->
 
 % save the model as model.keras
 save_model() ->
-    gen_server:cast(erlang_master, save_model).
+    gen_server:cast(erlang_master, {save_model, model}).
 
 % load the model from model.keras
 load_model() ->

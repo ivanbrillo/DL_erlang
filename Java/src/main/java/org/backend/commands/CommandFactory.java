@@ -18,7 +18,7 @@ public class CommandFactory {
     public CommandFactory(ApplicationContext context) {
         this.context = context;
     }
-    
+
     public Command createCommand(String commandCode) throws IllegalArgumentException {
         return switch (commandCode) {
             case "start" -> context.getBean(StartCommand.class);

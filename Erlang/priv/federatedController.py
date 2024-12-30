@@ -85,8 +85,8 @@ class FederatedController():
         
         return averaged_weights
     
-    def save_model(self, path = "model.keras") -> None:
-        self.model.save(path)
+    def save_model(self, path = "model") -> None:
+        self.model.save(path + ".keras")
 
     def load_model(self, path = "model.keras") -> str:
         try:

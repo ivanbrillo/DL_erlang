@@ -154,6 +154,8 @@ function processingInput(input){
     } else if (inputStr.startsWith("{db_ack")){
         addLogMessage("received", inputStr);
         sizeDB(inputStr);
+    }  else if (inputStr.startsWith("{model_saved}")){
+        addLogMessage("received", inputStr);
     }
 }
 

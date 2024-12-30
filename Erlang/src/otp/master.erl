@@ -67,6 +67,12 @@ handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when Ep
 
     case {EpochsLeft > 1, AccuracyThreshold >= TrainMeanAccuracy, length(Nodes) > 0, State#mstate.terminateTraining } of
         {true, true, true, false} ->
+           if 
+            CurrentEpoch rem 3 == 2 ->
+                    io:format("--- AAAAA: model saved ---~n"), 
+                gen_server:cast(erlang_master, {save_model, backup}); % Call save_model every 3 epochs
+            true -> ok
+            end,
             gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1, AccuracyThreshold});
         {_, _, true, _} ->
             message_primitives:notify_ui(State#mstate.javaUiPid, {training_total_completed, TrainMeanAccuracy});
@@ -81,8 +87,8 @@ handle_cast({train, _EpochsLeft, _CurrentEpoch, _AccuracyThreshold}, State) ->
     io:format("--- MASTER: training refused, possible causes: no nodes connected or illegal param ---~n"),
     {noreply, State};
 
-handle_cast(save_model, State) ->
-    _Ack = message_primitives:synch_message(State#mstate.pythonModelPID, save_model, null, model_saved, State#mstate.javaUiPid),
+handle_cast({save_model, Name}, State) ->
+    _Ack = message_primitives:synch_message(State#mstate.pythonModelPID, save_model, Name, model_saved, State#mstate.javaUiPid),
 
     message_primitives:notify_ui(State#mstate.javaUiPid, {model_saved}),
     io:format("--- MASTER: model saved ---~n"),
