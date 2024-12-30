@@ -99,6 +99,10 @@ handle_cast(stop_training, State) ->
     io:format("--- MASTER: train set to stop on next epoch or two ---~n"),
     {noreply, State#mstate{terminateTraining = true}}.
 
+% acks not read in the load_nodes pipeline, useful for UI dashboard
+handle_info({db_ack, InfosDB}, State) ->
+    message_primitives:notify_ui(State#mstate.javaUiPid, {db_ack, InfosDB}),
+    {noreply, State};
 
 handle_info({nodeup, Node}, State) ->
     io:format("--- MASTER: Node ~p connected ---~n", [Node]),
