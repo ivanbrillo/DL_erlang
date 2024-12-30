@@ -1,32 +1,38 @@
 package org.backend.websocket;
 
 import org.backend.MessageQueues;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.util.List;
 
+@Component
 public class WebSocketListener implements Runnable {
 
-    private final List<WebSocketSession> sessions;
+    private final SessionRegistry sessionRegistry;
+    private final MessageQueues queues;
 
-    public WebSocketListener(List<WebSocketSession> sessions) {
-        this.sessions = sessions;
+    @Autowired
+    public WebSocketListener(SessionRegistry sessionRegistry, MessageQueues queues) {
+        this.sessionRegistry = sessionRegistry;
+        this.queues = queues;
     }
+
 
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
-                String erlangMessage = MessageQueues.getErlangMessage();   // blocking call
+                String erlangMessage = queues.getErlangMessage();   // blocking call
 
                 if (!erlangMessage.startsWith("{node_metrics"))
                     System.out.println("[WebSocket] Send erlang message to active sessions " + erlangMessage);
 
                 // Broadcast to all active WebSocket sessions
-                for (WebSocketSession session : sessions)    // no need to synchronize since using snapshot iterator and session obj is thread safe
+                for (WebSocketSession session : sessionRegistry.getSessions())    // no need to synchronize since using snapshot iterator and session obj is thread safe
                     if (session.isOpen())
                         session.sendMessage(new TextMessage(erlangMessage));
 

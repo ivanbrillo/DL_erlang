@@ -1,25 +1,28 @@
 package org.backend;
 
+import org.springframework.stereotype.Component;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+@Component
 public class MessageQueues {
-    private static final BlockingQueue<String> erlangQueue = new LinkedBlockingQueue<>();
-    private static final BlockingQueue<String> webSocketQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<String> erlangQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<String> webSocketQueue = new LinkedBlockingQueue<>();
 
-    public static void addErlangMessage(String message) throws InterruptedException {
+    public void addErlangMessage(String message) throws InterruptedException {
         erlangQueue.put(message);
     }
 
-    public static void addWebSocketMessage(String message) throws InterruptedException {
+    public void addWebSocketMessage(String message) throws InterruptedException {
         webSocketQueue.put(message);
     }
 
-    public static String getErlangMessage() throws InterruptedException {
+    public String getErlangMessage() throws InterruptedException {
         return erlangQueue.take();
     }
 
-    public static String getWebSocketMessage() {
+    public String getWebSocketMessage() {
         return webSocketQueue.poll();
     }
 

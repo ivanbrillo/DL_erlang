@@ -9,34 +9,36 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class ErlangWebSocketHandler extends TextWebSocketHandler {
-    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
-    private final Thread erlangMessageForwarder = new Thread(new WebSocketListener(sessions));
+    private final SessionRegistry sessionRegistry;
+    private final Thread erlangMessageForwarder;
+    private final MessageQueues queues;
 
-    public ErlangWebSocketHandler() {
+    public ErlangWebSocketHandler(WebSocketListener webSocketListener, SessionRegistry sessionRegistry, MessageQueues queues) {
+        this.queues = queues;
+        this.sessionRegistry = sessionRegistry;
+        erlangMessageForwarder = new Thread(webSocketListener);
         erlangMessageForwarder.start();
     }
 
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
-        sessions.add(session);
+        sessionRegistry.getSessions().add(session);
         System.out.println("[SockJS] New session connected: " + session.getId());
     }
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws Exception {
         String receivedMessage = message.getPayload();
-        MessageQueues.addWebSocketMessage(receivedMessage);
+        queues.addWebSocketMessage(receivedMessage);
         System.out.println("[SockJS] Received message: " + receivedMessage);
     }
 
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) {
-        sessions.remove(session);
+        sessionRegistry.getSessions().remove(session);
         System.out.println("[SockJS] Session closed: " + session.getId() + ", Status: " + status);
     }
 
@@ -45,4 +47,5 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
         erlangMessageForwarder.interrupt();
         erlangMessageForwarder.join();
     }
+
 }

@@ -7,6 +7,7 @@ import org.backend.MessageQueues;
 import org.backend.commands.Command;
 import org.backend.commands.StopCommand;
 import org.backend.commands.CommandFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,9 @@ public class ErlangController implements Runnable {
     private final ErlangContext erlangContext = new ErlangContext();
     private final CommandFactory commandFactory;
     private final ApplicationContext appContext;
+
+    @Autowired
+    private MessageQueues queues;
 
 
     public ErlangController(CommandFactory commandFactory, ApplicationContext appContext) {
@@ -47,7 +51,7 @@ public class ErlangController implements Runnable {
                 OtpErlangObject msg = erlangContext.getOtpConnection().receive();
 
                 if (!msg.toString().startsWith("{rex,")) {   // RPC return value
-                    MessageQueues.addErlangMessage(msg.toString());
+                    queues.addErlangMessage(msg.toString());
 
                     //TODO check this line
                     if (msg.toString().equals("{train_refused}") || msg.toString().startsWith("{training_total_completed,") || msg.toString().startsWith("{train_error,"))
@@ -60,7 +64,7 @@ public class ErlangController implements Runnable {
     }
 
     private void executeWebSocketCommand() {
-        String commandJSON = MessageQueues.getWebSocketMessage();
+        String commandJSON = queues.getWebSocketMessage();
         if (commandJSON == null)
             return;
 

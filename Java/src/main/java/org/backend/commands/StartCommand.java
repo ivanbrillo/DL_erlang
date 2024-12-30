@@ -3,6 +3,7 @@ package org.backend.commands;
 import com.ericsson.otp.erlang.*;
 import org.backend.erlang.ErlangContext;
 import org.backend.erlang.ErlangHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.backend.MessageQueues;
@@ -12,6 +13,9 @@ import java.io.IOException;
 
 @Component
 public class StartCommand implements Command {
+
+    @Autowired
+    private MessageQueues queues;
 
     private final String cookie;
     private final String javaNodeName;
@@ -59,7 +63,7 @@ public class StartCommand implements Command {
 
     private void sendErrorMessage() {
         try {
-            MessageQueues.addErlangMessage("{start uncorrectly}");
+            queues.addErlangMessage("{start uncorrectly}");
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
