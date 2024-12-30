@@ -1,6 +1,9 @@
 package org.backend.erlang;
 
 import com.ericsson.otp.erlang.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.backend.MessageQueues;
@@ -12,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Map;
 
 
 @Component
@@ -20,6 +24,8 @@ public class ErlangController implements Runnable {
     private final ErlangContext erlangContext = new ErlangContext();
     private final CommandFactory commandFactory;
     private final ApplicationContext appContext;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
 
     @Autowired
     private MessageQueues queues;
@@ -50,7 +56,7 @@ public class ErlangController implements Runnable {
             if (erlangContext.isConnected() && erlangContext.getOtpConnection().msgCount() > 0) {
                 OtpErlangObject msg = erlangContext.getOtpConnection().receive();
 
-                if (!msg.toString().startsWith("{rex,")) {   // RPC return value
+                if (!msg.toString().startsWith("{rex,")) {   // RPC return value, will be discarded
                     queues.addErlangMessage(msg.toString());
 
                     //TODO check this line
@@ -69,8 +75,9 @@ public class ErlangController implements Runnable {
             return;
 
         try {
-            Command command = commandFactory.createCommand(commandJSON);
-            command.execute(erlangContext);
+            Map<String, String> commandMap = parseCommand(commandJSON);
+            Command command = commandFactory.createCommand(commandMap.get("command"));
+            command.execute(erlangContext, commandMap.get("parameters"));
         } catch (RuntimeException e) {
             System.out.println("Cannot execute command for reason: " + e.getMessage());
         }
@@ -82,10 +89,19 @@ public class ErlangController implements Runnable {
             erlangContext.getErlangControllerThread().interrupt();
             erlangContext.getErlangControllerThread().join();
             try {
-                appContext.getBean(StopCommand.class).execute(erlangContext);
+                appContext.getBean(StopCommand.class).execute(erlangContext, "");
             } catch (RuntimeException ignored) {
             }
         }
         System.out.println("ErlangController shutdown complete.");
+    }
+
+    private Map<String, String> parseCommand(String commandJSON) {
+        try {
+            return objectMapper.readValue(commandJSON, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Command discarded with reason: " + e.getMessage());
+        }
     }
 }

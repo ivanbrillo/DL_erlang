@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class LoadCommand implements Command {
 
     @Override
-    public void execute(ErlangContext context) throws RuntimeException {
+    public void execute(ErlangContext context, String parameters) throws RuntimeException {
 
         if (!context.isConnected())
             throw new RuntimeException("Erlang process is not connected so the model cannot be loaded");

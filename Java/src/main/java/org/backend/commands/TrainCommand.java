@@ -16,9 +16,6 @@ import java.util.regex.Pattern;
 @Component
 public class TrainCommand implements Command {
 
-    private int epochs = 0;
-    private double targetAccuracy = 1.0;
-
     private static String getParamValue(String parameters, String parametersName) {
         Pattern pattern = Pattern.compile(parametersName + "=([^,]+)");
         Matcher matcher = pattern.matcher(parameters);
@@ -29,24 +26,23 @@ public class TrainCommand implements Command {
         return null;
     }
 
-    public void setParameters(String parameters) {
+    private static double getParameter(String parameters, String parameterName) {
         try {
-            epochs = Integer.parseInt(Objects.requireNonNull(getParamValue(parameters, "epochs")));
-            targetAccuracy = Double.parseDouble(Objects.requireNonNull(getParamValue(parameters, "targetAccuracy")));
+            return Double.parseDouble(Objects.requireNonNull(getParamValue(parameters, parameterName)));
         } catch (NumberFormatException | NullPointerException e) {
             throw new IllegalArgumentException("Train Command discarded for bad arguments", e);
         }
     }
 
     @Override
-    public void execute(ErlangContext context) throws RuntimeException {
+    public void execute(ErlangContext context, String parameters) throws RuntimeException {
         if (!context.isConnected() || context.isTraining())
             throw new RuntimeException("Erlang process is not connected or already in training, unable to perform the train");
 
         context.setTraining(true);
         ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{
-                new OtpErlangInt(epochs),
-                new OtpErlangDouble(targetAccuracy)
+                new OtpErlangInt((int)getParameter(parameters, "epochs")),
+                new OtpErlangDouble(getParameter(parameters, "targetAccuracy"))
         }, "master_api", "train");
     }
 

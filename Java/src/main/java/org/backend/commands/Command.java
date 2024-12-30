@@ -4,6 +4,6 @@ import org.backend.erlang.ErlangContext;
 
 public interface Command {
 
-    void execute(ErlangContext context) throws RuntimeException;
+    void execute(ErlangContext context, String parameters) throws RuntimeException;
 
 }

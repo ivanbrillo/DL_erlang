@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class StopTrainingCommand implements Command {
 
     @Override
-    public void execute(ErlangContext context) throws RuntimeException {
+    public void execute(ErlangContext context, String parameters) throws RuntimeException {
 
         if (!context.isConnected() || !context.isTraining())
             throw new RuntimeException("Erlang process is not connected or in training so i cannot stop the training");
