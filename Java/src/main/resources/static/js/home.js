@@ -31,13 +31,12 @@ document.getElementById('connectButton').addEventListener('click', function() {
 
     // Event handler when the connection is open
     socket.onopen = function() {
-        console.log('SockJS connection established');
         socket.send(JSON.stringify({command: "start", parameters: ""}));
+        addLogMessage("sent", "start");
     };
 
     // Event handler when a message is received
     socket.onmessage = function(event) {
-        console.log('Message received:', event.data);
         processingInput(event.data);
     };
 
@@ -59,6 +58,7 @@ document.getElementById('connectButton').addEventListener('click', function() {
 
 document.getElementById('closeButton').addEventListener('click', function() {
     socket.send(JSON.stringify({command: "stop", parameters: ""}));
+    addLogMessage("sent", "stop");
 
    const container = document.getElementById('containerNodes');
    const elements = container.querySelectorAll('.elemNode');
@@ -88,6 +88,8 @@ document.getElementById('startBtn').addEventListener('click', function() {
     };
 
     socket.send(JSON.stringify(msg));
+    addLogMessage("sent", msg.command + msg.parameters);
+
     clearChart();
 
     document.getElementById('connectButton').disabled = true;
@@ -100,14 +102,17 @@ document.getElementById('startBtn').addEventListener('click', function() {
 
 document.getElementById('saveButton').addEventListener('click', function() {
     socket.send(JSON.stringify({command: "save", parameters: ""}));
+    addLogMessage("sent", "save model");
 });
 
 document.getElementById('loadButton').addEventListener('click', function() {
     socket.send(JSON.stringify({command: "load", parameters: ""}));
+    addLogMessage("sent", "load model");
 });
 
 document.getElementById('stopBtn').addEventListener('click', function() {
     socket.send(JSON.stringify({command: "stop_training", parameters: ""}));
+    addLogMessage("sent", "stop training");
 
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
@@ -124,26 +129,35 @@ function processingInput(input){
     const inputStr = typeof input === 'object' ? JSON.stringify(input) : input;
 
     if (inputStr.startsWith("{initialized_nodes")) {
-        initialized_nodes(inputStr);
+        initializedNodes(inputStr);
+        addLogMessage("received", inputStr);
     } else if (inputStr.startsWith("{train_epoch_completed")) {
-        train_accuracy(inputStr);
+        trainAccuracy(inputStr);
     } else if (inputStr.startsWith("{training_total_completed")) {
+        addLogMessage("received", inputStr);
         document.getElementById('startBtn').disabled = false;
     } else if (inputStr.startsWith("{node_metrics")){
-        node_metrics(inputStr);
+        nodeMetrics(inputStr);
     } else if (inputStr.startsWith("{node_up")){
-        add_node(inputStr);
+        addLogMessage("received", inputStr);
+        addNode(inputStr);
     } else if (inputStr.startsWith("{node_down")){
-        delete_node(inputStr);
+        addLogMessage("received", inputStr);
+        deleteNode(inputStr);
     } else if (inputStr.startsWith("{start uncorrectly")){
+        addLogMessage("received", inputStr);
         document.getElementById('connectButton').disabled = false;
         document.getElementById('closeButton').disabled = true;
     } else if (inputStr.startsWith("{train_refused")){
+        addLogMessage("received", inputStr);
         document.getElementById('startBtn').disabled = false;
+    } else if (inputStr.startsWith("{db_ack")){
+        addLogMessage("received", inputStr);
+        sizeDB(inputStr);
     }
 }
 
-function initialized_nodes(input){
+function initializedNodes(input){
     /* delete old nodes, useful in restart due to errors */
     const container = document.getElementById('containerNodes');
     const oldElements = container.querySelectorAll('.elemNode');
@@ -178,7 +192,7 @@ function initialized_nodes(input){
     result.forEach(createNode);
 }
 
-function train_accuracy(input) {
+function trainAccuracy(input) {
     const content = input.substring(input.indexOf('['));
     const parts = content.split(/\],\[/).map(part => part.replace(/[\[\]{}]/g, ''));
 
@@ -213,7 +227,7 @@ function train_accuracy(input) {
 
 
 
-function node_metrics(input){
+function nodeMetrics(input){
     let inputJSON = input.match(/"({.*})"/);
 
     const metricsData = JSON.parse(inputJSON[1]);
@@ -227,7 +241,8 @@ function node_metrics(input){
 
 
     metrics.forEach(metric => {
-        if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric") {
+        if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric"
+        || metric.id === "train-dataset-size" || metric.id === "test-dataset-size") {
             return;
         }
 
@@ -239,13 +254,28 @@ function node_metrics(input){
 }
 
 
+function sizeDB(input) {
+    const regex = /#Pid<([^\.]+)\.[^>]*>.*?\{(\d+),\d+,\d+\},\{(\d+),\d+,\d+\}/;
+    const match = input.match(regex);
 
-function add_node(input){
+
+    let nodeElem = document.getElementById(match[1]);
+
+    const trainElem = nodeElem.querySelector("#train-dataset-size");
+    const testElem = nodeElem.querySelector("#test-dataset-size");
+
+    trainElem.textContent = match[2] || "N/A";
+    testElem.textContent = match[3] || "N/A";
+}
+
+
+
+function addNode(input){
     const name = input.match(/,(.*?)}/)?.[1];
     createNode(name);
 }
 
-function delete_node(input){
+function deleteNode(input){
     const name = input.match(/,(.*?)}/)?.[1];
     removeNode(name);
 }
@@ -265,7 +295,7 @@ function addLogMessage(type, message) {
         logEntry.textContent = "Received message: " + message;
     } else if (type === 'sent') {
         logEntry.classList.add('sent');
-        logEntry.innerHTML = "Received message: " + message;
+        logEntry.innerHTML = "Sent message: " + message;
     }
 
     logContainer.appendChild(logEntry);

@@ -44,46 +44,6 @@ TOP MENU
 }
 
 
-/* Style the list */
-ul.breadcrumb {
-    padding: 10px 16px;
-    list-style: none;
-}
-
-/* Display list items side by side */
-ul.breadcrumb li {
-    display: inline;
-    font-size: 18px;
-    color: white;
-    font-weight: lighter;
-    text-decoration: none;
-}
-
-ul.breadcrumb li:last-child {
-    font-weight: bold;
-}
-
-ul.breadcrumb li+li:before {
-    padding: 8px;
-    color: white;
-    content: "/\00a0";  /* Add a slash symbol (/) before/behind each list item */
-}
-
-ul.breadcrumb li:not(:first-child) a:hover {
-    text-decoration: underline;
-}
-
-
-#menu{
-    display:flex;
-    flex-direction:row;
-    justify-content:flex-start;
-    align-items:center;
-    gap:13px;
-    position:relative;
-}
-
-
 
 /*******************
 LEFT MENU
@@ -173,7 +133,7 @@ LEFT MENU
 BUTTON TOP MENU AND LEFT MENU
 *****************************/
 
-#menu button, #elements button {
+#elements button {
     background-color: transparent;
     padding: 15px 20px;
     display: flex;
@@ -187,20 +147,19 @@ BUTTON TOP MENU AND LEFT MENU
     border-style:none;
 }
 
-#menu button:hover, #elements button:hover {
+#elements button:hover {
     cursor:pointer;
 }
 
-#menu button img, #elements button img{
+#elements button img{
     transition: cubic-bezier(0.075, 0.82, 0.165, 1) 0.5s;
 }
 
-#menu button:hover img, #menu button:hover span
 #elements button:hover img, #elemets button:hover span{
     transform: scale(1.1);
 }
 
-#menu button:active img,  #elemets button:active img{
+#elemets button:active img{
     transform: scale(0.9);
 }
 
