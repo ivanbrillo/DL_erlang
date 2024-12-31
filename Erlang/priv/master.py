@@ -44,8 +44,8 @@ def register_handler(master_pid):
             federatedController.update_weights(payload)
             cast(master_pid, (encode_status_code("update_weights_ack"), None))
         elif code == "save_model":
-            federatedController.save_model(payload.decode('utf-8'))
-            cast(master_pid, (encode_status_code("model_saved"), None))
+            result = federatedController.save_model(payload.decode('utf-8'))
+            cast(master_pid, (encode_status_code("model_saved"), encode_status_code(result)))
         elif code == "load_model":
             result = federatedController.load_model(payload.decode('utf-8'))
             cast(master_pid, (encode_status_code("model_loaded"), encode_status_code(result)))

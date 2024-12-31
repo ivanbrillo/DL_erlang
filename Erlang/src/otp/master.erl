@@ -87,9 +87,9 @@ handle_cast({train, _EpochsLeft, _CurrentEpoch, _AccuracyThreshold}, State) ->
     {noreply, State};
 
 handle_cast({save_model, Name}, State) ->
-    _Ack = message_primitives:synch_message(State#mstate.pythonModelPID, save_model, Name, model_saved, State#mstate.javaUiPid),
+    Result = message_primitives:synch_message(State#mstate.pythonModelPID, save_model, Name, model_saved, State#mstate.javaUiPid),
 
-    message_primitives:notify_ui(State#mstate.javaUiPid, {model_saved}),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {model_saved, Result}),
     io:format("--- MASTER: model saved ---~n"),
     {noreply, State};
 

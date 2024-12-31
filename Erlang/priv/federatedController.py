@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 import json
 from networkModel import NetworkModel
+from tensorflow.keras.models import model_from_json
 
 
 class FederatedController():
@@ -85,14 +86,19 @@ class FederatedController():
         
         return averaged_weights
     
-    def save_model(self, path = "model") -> None:
-        self.model.save(path + ".keras")
+    def save_model(self, path = "model") -> str:
+        try:
+            self.model.save(path + ".keras")
+            return "true"
+        except Exception as e:
+            print(f"Error saving the model: {str(e)}")
+        return "false"
 
     def load_model(self, path = "model") -> str:
         try:
             self.model.load_weights(path + ".keras")
             return "true"
         except Exception as e:
-            print(f"Error loading model weights: {str(e)}")
+            print(f"Error loading the model: {str(e)}")
         return "false"
 
