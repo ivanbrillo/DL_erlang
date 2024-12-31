@@ -2,6 +2,7 @@ package org.backend.websocket;
 
 import jakarta.annotation.PreDestroy;
 import org.backend.MessageQueues;
+import org.backend.erlang.ErlangContext;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -15,10 +16,13 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     private final SessionRegistry sessionRegistry;
     private final Thread erlangMessageForwarder;
     private final MessageQueues queues;
+    private final ErlangContext erlangContext;
 
-    public ErlangWebSocketHandler(WebSocketListener webSocketListener, SessionRegistry sessionRegistry, MessageQueues queues) {
+
+    public ErlangWebSocketHandler(WebSocketListener webSocketListener, SessionRegistry sessionRegistry, MessageQueues queues, ErlangContext erlangContext) {
         this.queues = queues;
         this.sessionRegistry = sessionRegistry;
+        this.erlangContext = erlangContext;
         erlangMessageForwarder = new Thread(webSocketListener);
         erlangMessageForwarder.start();
     }
@@ -26,6 +30,10 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
         sessionRegistry.addSession(session);
+
+        if (erlangContext.isConnected())
+            queues.restoreSession();
+
         System.out.println("[SockJS] New session connected: " + session.getId());
     }
 

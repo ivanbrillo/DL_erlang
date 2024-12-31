@@ -61,7 +61,6 @@ function createNode(Name){
         metricsContainer.appendChild(metricDiv);
     });
 
-
     node.appendChild(title);
     node.appendChild(metricsContainer);
 

@@ -58,6 +58,7 @@ handle_call(distribute_weights, _From, State) ->
     {reply, {ok, ResponseList}, State}.
 
 handle_cast({new_train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) ->
+    message_primitives:notify_ui(State#mstate.javaUiPid, {new_train, {EpochsLeft,AccuracyThreshold}}),
     gen_server:cast(erlang_master, {train, EpochsLeft, CurrentEpoch, AccuracyThreshold}),
     {noreply, State#mstate{terminateTraining = false}};   % clear the terminateTraining flag of a possible previous training
 

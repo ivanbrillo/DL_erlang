@@ -21,19 +21,17 @@ import java.util.Map;
 @Component
 public class ErlangController implements Runnable {
 
-    private final ErlangContext erlangContext = new ErlangContext();
     private final CommandFactory commandFactory;
     private final ApplicationContext appContext;
+    private final MessageQueues queues;
+    private final ErlangContext erlangContext;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
-    @Autowired
-    private MessageQueues queues;
-
-
-    public ErlangController(CommandFactory commandFactory, ApplicationContext appContext) {
+    public ErlangController(CommandFactory commandFactory, ApplicationContext appContext, MessageQueues queues, ErlangContext erlangContext) {
         this.commandFactory = commandFactory;
         this.appContext = appContext;
+        this.queues = queues;
+        this.erlangContext = erlangContext;
     }
 
     @PostConstruct

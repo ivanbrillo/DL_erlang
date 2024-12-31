@@ -4,6 +4,30 @@ const container = document.getElementById("container");
 const dashboard = document.getElementById("dashboard");
 let socket;
 
+let host = document.location.host;
+const url = "http://" + host + "/erlang-socket";
+
+// Connection to the backend using SockJS
+socket = new SockJS(url);
+
+// Event handler when the connection is open
+socket.onopen = function () {
+};
+
+// Event handler when a message is received
+socket.onmessage = function (event) {
+    processingInput(event.data);
+};
+
+socket.onclose = function () {
+    console.log('SockJS connection closed');
+};
+
+socket.onerror = function (error) {
+    console.error('SockJS error:', error);
+};
+
+
 /* LEFT MENU MANAGEMENT*/
 analyticsBtn.addEventListener("click", () => {
     container.style.display = "none";
@@ -20,33 +44,11 @@ homepageBtn.addEventListener("click", () => {
 });
 
 
-
 /* MESSAGE MANAGEMENT*/
-document.getElementById('connectButton').addEventListener('click', function() {
-    let host = document.location.host;
-    const url = "http://" + host + "/erlang-socket";
+document.getElementById('connectButton').addEventListener('click', function () {
 
-    // Connection to the backend using SockJS
-    socket = new SockJS(url);
-
-    // Event handler when the connection is open
-    socket.onopen = function() {
-        socket.send(JSON.stringify({command: "start", parameters: ""}));
-        addLogMessage("sent", "start");
-    };
-
-    // Event handler when a message is received
-    socket.onmessage = function(event) {
-        processingInput(event.data);
-    };
-
-    socket.onclose = function() {
-        console.log('SockJS connection closed');
-    };
-
-    socket.onerror = function(error) {
-        console.error('SockJS error:', error);
-    };
+    socket.send(JSON.stringify({command: "start", parameters: ""}));
+    addLogMessage("sent", "start");
 
     document.getElementById('connectButton').disabled = true;
     document.getElementById('closeButton').disabled = false;
@@ -57,13 +59,13 @@ document.getElementById('connectButton').addEventListener('click', function() {
     document.getElementById('stopBtn').disabled = true;
 });
 
-document.getElementById('closeButton').addEventListener('click', function() {
+document.getElementById('closeButton').addEventListener('click', function () {
     socket.send(JSON.stringify({command: "stop", parameters: ""}));
     addLogMessage("sent", "stop");
 
-   const container = document.getElementById('containerNodes');
-   const elements = container.querySelectorAll('.elemNode');
-   elements.forEach(elem => elem.remove());
+    const container = document.getElementById('containerNodes');
+    const elements = container.querySelectorAll('.elemNode');
+    elements.forEach(elem => elem.remove());
 
 
     clearChart();
@@ -78,7 +80,7 @@ document.getElementById('closeButton').addEventListener('click', function() {
 
 });
 
-document.getElementById('startBtn').addEventListener('click', function() {
+document.getElementById('startBtn').addEventListener('click', function () {
     const epochsInput = document.getElementById('epochsInput').value;
     const accuracyTargetInput = document.getElementById('accuracyTarget').value;
 
@@ -103,22 +105,22 @@ document.getElementById('startBtn').addEventListener('click', function() {
     document.getElementById('stopBtn').disabled = false;
 });
 
-document.getElementById('saveButton').addEventListener('click', function() {
+document.getElementById('saveButton').addEventListener('click', function () {
     socket.send(JSON.stringify({command: "save", parameters: ""}));
     addLogMessage("sent", "save model");
 });
 
-document.getElementById('loadButton').addEventListener('click', function() {
+document.getElementById('loadButton').addEventListener('click', function () {
     socket.send(JSON.stringify({command: "load", parameters: "model"}));
     addLogMessage("sent", "load model");
 });
 
-document.getElementById('loadBackUpButton').addEventListener('click', function() {
+document.getElementById('loadBackUpButton').addEventListener('click', function () {
     socket.send(JSON.stringify({command: "load", parameters: "backup"}));
     addLogMessage("sent", "load backup");
 });
 
-document.getElementById('stopBtn').addEventListener('click', function() {
+document.getElementById('stopBtn').addEventListener('click', function () {
     socket.send(JSON.stringify({command: "stop_training", parameters: ""}));
     addLogMessage("sent", "stop training");
 
@@ -127,11 +129,10 @@ document.getElementById('stopBtn').addEventListener('click', function() {
 });
 
 
-
 /*
 PRECESSING INPUT FROM BACK-END
  */
-function processingInput(input){
+function processingInput(input) {
     // Since SockJS automatically parses JSON, we need to stringify it back
     // if the input is an object
     const inputStr = typeof input === 'object' ? JSON.stringify(input) : input;
@@ -145,15 +146,15 @@ function processingInput(input){
         addLogMessage("received", inputStr);
         document.getElementById('startBtn').disabled = false;
         document.getElementById('stopBtn').disabled = true;
-    } else if (inputStr.startsWith("{node_metrics")){
+    } else if (inputStr.startsWith("{node_metrics")) {
         nodeMetrics(inputStr);
-    } else if (inputStr.startsWith("{node_up")){
+    } else if (inputStr.startsWith("{node_up")) {
         addLogMessage("received", inputStr);
         addNode(inputStr);
-    } else if (inputStr.startsWith("{node_down")){
+    } else if (inputStr.startsWith("{node_down")) {
         addLogMessage("received", inputStr);
         deleteNode(inputStr);
-    } else if (inputStr.startsWith("{start uncorrectly")){
+    } else if (inputStr.startsWith("{start uncorrectly")) {
         addLogMessage("received", inputStr);
         document.getElementById('connectButton').disabled = false;
         document.getElementById('closeButton').disabled = true;
@@ -162,25 +163,44 @@ function processingInput(input){
         document.getElementById('saveButton').disabled = true;
         document.getElementById('startBtn').disabled = true;
         document.getElementById('stopBtn').disabled = true;
-    } else if (inputStr.startsWith("{train_refused")){
+    } else if (inputStr.startsWith("{train_refused")) {
         addLogMessage("received", inputStr);
         document.getElementById('startBtn').disabled = false;
         document.getElementById('stopBtn').disabled = true;
-    } else if (inputStr.startsWith("{db_ack")){
+    } else if (inputStr.startsWith("{db_ack")) {
         addLogMessage("received", inputStr);
         sizeDB(inputStr);
-    }  else if (inputStr.startsWith("{model_saved")){
+    } else if (inputStr.startsWith("{model_saved")) {
         addLogMessage("received", inputStr);
-    } else if (inputStr.startsWith("{model_loaded")){
+    } else if (inputStr.startsWith("{model_loaded")) {
         addLogMessage("received", inputStr);
+    } else if (inputStr.startsWith("{new_train")) {
+        clearChart();
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        addLogMessage("received", inputStr);
+
+        const regex = /{new_train,\{(\d+),([\d.]+)}}/; // Match the format {new_train,{<epochs>,<accuracy>}}
+        const match = regex.exec(inputStr);
+
+        console.log(match[1]);
+        console.log(match[2]);
+
+        document.getElementById('epochsInput').value = match[1];
+        document.getElementById('accuracyTarget').value = match[2];
+
+        document.getElementById('epochsInput').dispatchEvent(new Event('input'));
+        document.getElementById('accuracyTarget').dispatchEvent(new Event('input'));
+
     }
 }
 
-function initializedNodes(input){
+function initializedNodes(input) {
     /* delete old nodes, useful in restart due to errors */
     const container = document.getElementById('containerNodes');
     const oldElements = container.querySelectorAll('.elemNode');
     oldElements.forEach(elem => elem.remove());
+    document.getElementById('startBtn').disabled = false;
 
     clearChart();
 
@@ -217,7 +237,7 @@ function trainAccuracy(input) {
     const parts = content.split(/\],\[/).map(part => part.replace(/[\[\]{}]/g, ''));
 
     // Array PID
-    const pids = parts[0].split(',').map(pid =>pid.match(/<([^.]+)/)[1]);
+    const pids = parts[0].split(',').map(pid => pid.match(/<([^.]+)/)[1]);
     // Array Train Accuracy
     const trainAccuracies = parts[1].split(',').map(Number);
     // Array Test Accuracy
@@ -246,8 +266,7 @@ function trainAccuracy(input) {
 }
 
 
-
-function nodeMetrics(input){
+function nodeMetrics(input) {
 
     let inputJSON = input.match(/"({.*})"/);
 
@@ -258,21 +277,21 @@ function nodeMetrics(input){
 
     metrics.forEach(metric => {
         if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric"
-        || metric.id === "train-dataset-size" || metric.id === "test-dataset-size") {
+            || metric.id === "train-dataset-size" || metric.id === "test-dataset-size") {
             return;
         }
 
         let info = metricsData[metric.label.replace(':', '').trim()];
 
-        if(metric.id === "cpu-metric") {
+        if (metric.id === "cpu-metric") {
             updateProgressBar(nodeElem, "cpu-bar", parseFloat(info.replace('%', '')));
-        } else if(metric.id === "memory-metric"){
+        } else if (metric.id === "memory-metric") {
             updateProgressBar(nodeElem, "memory-bar", parseFloat(info.replace('%', '')));
         }
 
         const metricElem = nodeElem.querySelector(`#${metric.id}`);
         if (metricElem) {
-            metricElem.textContent =  info;
+            metricElem.textContent = info;
         }
     });
 }
@@ -293,19 +312,15 @@ function sizeDB(input) {
 }
 
 
-
-function addNode(input){
+function addNode(input) {
     const name = input.match(/,(.*?)}/)?.[1];
     createNode(name);
 }
 
-function deleteNode(input){
+function deleteNode(input) {
     const name = input.match(/,(.*?)}/)?.[1];
     removeNode(name);
 }
-
-
-
 
 
 /* LOG SECTION */
