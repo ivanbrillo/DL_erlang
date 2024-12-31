@@ -4,6 +4,18 @@ const container = document.getElementById("container");
 const dashboard = document.getElementById("dashboard");
 let socket;
 
+
+/* BUTTONS */
+const CONNECT = document.getElementById('connectButton');
+const CLOSE = document.getElementById('closeButton');
+const MODEL = document.getElementById('loadButton');
+const BACKUP = document.getElementById('loadBackUpButton');
+const SAVE = document.getElementById('saveButton');
+const START = document.getElementById('startBtn');
+const STOP = document.getElementById('stopBtn');
+
+
+
 /* LEFT MENU MANAGEMENT*/
 analyticsBtn.addEventListener("click", () => {
     container.style.display = "none";
@@ -33,6 +45,7 @@ document.getElementById('connectButton').addEventListener('click', function() {
     socket.onopen = function() {
         socket.send(JSON.stringify({command: "start", parameters: ""}));
         addLogMessage("sent", "start");
+        showSpinner();
     };
 
     // Event handler when a message is received
@@ -47,14 +60,6 @@ document.getElementById('connectButton').addEventListener('click', function() {
     socket.onerror = function(error) {
         console.error('SockJS error:', error);
     };
-
-    document.getElementById('connectButton').disabled = true;
-    document.getElementById('closeButton').disabled = false;
-    document.getElementById('loadButton').disabled = false;
-    document.getElementById('loadBackUpButton').disabled = false;
-    document.getElementById('saveButton').disabled = false;
-    document.getElementById('startBtn').disabled = false;
-    document.getElementById('stopBtn').disabled = true;
 });
 
 document.getElementById('closeButton').addEventListener('click', function() {
@@ -67,15 +72,7 @@ document.getElementById('closeButton').addEventListener('click', function() {
 
 
     clearChart();
-
-    document.getElementById('connectButton').disabled = false;
-    document.getElementById('closeButton').disabled = true;
-    document.getElementById('loadButton').disabled = true;
-    document.getElementById('loadBackUpButton').disabled = true;
-    document.getElementById('saveButton').disabled = true;
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('stopBtn').disabled = true;
-
+    uiDisabled();
 });
 
 document.getElementById('startBtn').addEventListener('click', function() {
@@ -94,13 +91,8 @@ document.getElementById('startBtn').addEventListener('click', function() {
 
     clearChart();
 
-    document.getElementById('connectButton').disabled = true;
-    document.getElementById('closeButton').disabled = false;
-    document.getElementById('loadButton').disabled = false;
-    document.getElementById('loadBackUpButton').disabled = false;
-    document.getElementById('saveButton').disabled = false;
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('stopBtn').disabled = false;
+    START.disabled = true;
+    STOP.disabled = false;
 });
 
 document.getElementById('saveButton').addEventListener('click', function() {
@@ -122,8 +114,8 @@ document.getElementById('stopBtn').addEventListener('click', function() {
     socket.send(JSON.stringify({command: "stop_training", parameters: ""}));
     addLogMessage("sent", "stop training");
 
-    document.getElementById('startBtn').disabled = false;
-    document.getElementById('stopBtn').disabled = true;
+    START.disabled = false;
+    STOP.disabled = true;
 });
 
 
@@ -143,8 +135,8 @@ function processingInput(input){
         trainAccuracy(inputStr);
     } else if (inputStr.startsWith("{training_total_completed")) {
         addLogMessage("received", inputStr);
-        document.getElementById('startBtn').disabled = false;
-        document.getElementById('stopBtn').disabled = true;
+        START.disabled = false;
+        STOP.disabled = true;
     } else if (inputStr.startsWith("{node_metrics")){
         nodeMetrics(inputStr);
     } else if (inputStr.startsWith("{node_up")){
@@ -155,17 +147,12 @@ function processingInput(input){
         deleteNode(inputStr);
     } else if (inputStr.startsWith("{start uncorrectly")){
         addLogMessage("received", inputStr);
-        document.getElementById('connectButton').disabled = false;
-        document.getElementById('closeButton').disabled = true;
-        document.getElementById('loadButton').disabled = true;
-        document.getElementById('loadBackUpButton').disabled = true;
-        document.getElementById('saveButton').disabled = true;
-        document.getElementById('startBtn').disabled = true;
-        document.getElementById('stopBtn').disabled = true;
+        hideSpinner();
+        uiActive();
     } else if (inputStr.startsWith("{train_refused")){
         addLogMessage("received", inputStr);
-        document.getElementById('startBtn').disabled = false;
-        document.getElementById('stopBtn').disabled = true;
+        START.disabled = false;
+        STOP.disabled = true;
     } else if (inputStr.startsWith("{db_ack")){
         addLogMessage("received", inputStr);
         sizeDB(inputStr);
@@ -177,6 +164,8 @@ function processingInput(input){
 }
 
 function initializedNodes(input){
+    hideSpinner();
+
     /* delete old nodes, useful in restart due to errors */
     const container = document.getElementById('containerNodes');
     const oldElements = container.querySelectorAll('.elemNode');
@@ -210,6 +199,7 @@ function initializedNodes(input){
     }
 
     result.forEach(createNode);
+    uiActive();
 }
 
 function trainAccuracy(input) {
@@ -302,6 +292,39 @@ function addNode(input){
 function deleteNode(input){
     const name = input.match(/,(.*?)}/)?.[1];
     removeNode(name);
+}
+
+
+function uiDisabled(){
+    CONNECT.disabled = false;
+    CLOSE.disabled = true;
+    MODEL.disabled = true;
+    BACKUP.disabled = true;
+    SAVE.disabled = true;
+    START.disabled = true;
+    STOP.disabled = true;
+}
+
+
+function uiActive() {
+    CONNECT.disabled = true;
+    CLOSE.disabled = false;
+    MODEL.disabled = false;
+    BACKUP.disabled = false;
+    SAVE.disabled = false;
+    START.disabled = false;
+    STOP.disabled = true;
+}
+
+
+
+/* SPINNER */
+function showSpinner() {
+    document.getElementById('spinner').style.display = 'block';
+}
+
+function hideSpinner() {
+    document.getElementById('spinner').style.display = 'none';
 }
 
 
