@@ -136,6 +136,7 @@ function processingInput(input){
     } else if (inputStr.startsWith("{training_total_completed")) {
         addLogMessage("received", inputStr);
         document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
     } else if (inputStr.startsWith("{node_metrics")){
         nodeMetrics(inputStr);
     } else if (inputStr.startsWith("{node_up")){
@@ -148,9 +149,14 @@ function processingInput(input){
         addLogMessage("received", inputStr);
         document.getElementById('connectButton').disabled = false;
         document.getElementById('closeButton').disabled = true;
+        document.getElementById('loadButton').disabled = true;
+        document.getElementById('saveButton').disabled = true;
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = true;
     } else if (inputStr.startsWith("{train_refused")){
         addLogMessage("received", inputStr);
         document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
     } else if (inputStr.startsWith("{db_ack")){
         addLogMessage("received", inputStr);
         sizeDB(inputStr);
@@ -164,6 +170,10 @@ function initializedNodes(input){
     const container = document.getElementById('containerNodes');
     const oldElements = container.querySelectorAll('.elemNode');
     oldElements.forEach(elem => elem.remove());
+
+    clearChart();
+
+
 
 
     const startIdx = input.indexOf("[");
@@ -230,17 +240,13 @@ function trainAccuracy(input) {
 
 
 function nodeMetrics(input){
+
     let inputJSON = input.match(/"({.*})"/);
 
     const metricsData = JSON.parse(inputJSON[1]);
     let nodeId = metricsData.Node;
 
     let nodeElem = document.getElementById(nodeId);
-    if (!nodeElem) {
-        console.log("Node name does not exist")
-    }
-
-
 
     metrics.forEach(metric => {
         if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric"
@@ -248,9 +254,17 @@ function nodeMetrics(input){
             return;
         }
 
+        let info = metricsData[metric.label.replace(':', '').trim()];
+
+        if(metric.id === "cpu-metric") {
+            updateProgressBar(nodeElem, "cpu-bar", parseFloat(info.replace('%', '')));
+        } else if(metric.id === "memory-metric"){
+            updateProgressBar(nodeElem, "memory-bar", parseFloat(info.replace('%', '')));
+        }
+
         const metricElem = nodeElem.querySelector(`#${metric.id}`);
         if (metricElem) {
-            metricElem.textContent = metricsData[metric.label.replace(':', '').trim()] || 'N/A';
+            metricElem.textContent =  info;
         }
     });
 }

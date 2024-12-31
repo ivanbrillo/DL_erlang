@@ -13,7 +13,7 @@
 
 #containerNodes {
     width: 60%;
-    height: 70%;
+    height: 90%;
 
     overflow-y: auto;
 
@@ -47,7 +47,7 @@
 
 
 .elemNode {
-    height: 55%;
+    height: 57%;
     width: 40%;
     padding: 20px;
     border-radius: 15px;
@@ -67,6 +67,7 @@
     font-weight: 600;
     color: white;
     margin: 0px;
+    margin-bottom: 10px;
     text-align: center;
 }
 
@@ -79,6 +80,11 @@
 .metric-item {
     color: white;
     font-size: 14px;
+    display: flex;
+}
+
+.metric-item strong{
+    margin-right: 10px;
 }
 
 
@@ -102,6 +108,22 @@
 .status-text {
     font-size: 14px;
     color: #10B981;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #ddd;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+
+.progress-bar-inner {
+    height: 100%;
+    border-radius: 5px;
+    text-align: center;
+    color: white;
+    line-height: 10px;
 }
 
 

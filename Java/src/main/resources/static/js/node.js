@@ -21,7 +21,7 @@ function createNode(Name){
 
 
     let title = document.createElement('h3');
-    title.textContent = 'NODE '+ Name;
+    title.textContent = 'NODE: '+ Name;
 
     /* metrics */
     let metricsContainer = document.createElement('div');
@@ -33,18 +33,31 @@ function createNode(Name){
 
         const label = document.createElement('strong');
         label.textContent = metric.label;
+        metricDiv.appendChild(label);
 
-        const value = document.createElement('span');
-        value.id = metric.id;
+        let bar = document.createElement('div');
 
-        if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric") {
-            value.textContent = 'N/A';
+        if (metric.id === "cpu-metric") {
+            bar.id = "cpu-bar";
+            bar.className = 'progress-bar';
+            metricDiv.appendChild(bar);
+        } else if (metric.id === "memory-metric") {
+            bar.id = "memory-bar";
+            bar.className = 'progress-bar';
+            metricDiv.appendChild(bar);
         } else {
-            value.textContent = 'Loading...';
+            const value = document.createElement('span');
+            value.id = metric.id;
+
+            if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric") {
+                value.textContent = 'N/A';
+            } else {
+                value.textContent = 'Loading...';
+            }
+
+            metricDiv.appendChild(value);
         }
 
-        metricDiv.appendChild(label);
-        metricDiv.appendChild(value);
         metricsContainer.appendChild(metricDiv);
     });
 
@@ -64,4 +77,27 @@ function removeNode(name){
         console.log(`${name} Node eliminated.`);
     }
     numNodi--;
+}
+
+
+
+function updateProgressBar(nodeElem, metricId, value) {
+    const progressBar = nodeElem.querySelector(`#${metricId}`);
+
+    const progressBarInner = document.createElement("div");
+    progressBarInner.classList.add("progress-bar-inner");
+    progressBarInner.style.width = value + "%";
+
+
+    let red = Math.min(255, Math.floor(255 * (value / 100)));
+    let green = Math.min(255, Math.floor(255 * (1 - value / 100)));
+
+    progressBarInner.style.backgroundColor = `rgb(${red}, ${green}, 0)`;
+
+
+    progressBarInner.textContent = value.toFixed(1) + "%";
+
+
+    progressBar.innerHTML = "";
+    progressBar.appendChild(progressBarInner);
 }
