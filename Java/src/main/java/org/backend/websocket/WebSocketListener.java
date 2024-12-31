@@ -3,8 +3,6 @@ package org.backend.websocket;
 import org.backend.MessageQueues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 
@@ -32,9 +30,7 @@ public class WebSocketListener implements Runnable {
                     System.out.println("[WebSocket] Send erlang message to active sessions " + erlangMessage);
 
                 // Broadcast to all active WebSocket sessions
-                for (WebSocketSession session : sessionRegistry.getSessions())    // no need to synchronize since using snapshot iterator and session obj is thread safe
-                    if (session.isOpen())
-                        session.sendMessage(new TextMessage(erlangMessage));
+                sessionRegistry.broadcastMessage(erlangMessage);
 
             } catch (InterruptedException e) {
                 System.err.println("[WebSocket] Thread interrupted during take()");

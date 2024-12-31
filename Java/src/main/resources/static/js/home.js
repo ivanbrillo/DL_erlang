@@ -51,6 +51,7 @@ document.getElementById('connectButton').addEventListener('click', function() {
     document.getElementById('connectButton').disabled = true;
     document.getElementById('closeButton').disabled = false;
     document.getElementById('loadButton').disabled = false;
+    document.getElementById('loadBackUpButton').disabled = false;
     document.getElementById('saveButton').disabled = false;
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
@@ -70,6 +71,7 @@ document.getElementById('closeButton').addEventListener('click', function() {
     document.getElementById('connectButton').disabled = false;
     document.getElementById('closeButton').disabled = true;
     document.getElementById('loadButton').disabled = true;
+    document.getElementById('loadBackUpButton').disabled = true;
     document.getElementById('saveButton').disabled = true;
     document.getElementById('startBtn').disabled = true;
     document.getElementById('stopBtn').disabled = true;
@@ -95,6 +97,7 @@ document.getElementById('startBtn').addEventListener('click', function() {
     document.getElementById('connectButton').disabled = true;
     document.getElementById('closeButton').disabled = false;
     document.getElementById('loadButton').disabled = false;
+    document.getElementById('loadBackUpButton').disabled = false;
     document.getElementById('saveButton').disabled = false;
     document.getElementById('startBtn').disabled = true;
     document.getElementById('stopBtn').disabled = false;
@@ -106,8 +109,13 @@ document.getElementById('saveButton').addEventListener('click', function() {
 });
 
 document.getElementById('loadButton').addEventListener('click', function() {
-    socket.send(JSON.stringify({command: "load", parameters: ""}));
+    socket.send(JSON.stringify({command: "load", parameters: "model"}));
     addLogMessage("sent", "load model");
+});
+
+document.getElementById('loadBackUpButton').addEventListener('click', function() {
+    socket.send(JSON.stringify({command: "load", parameters: "backup"}));
+    addLogMessage("sent", "load backup");
 });
 
 document.getElementById('stopBtn').addEventListener('click', function() {
@@ -150,6 +158,7 @@ function processingInput(input){
         document.getElementById('connectButton').disabled = false;
         document.getElementById('closeButton').disabled = true;
         document.getElementById('loadButton').disabled = true;
+        document.getElementById('loadBackUpButton').disabled = true;
         document.getElementById('saveButton').disabled = true;
         document.getElementById('startBtn').disabled = true;
         document.getElementById('stopBtn').disabled = true;
@@ -162,6 +171,8 @@ function processingInput(input){
         sizeDB(inputStr);
     }  else if (inputStr.startsWith("{model_saved}")){
         addLogMessage("received", inputStr);
+    } else if (inputStr.startsWith("{model_loaded")){
+        addLogMessage("received", inputStr);
     }
 }
 
@@ -172,9 +183,6 @@ function initializedNodes(input){
     oldElements.forEach(elem => elem.remove());
 
     clearChart();
-
-
-
 
     const startIdx = input.indexOf("[");
     const endIdx = input.lastIndexOf("]");

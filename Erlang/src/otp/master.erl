@@ -69,7 +69,6 @@ handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when Ep
         {true, true, true, false} ->
            if 
             CurrentEpoch rem 3 == 2 ->
-                    io:format("--- AAAAA: model saved ---~n"), 
                 gen_server:cast(erlang_master, {save_model, backup}); % Call save_model every 3 epochs
             true -> ok
             end,
@@ -94,8 +93,8 @@ handle_cast({save_model, Name}, State) ->
     io:format("--- MASTER: model saved ---~n"),
     {noreply, State};
 
-handle_cast(load_model, State) ->
-    Result = message_primitives:synch_message(State#mstate.pythonModelPID, load_model, null, model_loaded, State#mstate.javaUiPid),
+handle_cast({load_model, Name}, State) ->
+    Result = message_primitives:synch_message(State#mstate.pythonModelPID, load_model, Name, model_loaded, State#mstate.javaUiPid),
 
     message_primitives:notify_ui(State#mstate.javaUiPid, {model_loaded, Result}),
     io:format("--- MASTER: model loaded ~p ---~n", [Result]),

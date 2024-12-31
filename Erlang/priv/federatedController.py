@@ -88,9 +88,9 @@ class FederatedController():
     def save_model(self, path = "model") -> None:
         self.model.save(path + ".keras")
 
-    def load_model(self, path = "model.keras") -> str:
+    def load_model(self, path = "model") -> str:
         try:
-            self.model.load_weights(path)
+            self.model.load_weights(path + ".keras")
             return "true"
         except Exception as e:
             print(f"Error loading model weights: {str(e)}")

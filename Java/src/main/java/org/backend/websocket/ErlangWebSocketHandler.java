@@ -25,7 +25,7 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
-        sessionRegistry.getSessions().add(session);
+        sessionRegistry.addSession(session);
         System.out.println("[SockJS] New session connected: " + session.getId());
     }
 
@@ -38,7 +38,7 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) {
-        sessionRegistry.getSessions().remove(session);
+        sessionRegistry.removeSession(session);
         System.out.println("[SockJS] Session closed: " + session.getId() + ", Status: " + status);
     }
 
