@@ -6,6 +6,7 @@ import com.ericsson.otp.erlang.OtpErlangInt;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import org.backend.erlang.ErlangContext;
 import org.backend.erlang.ErlangHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -15,6 +16,9 @@ import java.util.regex.Pattern;
 
 @Component
 public class TrainCommand implements Command {
+
+    @Autowired
+    ErlangContext context;
 
     private static String getParamValue(String parameters, String parametersName) {
         Pattern pattern = Pattern.compile(parametersName + "=([^,]+)");
@@ -35,7 +39,7 @@ public class TrainCommand implements Command {
     }
 
     @Override
-    public void execute(ErlangContext context, String parameters) throws RuntimeException {
+    public void execute(String parameters) throws RuntimeException {
         if (!context.isConnected() || context.isTraining())
             throw new RuntimeException("Erlang process is not connected or already in training, unable to perform the train");
 

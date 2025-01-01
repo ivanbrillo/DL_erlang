@@ -16,6 +16,8 @@ public class StartCommand implements Command {
 
     @Autowired
     private MessageQueues queues;
+    @Autowired
+    ErlangContext context;
 
     private final String cookie;
     private final String javaNodeName;
@@ -44,7 +46,7 @@ public class StartCommand implements Command {
     }
 
     @Override
-    public void execute(ErlangContext context, String parameters) throws RuntimeException {
+    public void execute(String parameters) throws RuntimeException {
 
         if (context.isConnected())
             throw new RuntimeException("Erlang process is already started and connected");

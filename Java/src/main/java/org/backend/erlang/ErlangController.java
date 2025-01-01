@@ -8,13 +8,11 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.backend.MessageQueues;
 import org.backend.commands.Command;
-import org.backend.commands.StopCommand;
 import org.backend.commands.CommandFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 
@@ -22,14 +20,15 @@ import java.util.Map;
 public class ErlangController implements Runnable {
 
     private final CommandFactory commandFactory;
-    private final ApplicationContext appContext;
     private final MessageQueues queues;
     private final ErlangContext erlangContext;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ErlangController(CommandFactory commandFactory, ApplicationContext appContext, MessageQueues queues, ErlangContext erlangContext) {
+    private final List<String> finishedTrainCode = List.of("train_refused", "training_total_completed", "train_error");
+
+
+    public ErlangController(CommandFactory commandFactory, MessageQueues queues, ErlangContext erlangContext) {
         this.commandFactory = commandFactory;
-        this.appContext = appContext;
         this.queues = queues;
         this.erlangContext = erlangContext;
     }
@@ -52,13 +51,12 @@ public class ErlangController implements Runnable {
     private void receiveErlangMessage() {
         try {
             if (erlangContext.isConnected() && erlangContext.getOtpConnection().msgCount() > 0) {
-                OtpErlangObject msg = erlangContext.getOtpConnection().receive();
+                String msg = erlangContext.getOtpConnection().receive().toString();
 
-                if (!msg.toString().startsWith("{rex,")) {   // RPC return value, will be discarded
-                    queues.addErlangMessage(msg.toString());
+                if (!msg.startsWith("{rex,")) {   // RPC return value, will be discarded
+                    queues.addErlangMessage(msg);
 
-                    //TODO check this line
-                    if (msg.toString().equals("{train_refused}") || msg.toString().startsWith("{training_total_completed,") || msg.toString().startsWith("{train_error,"))
+                    if (finishedTrainCode.stream().anyMatch(code -> msg.startsWith("{" + code)))
                         erlangContext.setTraining(false);
                 }
             }
@@ -75,7 +73,7 @@ public class ErlangController implements Runnable {
         try {
             Map<String, String> commandMap = parseCommand(commandJSON);
             Command command = commandFactory.createCommand(commandMap.get("command"));
-            command.execute(erlangContext, commandMap.get("parameters"));
+            command.execute(commandMap.get("parameters"));
         } catch (RuntimeException e) {
             System.out.println("Cannot execute command for reason: " + e.getMessage());
         }
@@ -87,7 +85,7 @@ public class ErlangController implements Runnable {
             erlangContext.getErlangControllerThread().interrupt();
             erlangContext.getErlangControllerThread().join();
             try {
-                appContext.getBean(StopCommand.class).execute(erlangContext, "");
+                commandFactory.createCommand("stop").execute("");
             } catch (RuntimeException ignored) {
             }
         }

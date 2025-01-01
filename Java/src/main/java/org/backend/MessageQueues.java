@@ -12,13 +12,13 @@ public class MessageQueues {
     private final BlockingQueue<String> webSocketQueue = new LinkedBlockingQueue<>();
 
     private final BlockingQueue<String> cacheSession = new LinkedBlockingQueue<>();
-    private final List<String> cacheMsgCodes = List.of("{initialized_nodes", "{train_epoch_completed",
-            "{training_total_completed", "{node_up", "{node_down", "{db_ack", "{new_train");
+    private final List<String> cacheMsgCodes = List.of("initialized_nodes", "train_epoch_completed",
+            "training_total_completed", "node_up", "node_down", "db_ack", "new_train");
 
     public synchronized void addErlangMessage(String message) throws InterruptedException {
         erlangQueue.put(message);
 
-        if (cacheMsgCodes.stream().anyMatch(message::startsWith))
+        if (cacheMsgCodes.stream().anyMatch(code -> message.startsWith("{" + code)))
             cacheSession.put(message);
 
     }
