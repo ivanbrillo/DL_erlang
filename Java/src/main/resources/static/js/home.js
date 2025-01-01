@@ -114,8 +114,6 @@ document.getElementById('loadBackUpButton').addEventListener('click', function (
 document.getElementById('stopBtn').addEventListener('click', function () {
     socket.send(JSON.stringify({command: "stop_training", parameters: ""}));
     addLogMessage("sent", "stop training");
-
-    START.disabled = false;
     STOP.disabled = true;
 });
 
@@ -169,14 +167,9 @@ function processingInput(input) {
         const regex = /{new_train,\{(\d+),([\d.]+)}}/; // Match the format {new_train,{<epochs>,<accuracy>}}
         const match = regex.exec(inputStr);
 
-        console.log(match[1]);
-        console.log(match[2]);
-
         document.getElementById('epochsInput').value = match[1];
         document.getElementById('accuracyTarget').value = match[2];
-
-        document.getElementById('epochsInput').dispatchEvent(new Event('input'));
-        document.getElementById('accuracyTarget').dispatchEvent(new Event('input'));
+        document.getElementById('epochTot').textContent = match[1];
 
     }
 }
