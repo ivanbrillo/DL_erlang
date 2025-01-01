@@ -50,16 +50,15 @@ public class ErlangController implements Runnable {
 
     private void receiveErlangMessage() {
         try {
-            if (erlangContext.isConnected() && erlangContext.getOtpConnection().msgCount() > 0) {
-                String msg = erlangContext.getOtpConnection().receive().toString();
+            String msg = erlangContext.getNextMessage();
 
-                if (!msg.startsWith("{rex,")) {   // RPC return value, will be discarded
-                    queues.addErlangMessage(msg);
+            if (msg != null && !msg.startsWith("{rex,")) {   // RPC return value, will be discarded
+                queues.addErlangMessage(msg);
 
-                    if (finishedTrainCode.stream().anyMatch(code -> msg.startsWith("{" + code)))
-                        erlangContext.setTraining(false);
-                }
+                if (finishedTrainCode.stream().anyMatch(code -> msg.startsWith("{" + code)))
+                    erlangContext.setTraining(false);
             }
+
         } catch (OtpAuthException | OtpErlangExit | IOException | InterruptedException e) {
             System.out.println("Message discarded from Erlang with reason: " + e.getMessage());
         }

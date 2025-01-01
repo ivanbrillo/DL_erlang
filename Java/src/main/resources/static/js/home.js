@@ -36,7 +36,7 @@ const SAVE = document.getElementById('saveButton');
 const START = document.getElementById('startBtn');
 const STOP = document.getElementById('stopBtn');
 
-
+buttonsInvisible();
 
 /* LEFT MENU MANAGEMENT*/
 analyticsBtn.addEventListener("click", () => {
@@ -146,7 +146,7 @@ function processingInput(input) {
     } else if (inputStr.startsWith("{start uncorrectly")) {
         addLogMessage("received", inputStr);
         hideSpinner();
-        uiActive();
+        uiDisabled();
     } else if (inputStr.startsWith("{train_refused")){
         addLogMessage("received", inputStr);
         START.disabled = false;
@@ -171,6 +171,9 @@ function processingInput(input) {
         document.getElementById('accuracyTarget').value = match[2];
         document.getElementById('epochTot').textContent = match[1];
 
+    } else if (inputStr.startsWith("{operator}")) {
+        addLogMessage("received", inputStr);
+        buttonsVisible();
     }
 }
 
@@ -326,6 +329,32 @@ function uiActive() {
     STOP.disabled = true;
 }
 
+
+function buttonsInvisible() {
+    CONNECT.style.display = 'none';
+    CLOSE.style.display = 'none';
+    MODEL.style.display = 'none';
+    BACKUP.style.display = 'none';
+    SAVE.style.display = 'none';
+    START.style.display = 'none';
+    STOP.style.display = 'none';
+
+    document.getElementById('epochsInput').disabled = true;
+    document.getElementById('accuracyTarget').disabled = true;
+}
+
+function buttonsVisible() {
+    CONNECT.style.display = 'inline';
+    CLOSE.style.display = 'inline';
+    MODEL.style.display = 'inline';
+    BACKUP.style.display = 'inline';
+    SAVE.style.display = 'inline';
+    START.style.display = 'inline';
+    STOP.style.display = 'inline';
+
+    document.getElementById('epochsInput').disabled = false;
+    document.getElementById('accuracyTarget').disabled = false;
+}
 
 
 /* SPINNER */
