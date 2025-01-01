@@ -1,7 +1,10 @@
 package org.backend;
 
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,14 +23,12 @@ public class MessageQueues {
 
         if (cacheMsgCodes.stream().anyMatch(code -> message.startsWith("{" + code)))
             cacheSession.put(message);
-
     }
 
     public void addWebSocketMessage(String message) throws InterruptedException {
         webSocketQueue.put(message);
     }
 
-    //TODO synch?
     public String getErlangMessage() throws InterruptedException {
         return erlangQueue.take();
     }
@@ -36,9 +37,26 @@ public class MessageQueues {
         return webSocketQueue.poll();
     }
 
-    public synchronized void restoreSession() {
-        erlangQueue.clear();
-        erlangQueue.addAll(cacheSession);
+    public synchronized void restoreSession(WebSocketSession session) throws RuntimeException, InterruptedException {
+        long startTime = System.currentTimeMillis();
+        long timeoutMillis = 500;
+
+        // Wait for erlangQueue to empty otherwise could have some message duplication on the new client
+        // no new msgs can be added when performing restoreSession
+        while (!erlangQueue.isEmpty()) {
+            if (System.currentTimeMillis() - startTime > timeoutMillis)
+                throw new RuntimeException("Timeout waiting for erlang queue to empty after 1 seconds");
+
+            Thread.sleep(5);
+        }
+
+        cacheSession.forEach(msg -> {
+            try {
+                session.sendMessage(new TextMessage(msg));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public synchronized void clearCache() {

@@ -35,6 +35,18 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
 
+        if (erlangContext.isConnected()) {
+            try {
+                queues.restoreSession(session);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Session restoration interrupted", e);
+                //TODO log
+            } catch (RuntimeException e) {
+                return;
+            }
+        }
+
         sessionRegistry.addSession(session);
         String role = getRoleString(session);
 
@@ -45,9 +57,6 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
                 throw new RuntimeException(e);
             }
         }
-
-        if (erlangContext.isConnected())
-            queues.restoreSession();
 
         System.out.println("[SockJS] New session connected: " + session.getId());
     }
@@ -60,6 +69,7 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
         if (role == null || !role.equals("ADMIN")) {
             // TODO log
             System.out.println("Received unauthorized message: " + message.getPayload());
+            return;
         }
 
         String receivedMessage = message.getPayload();
@@ -71,13 +81,11 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
         SecurityContext securityContext = (SecurityContext) session.getAttributes().get("SPRING_SECURITY_CONTEXT");
         Authentication authentication = securityContext.getAuthentication();
 
-        if (authentication == null)
-            return null;
-
-        return authentication.getAuthorities().stream()
+        return authentication == null ? null : authentication.getAuthorities().stream()
                 .map(grantedAuthority -> grantedAuthority.getAuthority().replace("ROLE_", "")) // Remove the "ROLE_" prefix
                 .findFirst()
                 .orElse(null);
+
     }
 
     @Override
