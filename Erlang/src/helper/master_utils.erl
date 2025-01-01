@@ -36,7 +36,7 @@ load_db(Pids, JavaUiPid, sync) ->
 train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights, JavaUiPid),
     lists:foreach(fun(Pid) -> node_api:train_pipeline(Pid, Weights) end, Nodes),
-    ResponseList = message_primitives:wait_response(length(Nodes), train_pipeline_ack, JavaUiPid),
+    ResponseList = message_primitives:wait_response(length(Nodes), train_pipeline_ack, JavaUiPid, use_error_filtering),
 
     case ResponseList of
         [] -> {[], 0.0};

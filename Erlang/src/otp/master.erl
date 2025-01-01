@@ -138,10 +138,17 @@ handle_info({nodeup, Node}, State) ->
     {noreply, State#mstate{currentUpNodes = PidNodes1, previousInitializedNodes = PidNodes2}};
 
 handle_info({nodedown, Node}, State) ->
+    self() ! {nodedown_resended, Node},
+    {noreply, State};
+
+% two codes nodedown and nodedown_resended because i cannot retransmit nodedown msgs
+handle_info({nodedown_resended, Node}, State) ->
     io:format("--- MASTER: Node ~p disconnected ---~n", [Node]),
     UpdatedUpNodes = lists:keydelete(Node, 2, State#mstate.currentUpNodes),   % remove from the connected node lists the disconnected node
     message_primitives:notify_ui(State#mstate.javaUiPid, {node_down, Node}),
     {noreply, State#mstate{currentUpNodes = UpdatedUpNodes}};
+
+
 
 handle_info({python_unhandled, Cause}, State) ->   % TODO: to be removed
     io:format("--- MASTER: Python received unhandled message: ~p ---~n", [Cause]),

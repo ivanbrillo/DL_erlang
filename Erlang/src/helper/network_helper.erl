@@ -12,7 +12,7 @@ initialize_nodes(JavaUiPid) ->
 
 initialize_nodes(Nodes, JavaUiPid) ->
     lists:filter(fun(N) -> rpc:cast(N, node_api, start_link, [self(), node()]) end, Nodes),
-    PidsOk = message_primitives:wait_response(length(Nodes), ok, JavaUiPid, 20000),
+    PidsOk = message_primitives:wait_response(length(Nodes), ok, JavaUiPid),
     lists:foreach(fun({P, _N}) -> erlang:monitor(process, P) end, PidsOk),
     PidsOk.
 

@@ -67,7 +67,7 @@ public class ErlangController implements Runnable {
             }
 
         } catch (OtpAuthException | OtpErlangExit | IOException e) {
-            log.error("Error message discarded from Erlang: {}", e.getMessage());
+            log.error("Error message discarded from Erlang, reason: {}", e.getMessage());
         }
     }
 

@@ -41,7 +41,7 @@ handle_cast({update_weights, Weights}, State) ->
     {noreply, State};
 
 handle_cast(train, State) ->
-    Response = message_primitives:synch_message(State#nstate.pythonPid, train, null, train_ack, State#nstate.masterPid, 30000),
+    Response = message_primitives:synch_message(State#nstate.pythonPid, train, null, train_ack, State#nstate.masterPid),
     State#nstate.masterPid ! {train_ack, {self(), Response}},
     io:format("--- NODE ~p: Training completed ---~n", [node()]),
     {noreply, State};
