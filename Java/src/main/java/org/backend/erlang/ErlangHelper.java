@@ -2,9 +2,11 @@ package org.backend.erlang;
 
 
 import com.ericsson.otp.erlang.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
+@Slf4j
 public class ErlangHelper {
 
     public static Process startErlangNode(String path, String cookie, String name, long timeout) throws IOException, InterruptedException, RuntimeException {
@@ -18,7 +20,7 @@ public class ErlangHelper {
 
         Process process = builder.start();
 
-        System.out.println("[Java] Erlang Node compiling and starting...");
+        log.info("[Java] Erlang Node compiling and starting");
         Thread.sleep(timeout);
 
         if (!process.isAlive()) {
@@ -26,6 +28,7 @@ public class ErlangHelper {
             throw new RuntimeException("[Java] Erlang node did not start correctly in 10 seconds.");
         }
 
+        log.info("[Java] Erlang Node compiled and started");
         return process;
     }
 

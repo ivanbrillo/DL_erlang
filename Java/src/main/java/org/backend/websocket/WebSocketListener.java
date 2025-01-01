@@ -1,11 +1,13 @@
 package org.backend.websocket;
 
+import lombok.extern.slf4j.Slf4j;
 import org.backend.MessageQueues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class WebSocketListener implements Runnable {
 
@@ -27,16 +29,16 @@ public class WebSocketListener implements Runnable {
                 String erlangMessage = queues.getErlangMessage();   // blocking call
 
                 if (!erlangMessage.startsWith("{node_metrics"))
-                    System.out.println("[WebSocket] Send erlang message to active sessions " + erlangMessage);
+                    log.info("[WebSocket] Send erlang message to active sessions {}", erlangMessage);
 
                 // Broadcast to all active WebSocket sessions
                 sessionRegistry.broadcastMessage(erlangMessage);
 
             } catch (InterruptedException e) {
-                System.err.println("[WebSocket] Thread interrupted during take()");
                 Thread.currentThread().interrupt();   // restore the flag
+                log.error("[WebSocket] Thread interrupted during take()");
             } catch (IOException e) {
-                System.err.println("[WebSocket] Error sending Erlang message: " + e.getMessage());
+                log.error("[WebSocket] Error sending Erlang message: {}", e.getMessage());
             }
         }
     }

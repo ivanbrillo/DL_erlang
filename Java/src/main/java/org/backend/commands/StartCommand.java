@@ -53,9 +53,12 @@ public class StartCommand implements Command {
 
         try {
             context.setErlangProcess(ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 5000));
-        } catch (IOException | InterruptedException | RuntimeException e) {
+        } catch (IOException | RuntimeException e) {
             sendErrorMessage();
             throw new RuntimeException("Cannot start Erlang node " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
         }
 
         createConnection(context);
@@ -66,8 +69,9 @@ public class StartCommand implements Command {
     private void sendErrorMessage() {
         try {
             queues.addErlangMessage("{start uncorrectly}");
-        } catch (InterruptedException ie) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
         }
     }
 }

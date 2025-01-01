@@ -1,6 +1,7 @@
 package org.backend.websocket;
 
 import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
 import org.backend.MessageQueues;
 import org.backend.erlang.ErlangContext;
 import org.springframework.lang.NonNull;
@@ -16,6 +17,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 
 
+@Slf4j
 @Component
 public class ErlangWebSocketHandler extends TextWebSocketHandler {
     private final SessionRegistry sessionRegistry;
@@ -40,9 +42,10 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
                 queues.restoreSession(session);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                log.error("Session restoration interrupted");
                 throw new RuntimeException("Session restoration interrupted", e);
-                //TODO log
             } catch (RuntimeException e) {
+                log.error("Error restoring session {}", e.getMessage());
                 return;
             }
         }
@@ -54,11 +57,13 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
             try {
                 session.sendMessage(new TextMessage("{operator}"));
             } catch (IOException e) {
+                log.error("Error enabling admin command in UI: {}", e.getMessage());
                 throw new RuntimeException(e);
             }
         }
 
-        System.out.println("[SockJS] New session connected: " + session.getId());
+        log.info("[SockJS] New session connected: {}", session.getId());
+
     }
 
     @Override
@@ -67,14 +72,14 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
         String role = getRoleString(session);
 
         if (role == null || !role.equals("ADMIN")) {
-            // TODO log
-            System.out.println("Received unauthorized message: " + message.getPayload());
+            log.warn("[SockJS] Received unauthorized message: {}, from session: {}", message.getPayload(), session.getId());
             return;
         }
 
         String receivedMessage = message.getPayload();
         queues.addWebSocketMessage(receivedMessage);
-        System.out.println("[SockJS] Received message: " + receivedMessage);
+        log.info("[SockJS] Received message: {}", receivedMessage);
+
     }
 
     private static String getRoleString(WebSocketSession session) {
@@ -91,7 +96,7 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) {
         sessionRegistry.removeSession(session);
-        System.out.println("[SockJS] Session closed: " + session.getId() + ", Status: " + status);
+        log.info("[SockJS] Session closed: {} with status: {}", session.getId(), status);
     }
 
     @PreDestroy

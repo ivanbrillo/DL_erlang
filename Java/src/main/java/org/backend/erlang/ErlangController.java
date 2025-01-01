@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
 import org.backend.MessageQueues;
 import org.backend.commands.Command;
 import org.backend.commands.CommandFactory;
@@ -15,7 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-
+@Slf4j
 @Component
 public class ErlangController implements Runnable {
 
@@ -37,18 +38,24 @@ public class ErlangController implements Runnable {
     public void init() {
         erlangContext.setErlangControllerThread(new Thread(this));
         erlangContext.getErlangControllerThread().start();
+        log.info("Erlang controller thread started");
     }
 
     @Override
     public void run() {
         // TODO mettere tutto asynch in erlang
         while (!Thread.currentThread().isInterrupted()) {
-            receiveErlangMessage();
+            try {
+                receiveErlangMessage();
+            } catch (InterruptedException e) {
+                log.error("ErlangController interrupted during addErlangMessage(msg)");
+                Thread.currentThread().interrupt();
+            }
             executeWebSocketCommand();
         }
     }
 
-    private void receiveErlangMessage() {
+    private void receiveErlangMessage() throws InterruptedException {
         try {
             String msg = erlangContext.getNextMessage();
 
@@ -59,8 +66,8 @@ public class ErlangController implements Runnable {
                     erlangContext.setTraining(false);
             }
 
-        } catch (OtpAuthException | OtpErlangExit | IOException | InterruptedException e) {
-            System.out.println("Message discarded from Erlang with reason: " + e.getMessage());
+        } catch (OtpAuthException | OtpErlangExit | IOException e) {
+            log.error("Error message discarded from Erlang: {}", e.getMessage());
         }
     }
 
@@ -74,7 +81,7 @@ public class ErlangController implements Runnable {
             Command command = commandFactory.createCommand(commandMap.get("command"));
             command.execute(commandMap.get("parameters"));
         } catch (RuntimeException e) {
-            System.out.println("Cannot execute command for reason: " + e.getMessage());
+            log.error("Error executing erlang command: {}", e.getMessage());
         }
     }
 
@@ -85,10 +92,11 @@ public class ErlangController implements Runnable {
             erlangContext.getErlangControllerThread().join();
             try {
                 commandFactory.createCommand("stop").execute("");
-            } catch (RuntimeException ignored) {
+                log.info("ErlangController shutdown complete");
+            } catch (RuntimeException e) {
+                log.error("Error stopping ErlangController {}", e.getMessage());
             }
         }
-        System.out.println("ErlangController shutdown complete.");
     }
 
     private Map<String, String> parseCommand(String commandJSON) {
