@@ -17,5 +17,5 @@ initialize_nodes(Nodes, JavaUiPid) ->
     PidsOk.
 
 get_ip_node() ->
-    {ok, Address} = inet:getaddr(localhost, inet),   % TODO change to master host!!
+    {ok, Address} = inet:getaddr(master, inet),
     Address.

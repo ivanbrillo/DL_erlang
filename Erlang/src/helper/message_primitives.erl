@@ -69,7 +69,7 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndT
 
 handleErrorMsg(Msg, N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime) ->
     case {node(), Error} of
-        {'master@localhost', use_error_filtering} ->    % TODO change to master@master !!!
+        {'master@master', use_error_filtering} -> 
             io:format("--- WARNING: nodedown or exception occurs during waiting the responses, Msg = ~p ---~n", [Msg]),
             wait_response(N-1, RespList, AckCode, DestinationNodeMetrics, Crashed ++ [Msg], Error, EndTime);
         {_, _} ->
