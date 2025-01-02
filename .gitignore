@@ -18,3 +18,4 @@ Erlang/_build/
 _checkouts/
 
 # priv/Dataset/
+Erlang/priv/dataParser.py

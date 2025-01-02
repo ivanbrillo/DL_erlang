@@ -150,7 +150,7 @@ function processingInput(input) {
         addLogMessage("received", inputStr);
         hideSpinner();
         uiDisabled();
-    } else if (inputStr.startsWith("{train_refused")){
+    } else if (inputStr.startsWith("{train_refused") || inputStr.startsWith("{train_error")){
         addLogMessage("received", inputStr);
         START.disabled = false;
         STOP.disabled = true;
