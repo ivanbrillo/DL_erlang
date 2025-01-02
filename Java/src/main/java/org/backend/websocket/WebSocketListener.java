@@ -1,38 +1,44 @@
 package org.backend.websocket;
 
+import lombok.extern.slf4j.Slf4j;
 import org.backend.MessageQueues;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
 
+@Slf4j
+@Component
 public class WebSocketListener implements Runnable {
 
-    private final List<WebSocketSession> sessions;
+    private final SessionRegistry sessionRegistry;
+    private final MessageQueues queues;
 
-    public WebSocketListener(List<WebSocketSession> sessions) {
-        this.sessions = sessions;
+    @Autowired
+    public WebSocketListener(SessionRegistry sessionRegistry, MessageQueues queues) {
+        this.sessionRegistry = sessionRegistry;
+        this.queues = queues;
     }
+
 
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
 
-                String erlangMessage = MessageQueues.erlangQueue.take();   // blocking call
-                System.out.println("[WebSocket] Send erlang message to active sessions " + erlangMessage);
+                String erlangMessage = queues.getErlangMessage();   // blocking call
+
+                if (!erlangMessage.startsWith("{node_metrics"))
+                    log.info("[WebSocket] Send erlang message to active sessions {}", erlangMessage);
 
                 // Broadcast to all active WebSocket sessions
-                for (WebSocketSession session : sessions)    // no need to syncronize since only one thread will access to a session obj
-                    if (session.isOpen())
-                        session.sendMessage(new TextMessage(erlangMessage));
+                sessionRegistry.broadcastMessage(erlangMessage);
 
             } catch (InterruptedException e) {
-                System.err.println("[WebSocket] Thread interrupted during take()");
                 Thread.currentThread().interrupt();   // restore the flag
+                log.error("[WebSocket] Thread interrupted during take()");
             } catch (IOException e) {
-                System.err.println("[WebSocket] Error sending Erlang message: " + e.getMessage());
+                log.error("[WebSocket] Error sending Erlang message: {}", e.getMessage());
             }
         }
     }

@@ -14,7 +14,7 @@ deps
 
 # rebar 3
 .rebar3
-/_build/
+Erlang/_build/
 _checkouts/
 
 # priv/Dataset/

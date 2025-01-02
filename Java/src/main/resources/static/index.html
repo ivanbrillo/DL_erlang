@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="css/node.css">
     <link rel="stylesheet" href="css/analytics.css">
@@ -19,31 +19,11 @@
 </head>
 <body>
 <div id="top_menu">
-    <ul class="breadcrumb">
-        <li>Pages</li>
-        <li>Dashboard</li>
-    </ul>
-
-    <div id="menu">
-        <button id="user">
-            <img src="img/user.svg" alt="">
-        </button>
-        <button id="settings">
-            <img src="img/settings.svg" alt="">
-        </button>
-        <button id="notify">
-            <img src="img/notify.svg" alt="">
-        </button>
-    </div>
+    <h1>FEDERATED MACHINE LEARNING</h1>
 </div>
 
 <div id="left_menu">
     <div id="inner">
-        <div>
-            <h1>FEDERATED MACHINE LEARNING</h1>
-            <line></line>
-        </div>
-
         <div id="elements">
             <button id="homepage_btn" class="active">
                 <img src="img/homepage_icon.svg" alt="">
@@ -61,41 +41,22 @@
 
 
 <div id="container">
-    <div id="containerNodes">
-
+    <div class="container_info">
+        <div id="containerNodes">
+            <div class="spinner" id="spinner"></div>
+        </div>
+        <div id="log"></div>
     </div>
 
     <div id="containerButton">
         <button id="connectButton">Start</button>
-        <button id="closeButton">Close</button>
+        <button id="closeButton" disabled>Close</button>
+        <button id="loadButton" disabled>Load Model</button>
+        <button id="loadBackUpButton" disabled>Load BackUp</button>
+        <button id="saveButton" disabled>Save Model</button>
     </div>
 </div>
 
-<!-- <div id="accuracy_level">
-    <img src="accuracy_icon" alt="">
-    <div id="accuracy_inner">
-        <circle id="accuracy_level"></circle>
-        <div id="score">
-            68%
-            Accuracy
-        </div>
-        <div id="time">
-            0h 58m
-            Time active
-        </div>
-
-    </div>
-</div> -->
-
-<!--
-<button id="update_btn"></button>
-<button id="distribute_btn"></button>
--->
-
-<!-- <div id="log_frame">
-    Log
-    <textarea name="Log" id="log"></textarea>
-</div> -->
 
 <div id="dashboard">
     <h3>NEURAL NETWORK TRAINING PROGRESS</h3>
@@ -110,7 +71,8 @@
         </div>
 
         <div>
-            <button class="button start-btn" id="startBtn">Start Training</button>
+            <button class="button start-btn" id="startBtn" disabled>Start Training</button>
+            <button class="button start-btn" id="stopBtn" disabled>Stop Training</button>
         </div>
         <div class="epoch-counter">Epoch: <span id="epochCounter">0</span>/<span id="epochTot">0</span></div>
     </div>

@@ -1,18 +1,12 @@
 const metrics = [
-    'CPU:',
-    'Memory:',
-    'Disk I/O:',
-    'Response Time:',
-    'Throughput:',
-    'Accuracy:'
+    { label: 'CPU: ', id: 'cpu-metric' },
+    { label: 'Memory: ', id: 'memory-metric' },
+    { label: 'Response Time: ', id: 'response-time-metric' },
+    { label: 'Train Accuracy: ', id: 'train-accuracy-metric' },
+    { label: 'Test Accuracy: ', id: 'test-accuracy-metric' },
+    { label: 'Training Dataset Size: ', id: 'train-dataset-size' },
+    { label: 'Test Dataset Size: ', id: 'test-dataset-size' }
 ];
-
-/*
-const results = {
-    accuracy: Math.random().toFixed(2),
-    loss: (Math.random() * 10).toFixed(2)
-};
-*/
 
 let numNodi = 0;
 
@@ -27,7 +21,7 @@ function createNode(Name){
 
 
     let title = document.createElement('h3');
-    title.textContent = 'NODE '+ Name;
+    title.textContent = 'NODE: '+ Name;
 
     /* metrics */
     let metricsContainer = document.createElement('div');
@@ -36,31 +30,73 @@ function createNode(Name){
     metrics.forEach(metric => {
         const metricDiv = document.createElement('span');
         metricDiv.className = 'metric-item';
-        metricDiv.textContent = metric;
+
+        const label = document.createElement('strong');
+        label.textContent = metric.label;
+        metricDiv.appendChild(label);
+
+        let bar = document.createElement('div');
+
+        if (metric.id === "cpu-metric") {
+            bar.id = "cpu-bar";
+            bar.className = 'progress-bar';
+            metricDiv.appendChild(bar);
+        } else if (metric.id === "memory-metric") {
+            bar.id = "memory-bar";
+            bar.className = 'progress-bar';
+            metricDiv.appendChild(bar);
+        } else {
+            const value = document.createElement('span');
+            value.id = metric.id;
+
+            if (metric.id === "train-accuracy-metric" || metric.id === "test-accuracy-metric") {
+                value.textContent = 'N/A';
+            } else {
+                value.textContent = 'Loading...';
+            }
+
+            metricDiv.appendChild(value);
+        }
+
         metricsContainer.appendChild(metricDiv);
     });
 
-
-    /* Status */
-    const statusContainer = document.createElement('div');
-    statusContainer.className = 'status-container';
-
-    const statusDot = document.createElement('span');
-    statusDot.className = 'status-dot';
-
-    const statusText = document.createElement('span');
-    statusText.textContent = 'Active';
-    statusText.className = 'status-text';
-
-
-    /* append */
-    statusContainer.appendChild(statusDot);
-    statusContainer.appendChild(statusText);
-
-
     node.appendChild(title);
     node.appendChild(metricsContainer);
-    node.appendChild(statusContainer);
 
     container.appendChild(node);
+}
+
+
+
+function removeNode(name){
+    const node = document.getElementById(name);
+    if (node) {
+        node.remove();
+        console.log(`${name} Node eliminated.`);
+    }
+    numNodi--;
+}
+
+
+
+function updateProgressBar(nodeElem, metricId, value) {
+    const progressBar = nodeElem.querySelector(`#${metricId}`);
+
+    const progressBarInner = document.createElement("div");
+    progressBarInner.classList.add("progress-bar-inner");
+    progressBarInner.style.width = value + "%";
+
+
+    let red = Math.min(255, Math.floor(255 * (value / 100)));
+    let green = Math.min(255, Math.floor(255 * (1 - value / 100)));
+
+    progressBarInner.style.backgroundColor = `rgb(${red}, ${green}, 0)`;
+
+
+    progressBarInner.textContent = value.toFixed(1) + "%";
+
+
+    progressBar.innerHTML = "";
+    progressBar.appendChild(progressBarInner);
 }

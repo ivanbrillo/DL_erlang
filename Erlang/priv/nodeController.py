@@ -21,7 +21,7 @@ class NodeController:
         """
         Load the dataset and preprocess it.
 
-        Returns a tuple containing the shapes of the training and test sets respectivly.
+        Returns a tuple containing the shapes of the training and test sets respectively.
         """
         self.x_train, self.y_train, self.x_test, self.y_test = preprocess_image()
         self.dataset_size = self.x_train.shape[0]
@@ -60,12 +60,19 @@ class NodeController:
         """
         train_result = self.model.fit(
             self.x_train, self.y_train,
+            validation_data=(self.x_test, self.y_test),
             epochs=1,
             batch_size=32,
             verbose=0
         )
 
-        return train_result.history['accuracy'][0]  # one value since 1 epoch
+        # Get training accuracy
+        train_accuracy = train_result.history['accuracy'][-1]
+
+        # Evaluate the model on the test dataset
+        test_accuracy = train_result.history['val_accuracy'][-1]
+
+        return (train_accuracy, test_accuracy)
 
 
     def get_weights(self, additional_infos: list) -> str:

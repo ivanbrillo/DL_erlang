@@ -44,46 +44,6 @@ TOP MENU
 }
 
 
-/* Style the list */
-ul.breadcrumb {
-    padding: 10px 16px;
-    list-style: none;
-}
-
-/* Display list items side by side */
-ul.breadcrumb li {
-    display: inline;
-    font-size: 18px;
-    color: white;
-    font-weight: lighter;
-    text-decoration: none;
-}
-
-ul.breadcrumb li:last-child {
-    font-weight: bold;
-}
-
-ul.breadcrumb li+li:before {
-    padding: 8px;
-    color: white;
-    content: "/\00a0";  /* Add a slash symbol (/) before/behind each list item */
-}
-
-ul.breadcrumb li:not(:first-child) a:hover {
-    text-decoration: underline;
-}
-
-
-#menu{
-    display:flex;
-    flex-direction:row;
-    justify-content:flex-start;
-    align-items:center;
-    gap:13px;
-    position:relative;
-}
-
-
 
 /*******************
 LEFT MENU
@@ -173,7 +133,7 @@ LEFT MENU
 BUTTON TOP MENU AND LEFT MENU
 *****************************/
 
-#menu button, #elements button {
+#elements button {
     background-color: transparent;
     padding: 15px 20px;
     display: flex;
@@ -187,27 +147,78 @@ BUTTON TOP MENU AND LEFT MENU
     border-style:none;
 }
 
-#menu button:hover, #elements button:hover {
+#elements button:hover {
     cursor:pointer;
 }
 
-#menu button img, #elements button img{
+#elements button img{
     transition: cubic-bezier(0.075, 0.82, 0.165, 1) 0.5s;
 }
 
-#menu button:hover img, #menu button:hover span
 #elements button:hover img, #elemets button:hover span{
     transform: scale(1.1);
 }
 
-#menu button:active img,  #elemets button:active img{
+#elemets button:active img{
     transform: scale(0.9);
 }
 
 
-button:disabled {
-    background-color: #cccccc; /* Colore di sfondo più chiaro */
-    color: #666666; /* Colore del testo sbiadito */
-    cursor: not-allowed; /* Icona del cursore a forma di divieto */
-    opacity: 0.6; /* Leggera trasparenza */
+button:disabled, #containerButton button:disabled{
+    cursor: not-allowed;
+    color: black;
+    background-color: gray;
+    opacity: 0.6;
+}
+
+
+
+/* SPINNER */
+.spinner {
+    width: 120px;
+    height: 120px;
+    border: 5px solid rgba(0, 0, 0, 0.1);
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: none; /* Hidden by default */
+    margin: auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+
+
+/* SECTION LOG*/
+.container_info{
+    display: flex;
+    width: 100%;
+    height: 80%;
+}
+
+
+
+#log {
+    width: 30%;
+    margin-left: 7%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    font-family: 'Roboto Mono', monospace;
+}
+.log-message {
+    color: black;
+    margin: 5px 0;
+    padding: 5px;
 }

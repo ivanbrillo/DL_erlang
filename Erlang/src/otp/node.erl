@@ -7,7 +7,8 @@
 
 init([MasterPid, MasterNode]) ->
     PythonPid = python_helper:init_python_process(),
-    {ok, _Name} = python:call(PythonPid, node, register_handler, [self(), node()]),
+
+    {ok, _Name} = python:call(PythonPid, node, register_handler, [self(), node(), network_helper:get_ip_node()]),
     net_kernel:monitor_nodes(true),  % nodeup/nodedown messages
     State = #nstate{masterPid = MasterPid, masterNode = MasterNode, pythonPid = PythonPid},
     io:format("--- NODE ~p: Initialized correctly ---~n", [node()]),
@@ -22,37 +23,37 @@ handle_call(_Request, _From, State) ->
 
 
 handle_cast(load_db, State) ->
-    Response = message_primitives:synch_message(State#nstate.pythonPid, load_db, null, db_ack),
+    Response = message_primitives:synch_message(State#nstate.pythonPid, load_db, null, db_ack, State#nstate.masterPid),
     State#nstate.masterPid ! {db_ack, {self(), Response}},
     io:format("--- NODE ~p: Load DB completed ---~n", [node()]),
     {noreply, State};
 
 handle_cast({initialize_model, Model}, State) ->
-    message_primitives:synch_message(State#nstate.pythonPid, initialize, Model, initialize_ack),
+    message_primitives:synch_message(State#nstate.pythonPid, initialize, Model, initialize_ack, State#nstate.masterPid),
     State#nstate.masterPid ! {initialize_ack, self()},
     io:format("--- NODE ~p: Initialization completed ---~n", [node()]),
     {noreply, State};
 
 handle_cast({update_weights, Weights}, State) ->
-    message_primitives:synch_message(State#nstate.pythonPid, update, Weights, weights_ack),
+    message_primitives:synch_message(State#nstate.pythonPid, update, Weights, weights_ack, State#nstate.masterPid),
     State#nstate.masterPid ! {weights_ack, self()},
     io:format("--- NODE ~p: Weights updated successfully ---~n", [node()]),
     {noreply, State};
 
 handle_cast(train, State) ->
-    Response = message_primitives:synch_message(State#nstate.pythonPid, train, null, train_ack, 30000),
+    Response = message_primitives:synch_message(State#nstate.pythonPid, train, null, train_ack, State#nstate.masterPid),
     State#nstate.masterPid ! {train_ack, {self(), Response}},
     io:format("--- NODE ~p: Training completed ---~n", [node()]),
     {noreply, State};
 
 handle_cast({train_pipeline, Weights}, State) ->
-    NewWeights = message_primitives:synch_message(State#nstate.pythonPid, train_pipeline, Weights, train_pipeline_ack),
+    NewWeights = message_primitives:synch_message(State#nstate.pythonPid, train_pipeline, Weights, train_pipeline_ack, State#nstate.masterPid),
     State#nstate.masterPid ! {train_pipeline_ack, {self(), NewWeights}},
     io:format("--- NODE ~p: Training Pipeline completed ---~n", [node()]),
     {noreply, State};
 
 handle_cast(get_weights, State) ->
-    Response = message_primitives:synch_message(State#nstate.pythonPid, get_weights, null, node_weights),
+    Response = message_primitives:synch_message(State#nstate.pythonPid, get_weights, null, node_weights, State#nstate.masterPid),
     State#nstate.masterPid ! {node_weights, {self(), Response}},
     io:format("--- NODE ~p: Weights returned ---~n", [node()]),
     {noreply, State}.
@@ -69,6 +70,10 @@ handle_info(terminate, State) ->
 handle_info({nodeup, MasterNode}, State) when MasterNode == State#nstate.masterNode ->
     io:format("--- NODE ~p: MASTER node reconnected.~n", [node()]),
     erlang:cancel_timer(State#nstate.termination_timer),
+    {noreply, State};
+
+handle_info({node_metrics, Metrics}, State) when undefined =/= State#nstate.masterPid->
+    State#nstate.masterPid ! {node_metrics, Metrics},
     {noreply, State};
 
 handle_info(Info, State) ->

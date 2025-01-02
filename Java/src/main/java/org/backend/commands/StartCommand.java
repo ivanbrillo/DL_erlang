@@ -3,13 +3,21 @@ package org.backend.commands;
 import com.ericsson.otp.erlang.*;
 import org.backend.erlang.ErlangContext;
 import org.backend.erlang.ErlangHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.backend.MessageQueues;
+
 
 import java.io.IOException;
 
 @Component
 public class StartCommand implements Command {
+
+    @Autowired
+    private MessageQueues queues;
+    @Autowired
+    ErlangContext context;
 
     private final String cookie;
     private final String javaNodeName;
@@ -32,24 +40,38 @@ public class StartCommand implements Command {
             context.setJavaPid(self.pid());
         } catch (IOException | OtpAuthException e) {
             context.getErlangProcess().destroyForcibly();
+            sendErrorMessage();
             throw new RuntimeException("Cannot start correctly the connection with erlang", e);
         }
     }
 
     @Override
-    public void execute(ErlangContext context) throws RuntimeException {
+    public void execute(String parameters) throws RuntimeException {
 
         if (context.isConnected())
             throw new RuntimeException("Erlang process is already started and connected");
 
         try {
             context.setErlangProcess(ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 10000));
-        } catch (IOException | InterruptedException | RuntimeException e) {
+        } catch (IOException | RuntimeException e) {
+            sendErrorMessage();
             throw new RuntimeException("Cannot start Erlang node " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
         }
 
         createConnection(context);
         ErlangHelper.call(context.getOtpConnection(), new OtpErlangObject[]{context.getJavaPid()}, "master_supervisor", "start_link_shell");
 
+    }
+
+    private void sendErrorMessage() {
+        try {
+            queues.addErlangMessage("{start uncorrectly}");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
     }
 }
