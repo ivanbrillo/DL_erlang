@@ -56,11 +56,7 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndT
         {node_metrics, Metrics} ->   % has high frequency and will interfere with normal timeout handling
             DestinationNodeMetrics ! {node_metrics, Metrics},
             wait_response(N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime);
-        {nodedown, Node} ->
-            handleErrorMsg({nodedown_resended, Node}, N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime);
-        {nodedown_resended, Node} ->
-            handleErrorMsg({nodedown_resended, Node}, N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime);
-        {'DOWN', _MonitorRef, process, Pid, Reason} when Reason =/= noconnection ->
+        {'DOWN', _MonitorRef, process, Pid, Reason} ->
             handleErrorMsg({'DOWN', _MonitorRef, process, Pid, Reason}, N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime)
             
     after TimeLeft ->
