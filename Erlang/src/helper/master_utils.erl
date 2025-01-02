@@ -1,6 +1,6 @@
 -module(master_utils).
--export([distribute_model/4, distribute_model_weights/4, load_db/3, train/4, load_nodes/3, check_node_alive/2]).
-
+-export([distribute_model/4, distribute_model_weights/4, load_db/3, train/4, load_nodes/3, check_node_alive/2, reconnect/2]).
+-include("state.hrl").
 
 
 distribute_model(PythonModelPid, Pids, JavaUiPid, async) ->
@@ -72,3 +72,36 @@ check_node_alive(Pid, Node) ->
       end;
     _ -> false
   end.
+
+
+reconnect(Node, State) ->
+    % Determine the new PID for the node
+    PidNew = case lists:keyfind(Node, 2, State#mstate.previousInitializedNodes) of
+    {Pid, _Node} ->
+    case master_utils:check_node_alive(Pid, Node) of
+        true ->
+                io:format("--- MASTER: Node ~p server is still alive ---~n", [Node]),
+                erlang:monitor(process, Pid),   % the monitor is deactivated when a node is disconnected
+                Pid;
+        _ ->    io:format("--- MASTER: Node ~p server is dead, initializing ---~n", [Node]),
+                [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
+                PidN
+    end;
+    false -> io:format("--- MASTER: Node ~p is newly connected, initializing ---~n", [Node]), 
+        [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
+        PidN
+    end,    
+
+    case master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID, State#mstate.javaUiPid) of
+    [LoadedPidNew] ->
+        NewPidNodes = lists:keydelete(Node, 2, State#mstate.previousInitializedNodes), % remove to avoid two processes for the same node
+        PidNodes1 = [{LoadedPidNew, Node} | State#mstate.currentUpNodes],
+        PidNodes2 = [{LoadedPidNew, Node} | NewPidNodes],
+        message_primitives:notify_ui(State#mstate.javaUiPid, {node_up, Node}),
+    State#mstate{currentUpNodes = PidNodes1, previousInitializedNodes = PidNodes2};
+    [] ->
+        % List is empty, no PID was loaded -> meaning the node has an error on the initialization routine
+        io:format("--- MASTER: Node ~p cannot be initialized ---~n", [Node]),
+        message_primitives:flush_msg({nodeup, Node}),  % avoid to retry the initialization if the error is in the startup routine
+        State
+    end.

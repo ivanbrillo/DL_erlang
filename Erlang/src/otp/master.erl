@@ -115,37 +115,8 @@ handle_info({db_ack, InfosDB}, State) ->
 
 handle_info({nodeup, Node}, State) ->
     io:format("--- MASTER: Node ~p connected ---~n", [Node]),
-
-    % Determine the new PID for the node
-    PidNew = case lists:keyfind(Node, 2, State#mstate.previousInitializedNodes) of
-        {Pid, _Node} ->
-            case master_utils:check_node_alive(Pid, Node) of
-                true ->
-                        io:format("--- MASTER: Node ~p server is still alive ---~n", [Node]),
-                        erlang:monitor(process, Pid),   % the monitor is deactivated when a node is disconnected
-                        Pid;
-                _ ->    io:format("--- MASTER: Node ~p server is dead, initializing ---~n", [Node]),
-                        [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
-                        PidN
-            end;
-        false -> io:format("--- MASTER: Node ~p is newly connected, initializing ---~n", [Node]), 
-                [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
-                PidN
-    end,
-
-    case master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID, State#mstate.javaUiPid) of
-    [LoadedPidNew] ->
-        NewPidNodes = lists:keydelete(Node, 2, State#mstate.previousInitializedNodes), % remove to avoid two processes for the same node
-        PidNodes1 = [{LoadedPidNew, Node} | State#mstate.currentUpNodes],
-        PidNodes2 = [{LoadedPidNew, Node} | NewPidNodes],
-        message_primitives:notify_ui(State#mstate.javaUiPid, {node_up, Node}),
-        {noreply, State#mstate{currentUpNodes = PidNodes1, previousInitializedNodes = PidNodes2}};
-    [] ->
-        % List is empty, no PID was loaded -> meaning the node has an error on the initialization routine
-        io:format("--- MASTER: Node ~p cannot be initialized ---~n", [Node]),
-        message_primitives:flush_msg({nodeup, Node}),  % avoid to retry the initialization if the error is in the startup routine
-        {noreply, State}
-    end;
+    NewState = master_utils:reconnect(Node, State),
+    {noreply, NewState};
 
 
 handle_info({nodedown, Node}, State) ->
@@ -164,15 +135,9 @@ handle_info(check_nodes, State) ->
     {noreply, State};
 
 handle_info({'DOWN', _MonitorRef, process, Pid, Reason}, State) when Reason =/= noconnection ->   % noconnection errors are directly handled by nodedown
-    case lists:keyfind(Pid, 1, State#mstate.currentUpNodes) of
-        {Pid, Node} ->
-            io:format("--- NODE ~p terminated with reason: ~p ---~n", [Node, Reason]),
-            erlang:disconnect_node(Node);   % Leave the restart for a later time to avoid continuous tries. It will be handled by nodedown in at most 10s
-        false ->
-            io:format("--- NODE with PID ~p not found in currentUpNodes, terminated with reason: ~p ---~n", [Pid, Reason])
-    end,
-    UpdatedUpNodes = lists:keydelete(Pid, 1, State#mstate.currentUpNodes),
-    {noreply, State#mstate{currentUpNodes = UpdatedUpNodes}};
+    NewState = master_utils:reconnect(node(Pid), State),
+    UpdatedUpNodes = lists:keydelete(Pid, 1, NewState#mstate.currentUpNodes),
+    {noreply, NewState#mstate{currentUpNodes = UpdatedUpNodes}};
 
 handle_info({node_metrics, Metrics}, State) ->
     State#mstate.javaUiPid ! {node_metrics, Metrics},
