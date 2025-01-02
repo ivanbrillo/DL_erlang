@@ -1,5 +1,5 @@
 -module(master_utils).
--export([distribute_model/4, distribute_model_weights/4, load_db/3, train/4, load_nodes/3, check_node_alive/2, reconnect/2]).
+-export([distribute_model/4, distribute_model_weights/4, load_db/3, train/4, load_nodes/3, check_node_alive/2, reconnect/2, reconnect/5]).
 -include("state.hrl").
 
 
@@ -105,3 +105,9 @@ reconnect(Node, State) ->
         message_primitives:flush_msg({nodeup, Node}),  % avoid to retry the initialization if the error is in the startup routine
         State
     end.
+
+
+reconnect(Node, State, Pid, Reason, _MonitorRef) ->
+    NewState = master_utils:reconnect(Node, State),
+    message_primitives:flush_msg({'DOWN', _MonitorRef, process, Pid, Reason}),
+    State.

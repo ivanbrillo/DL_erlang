@@ -135,7 +135,7 @@ handle_info(check_nodes, State) ->
     {noreply, State};
 
 handle_info({'DOWN', _MonitorRef, process, Pid, Reason}, State) when Reason =/= noconnection ->   % noconnection errors are directly handled by nodedown
-    NewState = master_utils:reconnect(node(Pid), State),
+    NewState = master_utils:reconnect(node(Pid), State, Pid, Reason, _MonitorRef),
     UpdatedUpNodes = lists:keydelete(Pid, 1, NewState#mstate.currentUpNodes),
     {noreply, NewState#mstate{currentUpNodes = UpdatedUpNodes}};
 
