@@ -141,10 +141,8 @@ function processingInput(input) {
     } else if (inputStr.startsWith("{node_metrics")){
         nodeMetrics(inputStr);
     } else if (inputStr.startsWith("{node_up")) {
-        addLogMessage("received", inputStr);
         addNode(inputStr);
     } else if (inputStr.startsWith("{node_down")) {
-        addLogMessage("received", inputStr);
         deleteNode(inputStr);
     } else if (inputStr.startsWith("{start uncorrectly")) {
         addLogMessage("received", inputStr);
