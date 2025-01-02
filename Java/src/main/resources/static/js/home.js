@@ -132,6 +132,9 @@ function processingInput(input) {
     if (inputStr.startsWith("{initialized_nodes")) {
         initializedNodes(inputStr);
         addLogMessage("received", inputStr);
+    } else if (inputStr.startsWith("{loaded_nodes")) {
+        initializedNodes(inputStr);
+        addLogMessage("received", inputStr);
     } else if (inputStr.startsWith("{train_epoch_completed")) {
         trainAccuracy(inputStr);
     } else if (inputStr.startsWith("{training_total_completed")) {

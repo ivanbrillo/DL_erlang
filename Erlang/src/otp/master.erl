@@ -25,10 +25,10 @@ handle_call(get_pid, _From, State) ->
     {reply, self(), State};
 
 handle_call(load_nodes, _From, State) ->
-    Pids = master_utils:load_nodes(State#mstate.currentUpNodes, State#mstate.pythonModelPID, State#mstate.javaUiPid),
-    message_primitives:notify_ui(State#mstate.javaUiPid, {loaded_nodes, Pids}),
-    io:format("--- MASTER: node loaded ---~n"),   % TODO remove
-    {reply, ok, State};
+    ActiveNodes = master_utils:load_nodes(State#mstate.currentUpNodes, State#mstate.pythonModelPID, State#mstate.javaUiPid),
+    message_primitives:notify_ui(State#mstate.javaUiPid, {loaded_nodes, ActiveNodes}),
+    io:format("--- MASTER: nodes loaded ~p ---~n", [ActiveNodes]),   % TODO remove
+    {reply, ok, State#mstate{currentUpNodes = ActiveNodes}};
 
 handle_call(load_db, _From, State) ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
@@ -126,7 +126,7 @@ handle_info({nodeup, Node}, State) ->
                         Pid;
                 _ ->    io:format("--- MASTER: Node ~p server is dead, initializing ---~n", [Node]),
                         [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
-                         PidN
+                        PidN
             end;
         false -> io:format("--- MASTER: Node ~p is newly connected, initializing ---~n", [Node]), 
                 [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
@@ -143,22 +143,15 @@ handle_info({nodeup, Node}, State) ->
     [] ->
         % List is empty, no PID was loaded -> meaning the node has an error on the initialization routine
         io:format("--- MASTER: Node ~p cannot be initialized ---~n", [Node]),
+        message_primitives:flush_msg({nodeup, Node}),  % avoid to retry the initialization if the error is in the startup routine
         {noreply, State}
     end;
 
 
-% handle_info({nodedown, Node}, State) ->
-%     self() ! {nodedown_resended, Node},
-%     {noreply, State};
-
-% two codes nodedown and nodedown_resended because i cannot retransmit nodedown msgs
 handle_info({nodedown, Node}, State) ->
     io:format("--- MASTER: Node ~p disconnected ---~n", [Node]),
     UpdatedUpNodes = lists:keydelete(Node, 2, State#mstate.currentUpNodes),   % remove from the connected node lists the disconnected node
     message_primitives:notify_ui(State#mstate.javaUiPid, {node_down, Node}),
-    % message_primitives:flush_messages({nodedown_resended, Node}),
-    % message_primitives:flush_messages({nodedown, Node}),
-
     {noreply, State#mstate{currentUpNodes = UpdatedUpNodes}};
 
 handle_info({python_unhandled, Cause}, State) ->   % TODO: to be removed

@@ -20,7 +20,8 @@ distribute_model_weights(PythonModelPid, Pids, JavaUiPid, async) ->
 
 distribute_model_weights(PythonModelPid, Pids, JavaUiPid, sync) ->
     distribute_model_weights(PythonModelPid, Pids, JavaUiPid, async),
-    message_primitives:wait_response(length(Pids), weights_ack, JavaUiPid, use_error_filtering).
+    NewPids = message_primitives:wait_response(length(Pids), weights_ack, JavaUiPid),
+    lists:map(fun(Pid) -> {Pid, erlang:node(Pid)} end, NewPids).
 
 
 load_db(Pids, _JavaUiPid, async) ->
@@ -38,7 +39,7 @@ train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights, JavaUiPid),
 
     lists:foreach(fun(Pid) -> node_api:train_pipeline(Pid, Weights, CurrentEpoch) end, Nodes),
-    ResponseList = message_primitives:wait_response(length(Nodes), {train_pipeline_ack, CurrentEpoch}, JavaUiPid, use_error_filtering),
+    ResponseList = message_primitives:wait_response(length(Nodes), {train_pipeline_ack, CurrentEpoch}, JavaUiPid),
 
     case ResponseList of
         [] -> {[], 0.0};

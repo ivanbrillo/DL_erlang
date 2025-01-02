@@ -20,12 +20,7 @@ public class ErlangHelper {
         Process process = builder.start();
 
         log.info("[Java] Erlang Node compiling and starting");
-        Thread.sleep(timeout);
 
-        if (!process.isAlive()) {
-            process.destroyForcibly();
-            throw new RuntimeException("[Java] Erlang node did not start correctly in 10 seconds.");
-        }
 
         // Start background thread to handle output
         new Thread(() -> {
@@ -42,6 +37,13 @@ public class ErlangHelper {
                 log.info("[Java] Erlang logging terminating: {}", e.getMessage());
             }
         }).start();
+
+        Thread.sleep(timeout);
+
+        if (!process.isAlive()) {
+            process.destroyForcibly();
+            throw new RuntimeException("[Java] Erlang node did not start correctly in 10 seconds.");
+        }
 
         return process;
     }
