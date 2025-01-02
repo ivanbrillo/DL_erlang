@@ -1,5 +1,5 @@
 -module(message_primitives).
--export([synch_message/5, notify_ui/2, wait_response/3, flush_msg/1]).
+-export([synch_message/5, notify_ui/2, wait_response/3, flush_msg/1, flush_msg/3]).
 -define(TIMEOUT, 60000).   % default time-out
 
 
@@ -52,5 +52,11 @@ notify_ui(UiPid, Message) ->
 flush_msg(Msg) ->
     receive
         Msg -> flush_msg(Msg)
+    after 0 -> ok
+    end.
+
+flush_msg('DOWN', Pid, Reason) ->
+    receive
+        {'DOWN', _MonitorRef, process, Pid2, Reason} when node(Pid) == node(Pid2) -> flush_msg('DOWN', Pid2, Reason)
     after 0 -> ok
     end.

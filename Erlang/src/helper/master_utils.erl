@@ -109,5 +109,5 @@ reconnect(Node, State) ->
 
 reconnect(Node, State, Pid, Reason, _MonitorRef) ->
     NewState = master_utils:reconnect(Node, State),
-    message_primitives:flush_msg({'DOWN', _MonitorRef, process, Pid, Reason}),
-    State.
+    message_primitives:flush_msg('DOWN', Pid, Reason),
+    NewState.
