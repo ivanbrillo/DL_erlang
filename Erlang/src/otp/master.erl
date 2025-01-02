@@ -133,9 +133,9 @@ handle_info({nodeup, Node}, State) ->
                 PidN
     end,
 
-    NewPidNodes = lists:keydelete(Node, 2, State#mstate.previousInitializedNodes), % remove to avoid two processes for the same node
     case master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID, State#mstate.javaUiPid) of
     [LoadedPidNew] ->
+        NewPidNodes = lists:keydelete(Node, 2, State#mstate.previousInitializedNodes), % remove to avoid two processes for the same node
         PidNodes1 = [{LoadedPidNew, Node} | State#mstate.currentUpNodes],
         PidNodes2 = [{LoadedPidNew, Node} | NewPidNodes],
         message_primitives:notify_ui(State#mstate.javaUiPid, {node_up, Node}),
