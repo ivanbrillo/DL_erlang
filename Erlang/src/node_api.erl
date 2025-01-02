@@ -1,5 +1,5 @@
 -module(node_api).
--export([start_link/2, load_db/1, initialize_model/2, update_weights/2, train/1, get_weights/1, stop/1, train_pipeline/2, check_status/1]).
+-export([start_link/2, load_db/1, initialize_model/2, update_weights/2, train/1, get_weights/1, stop/1, train_pipeline/3, check_status/1]).
 
 
 % initialize the node server and send to master {ok, {Pid, Node}}
@@ -29,8 +29,8 @@ train(Pid) ->
     gen_server:cast(Pid, train).
 
 % update the local weights and perform one epoch of training. It also send to master the updated weights
-train_pipeline(Pid, Weights) ->
-    gen_server:cast(Pid, {train_pipeline, Weights}).
+train_pipeline(Pid, Weights, Epoch) ->
+    gen_server:cast(Pid, {train_pipeline, Weights, Epoch}).
 
 % return true if the node is alive otherwise timeout or other exception exit codes (nodedown, shutdown)
 check_status(Pid) ->
