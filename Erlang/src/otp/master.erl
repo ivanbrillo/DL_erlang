@@ -134,7 +134,19 @@ handle_info({nodeup, Node}, State) ->
     PidNodes1 = [{LoadedPidNew, Node} | State#mstate.currentUpNodes], % Add the new node to the connected node list
     PidNodes2 = [{LoadedPidNew, Node} | NewPidNodes], % Add the new node to the previous connected node list
     message_primitives:notify_ui(State#mstate.javaUiPid, {node_up, Node}),
-    {noreply, State#mstate{currentUpNodes = PidNodes1, previousInitializedNodes = PidNodes2}};
+
+    case master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID, State#mstate.javaUiPid) of
+    [LoadedPidNew] ->
+        PidNodes1 = [{LoadedPidNew, Node} | State#mstate.currentUpNodes],
+        PidNodes2 = [{LoadedPidNew, Node} | NewPidNodes],
+        message_primitives:notify_ui(State#mstate.javaUiPid, {node_up, Node}),
+        {noreply, State#mstate{currentUpNodes = PidNodes1, previousInitializedNodes = PidNodes2}};
+    [] ->
+        % List is empty, no PID was loaded -> meaning the node has an error on the initialization routine
+        log:error("[Node Manager] Failed to load nodes: no PID returned for Node: ~p", [Node]),
+        {noreply, State}
+    end;
+
 
 handle_info({nodedown, Node}, State) ->
     self() ! {nodedown_resended, Node},
