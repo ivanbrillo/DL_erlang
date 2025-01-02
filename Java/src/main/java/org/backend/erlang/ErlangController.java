@@ -94,7 +94,7 @@ public class ErlangController implements Runnable {
                 commandFactory.createCommand("stop").execute("");
                 log.info("ErlangController shutdown complete");
             } catch (RuntimeException e) {
-                log.error("Error stopping ErlangController {}", e.getMessage());
+                log.error("Error stopping ErlangController: {}", e.getMessage());
             }
         }
     }

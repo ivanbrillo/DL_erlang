@@ -52,7 +52,7 @@ public class StartCommand implements Command {
             throw new RuntimeException("Erlang process is already started and connected");
 
         try {
-            context.setErlangProcess(ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 5000));
+            context.setErlangProcess(ErlangHelper.startErlangNode(beamPath, cookie, erlangNodeName, 10000));
         } catch (IOException | RuntimeException e) {
             sendErrorMessage();
             throw new RuntimeException("Cannot start Erlang node " + e.getMessage(), e);

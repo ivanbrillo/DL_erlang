@@ -21,6 +21,12 @@ socket.onmessage = function (event) {
 
 socket.onclose = function () {
     console.log('SockJS connection closed');
+    addLogMessage("received", "SockJS connection closed");
+    uiDisabled();
+    const container = document.getElementById('containerNodes');
+    const oldElements = container.querySelectorAll('.elemNode');
+    oldElements.forEach(elem => elem.remove());
+    clearChart();
 };
 
 socket.onerror = function (error) {
@@ -55,15 +61,13 @@ homepageBtn.addEventListener("click", () => {
 
 
 /* MESSAGE MANAGEMENT*/
-document.getElementById('connectButton').addEventListener('click', function () {
-    
+CONNECT.addEventListener('click', function () {
         socket.send(JSON.stringify({command: "start", parameters: ""}));
         addLogMessage("sent", "start");
         showSpinner();
-   
 });
 
-document.getElementById('closeButton').addEventListener('click', function () {
+CLOSE.addEventListener('click', function () {
     socket.send(JSON.stringify({command: "stop", parameters: ""}));
     addLogMessage("sent", "stop");
 
@@ -76,10 +80,9 @@ document.getElementById('closeButton').addEventListener('click', function () {
     uiDisabled();
 });
 
-document.getElementById('startBtn').addEventListener('click', function () {
+START.addEventListener('click', function () {
     const epochsInput = document.getElementById('epochsInput').value;
     const accuracyTargetInput = document.getElementById('accuracyTarget').value;
-
     document.getElementById('epochTot').textContent = epochsInput;
 
     const msg = {
@@ -96,22 +99,22 @@ document.getElementById('startBtn').addEventListener('click', function () {
     STOP.disabled = false;
 });
 
-document.getElementById('saveButton').addEventListener('click', function () {
+SAVE.addEventListener('click', function () {
     socket.send(JSON.stringify({command: "save", parameters: ""}));
     addLogMessage("sent", "save model");
 });
 
-document.getElementById('loadButton').addEventListener('click', function () {
+MODEL.addEventListener('click', function () {
     socket.send(JSON.stringify({command: "load", parameters: "model"}));
     addLogMessage("sent", "load model");
 });
 
-document.getElementById('loadBackUpButton').addEventListener('click', function () {
+BACKUP.addEventListener('click', function () {
     socket.send(JSON.stringify({command: "load", parameters: "backup"}));
     addLogMessage("sent", "load backup");
 });
 
-document.getElementById('stopBtn').addEventListener('click', function () {
+STOP.addEventListener('click', function () {
     socket.send(JSON.stringify({command: "stop_training", parameters: ""}));
     addLogMessage("sent", "stop training");
     STOP.disabled = true;
@@ -158,10 +161,19 @@ function processingInput(input) {
         addLogMessage("received", inputStr);
     } else if (inputStr.startsWith("{model_loaded")) {
         addLogMessage("received", inputStr);
+
+        if(inputStr === "{model_loaded,true}") {
+            const container = document.getElementById('containerNodes');
+            const oldElements = container.querySelectorAll('.elemNode');
+            oldElements.forEach(elem => {
+                elem.querySelector("#train-accuracy-metric").textContent = "N/A"
+                elem.querySelector("#test-accuracy-metric").textContent = "N/A"
+            });
+        }
     } else if (inputStr.startsWith("{new_train")) {
         clearChart();
-        document.getElementById('startBtn').disabled = true;
-        document.getElementById('stopBtn').disabled = false;
+        START.disabled = true;
+        STOP.disabled = false;
         addLogMessage("received", inputStr);
 
         const regex = /{new_train,\{(\d+),([\d.]+)}}/; // Match the format {new_train,{<epochs>,<accuracy>}}
@@ -172,8 +184,18 @@ function processingInput(input) {
         document.getElementById('epochTot').textContent = match[1];
 
     } else if (inputStr.startsWith("{operator}")) {
-        addLogMessage("received", inputStr);
         buttonsVisible();
+    } else if (inputStr.startsWith("{master_terminating")) {
+        addLogMessage("received", inputStr);
+        uiDisabled();
+        CONNECT.disabled = true;
+        clearChart();
+
+        const container = document.getElementById('containerNodes');
+        const oldElements = container.querySelectorAll('.elemNode');
+        oldElements.forEach(elem => elem.remove());
+
+        showSpinner();
     }
 }
 
@@ -184,7 +206,7 @@ function initializedNodes(input){
     const container = document.getElementById('containerNodes');
     const oldElements = container.querySelectorAll('.elemNode');
     oldElements.forEach(elem => elem.remove());
-    document.getElementById('startBtn').disabled = false;
+    START.disabled = false;
 
     clearChart();
 

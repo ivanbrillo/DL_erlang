@@ -182,5 +182,6 @@ handle_info(Info, State) ->
 terminate(_Reason, State) ->    % called from supervisor shutdown or stop function
     io:format("--- MASTER: Terminating Procedure ---~n"),
     lists:foreach(fun({Pid, _Node}) -> gen_server:stop(Pid) end, State#mstate.currentUpNodes),  % send stop signal to all connected nodes
-    python:stop(State#mstate.pythonModelPID),      % TODO: possible shutdown procedure (eg. save python model) 
+    python:stop(State#mstate.pythonModelPID),     
+    message_primitives:notify_ui(State#mstate.javaUiPid, {master_terminating, "possible restarting by supervisor"}),
     ok.
