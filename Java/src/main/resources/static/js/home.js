@@ -207,12 +207,13 @@ function initializedNodes(input){
     const oldElements = container.querySelectorAll('.elemNode');
     oldElements.forEach(elem => elem.remove());
     START.disabled = false;
-
     clearChart();
 
     const startIdx = input.indexOf("[");
     const endIdx = input.lastIndexOf("]");
     const content = input.substring(startIdx + 1, endIdx).trim();
+    uiActive();
+
 
     if (!content) {
         console.log("No active nodes.");
@@ -236,7 +237,6 @@ function initializedNodes(input){
     }
 
     result.forEach(createNode);
-    uiActive();
 }
 
 function trainAccuracy(input) {
