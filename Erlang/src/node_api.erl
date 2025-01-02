@@ -38,5 +38,9 @@ check_status(Pid) ->
 
 % stop the gen server and the python process. Disconnect the node from the master
 stop(Pid) ->
-    gen_server:stop(Pid).
-
+    try 
+        gen_server:stop(Pid)
+    catch
+        exit:noproc -> 
+            {error, noproc}
+    end.

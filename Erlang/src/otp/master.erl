@@ -28,7 +28,6 @@ handle_call(load_nodes, _From, State) ->
     Pids = master_utils:load_nodes(State#mstate.currentUpNodes, State#mstate.pythonModelPID, State#mstate.javaUiPid),
     message_primitives:notify_ui(State#mstate.javaUiPid, {loaded_nodes, Pids}),
     io:format("--- MASTER: node loaded ---~n"),   % TODO remove
-
     {reply, ok, State};
 
 handle_call(load_db, _From, State) ->
@@ -148,8 +147,6 @@ handle_info({nodedown_resended, Node}, State) ->
     message_primitives:notify_ui(State#mstate.javaUiPid, {node_down, Node}),
     {noreply, State#mstate{currentUpNodes = UpdatedUpNodes}};
 
-
-
 handle_info({python_unhandled, Cause}, State) ->   % TODO: to be removed
     io:format("--- MASTER: Python received unhandled message: ~p ---~n", [Cause]),
     {noreply, State};
@@ -181,7 +178,7 @@ handle_info(Info, State) ->
 
 terminate(_Reason, State) ->    % called from supervisor shutdown or stop function
     io:format("--- MASTER: Terminating Procedure ---~n"),
-    lists:foreach(fun({Pid, _Node}) -> gen_server:stop(Pid) end, State#mstate.currentUpNodes),  % send stop signal to all connected nodes
+    lists:foreach(fun({Pid, _Node}) -> node_api:stop(Pid) end, State#mstate.currentUpNodes),  % send stop signal to all connected nodes
     python:stop(State#mstate.pythonModelPID),     
     message_primitives:notify_ui(State#mstate.javaUiPid, {master_terminating, "possible restarting by supervisor"}),
     ok.
