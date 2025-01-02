@@ -18,11 +18,11 @@ get_server_pid() ->
 
 % start the node servers to the connected nodes in the network specified by the file .hosts.erlang
 initialize_nodes() ->
-    gen_server:call(erlang_master, initialize_nodes, 20000).
+    gen_server:call(erlang_master, initialize_nodes, 62000).
 
 % load dataset, model and weights in each connected node
 load_nodes() ->
-    gen_server:call(erlang_master, load_nodes, 20000).
+    gen_server:call(erlang_master, load_nodes, 62000).
 
 % load the dataset in each connected node
 load_db() ->

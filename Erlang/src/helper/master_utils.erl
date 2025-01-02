@@ -20,7 +20,7 @@ distribute_model_weights(PythonModelPid, Pids, JavaUiPid, async) ->
 
 distribute_model_weights(PythonModelPid, Pids, JavaUiPid, sync) ->
     distribute_model_weights(PythonModelPid, Pids, JavaUiPid, async),
-    message_primitives:wait_response(length(Pids), weights_ack, JavaUiPid).
+    message_primitives:wait_response(length(Pids), weights_ack, JavaUiPid, use_error_filtering).
 
 
 load_db(Pids, _JavaUiPid, async) ->
