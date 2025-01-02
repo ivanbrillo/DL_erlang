@@ -4,6 +4,7 @@ package org.backend.erlang;
 import com.ericsson.otp.erlang.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.io.IOException;
 
 @Slf4j
@@ -14,8 +15,9 @@ public class ErlangHelper {
         builder.directory(new java.io.File(path));  // Set the working directory
         builder.environment().put("TF_CPP_MIN_LOG_LEVEL", "3");   // suppress tf info/warning messages
 
-        // Redirect output and errors from erlang to the java console
+        // Redirect output and errors from erlang to the java console and to log file
         builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        builder.redirectOutput(ProcessBuilder.Redirect.appendTo(new File("logs/erlang.log")));
         builder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
         Process process = builder.start();
