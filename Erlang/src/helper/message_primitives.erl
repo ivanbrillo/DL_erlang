@@ -58,6 +58,8 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndT
             wait_response(N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime);
         {nodedown, Node} ->
             handleErrorMsg({nodedown_resended, Node}, N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime);
+        {nodedown_resended, Node} ->
+            handleErrorMsg({nodedown_resended, Node}, N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime);
         {'DOWN', _MonitorRef, process, Pid, Reason} when Reason =/= noconnection ->
             handleErrorMsg({'DOWN', _MonitorRef, process, Pid, Reason}, N, RespList, AckCode, DestinationNodeMetrics, Crashed, Error, EndTime)
             
