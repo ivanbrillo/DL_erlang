@@ -62,7 +62,9 @@ handle_cast({new_train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) ->
     {noreply, State#mstate{terminateTraining = false}};   % clear the terminateTraining flag of a possible previous training
 
 handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when EpochsLeft > 0, CurrentEpoch >= 0, length(State#mstate.currentUpNodes) > 0 ->
+
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
+    io:format("--- MASTER: new train epochs, with nodes: ~p ---~n", [PidNodes]),
     {Nodes, TrainMeanAccuracy} = master_utils:train(CurrentEpoch, State#mstate.pythonModelPID, PidNodes, State#mstate.javaUiPid),
 
     case {EpochsLeft > 1, AccuracyThreshold >= TrainMeanAccuracy, length(Nodes) > 0, State#mstate.terminateTraining } of
@@ -74,8 +76,10 @@ handle_cast({train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) when Ep
             end,
             gen_server:cast(erlang_master, {train, EpochsLeft - 1, CurrentEpoch + 1, AccuracyThreshold});
         {_, _, true, _} ->
+            io:format("--- MASTER: training completed ---~n"),
             message_primitives:notify_ui(State#mstate.javaUiPid, {training_total_completed, TrainMeanAccuracy});
         {_, _, false, _} ->
+            io:format("--- MASTER: training error ---~n"),
             message_primitives:notify_ui(State#mstate.javaUiPid, {training_error})
     end,
 
