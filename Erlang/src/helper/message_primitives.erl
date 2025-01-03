@@ -5,7 +5,7 @@
 
 synch_message(PidList, Code, Message, AckCode, DestinationNodeMetrics) when is_list(PidList) ->
     lists:foreach(fun(Pid) ->
-        Pid ! {Code, Message}
+        Pid ! {Code, self(), Message}
     end, PidList),
 
     EndTime = erlang:monotonic_time(millisecond) + ?TIMEOUT,

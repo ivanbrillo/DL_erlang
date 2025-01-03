@@ -1,6 +1,10 @@
 from tensorflow.keras.utils import to_categorical
 import numpy as np
 
+start_train: int = 0
+start_test: int = 0
+len_train: int = 12000
+len_test: int = 2000
 
 list_data_path = [
     "./priv/Dataset/train-images-idx3-ubyte/train-images-idx3-ubyte",
@@ -31,10 +35,10 @@ def load_images_and_labels(file_path, image=False, label=False):
 
 def preprocess_image():
     # Split the Data
-    x_train = load_images_and_labels(list_data_path[0], image=True, label=False)
-    y_train = load_images_and_labels(list_data_path[1], image=False, label=True)
-    x_test = load_images_and_labels(list_data_path[2], image=True, label=False)
-    y_test = load_images_and_labels(list_data_path[3], image=False, label=True)
+    x_train = load_images_and_labels(list_data_path[0], image=True, label=False)[start_train:start_train+len_train]
+    y_train = load_images_and_labels(list_data_path[1], image=False, label=True)[start_train:start_train+len_train]
+    x_test = load_images_and_labels(list_data_path[2], image=True, label=False)[start_test:start_test+len_test]
+    y_test = load_images_and_labels(list_data_path[3], image=False, label=True)[start_test:start_test+len_test]
 
     # Resizing the Data
     x_train = x_train.reshape(x_train.shape[0], 28,28)

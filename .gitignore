@@ -16,6 +16,7 @@ deps
 .rebar3
 Erlang/_build/
 _checkouts/
+Erlang/priv/__pycache__/
 
 # priv/Dataset/
 Erlang/priv/dataParser.py

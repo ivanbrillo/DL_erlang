@@ -26,7 +26,7 @@ def register_handler(erlang_pid, node_id, master_ip):
     start_metrics_thread()
 
     def handler(message):
-        code, payload = message
+        code, pid, payload = message
         code = code.decode('utf-8')
 
         if code == "initialize":

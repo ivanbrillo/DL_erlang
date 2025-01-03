@@ -31,7 +31,7 @@ def register_handler(master_pid):
     federatedController.master_pid = master_pid
 
     def handler(message):
-        code, payload = message
+        code, pid, payload = message
         code = code.decode('utf-8')
 
         if code == "get_model":

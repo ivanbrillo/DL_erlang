@@ -5,7 +5,7 @@
 % initialize the node server and send to master {ok, {Pid, Node}}
 start_link(MasterPid, MasterNode) ->
     {ok, Pid} = gen_server:start(node, [MasterPid, MasterNode], []),
-    MasterPid ! {ok, {Pid, node()}},   % allows asynchronous calls to the function
+    MasterPid ! {ok, self(), {Pid, node()}},   % allows asynchronous calls to the function
     {ok, Pid}.
 
 % load the specified pickle-encoded model to python, send to master {initialize_ack, Pid}
