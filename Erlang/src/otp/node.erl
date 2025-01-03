@@ -24,37 +24,37 @@ handle_call(_Request, _From, State) ->
 
 handle_cast(load_db, State) ->
     Response = message_primitives:synch_message(State#nstate.pythonPid, load_db, null, db_ack, State#nstate.masterPid),
-    State#nstate.masterPid ! {db_ack, {self(), Response}},
+    State#nstate.masterPid ! {db_ack, self(), {self(), Response}},
     io:format("--- NODE ~p: Load DB completed ---~n", [node()]),
     {noreply, State};
 
 handle_cast({initialize_model, Model}, State) ->
     message_primitives:synch_message(State#nstate.pythonPid, initialize, Model, initialize_ack, State#nstate.masterPid),
-    State#nstate.masterPid ! {initialize_ack, self()},
+    State#nstate.masterPid ! {initialize_ack, self(), self()},
     io:format("--- NODE ~p: Initialization completed ---~n", [node()]),
     {noreply, State};
 
 handle_cast({update_weights, Weights}, State) ->
     message_primitives:synch_message(State#nstate.pythonPid, update, Weights, weights_ack, State#nstate.masterPid),
-    State#nstate.masterPid ! {weights_ack, self()},
+    State#nstate.masterPid ! {weights_ack, self(), self()},
     io:format("--- NODE ~p: Weights updated successfully ---~n", [node()]),
     {noreply, State};
 
 handle_cast(train, State) ->
     Response = message_primitives:synch_message(State#nstate.pythonPid, train, null, train_ack, State#nstate.masterPid),
-    State#nstate.masterPid ! {train_ack, {self(), Response}},
+    State#nstate.masterPid ! {train_ack, self(), {self(), Response}},
     io:format("--- NODE ~p: Training completed ---~n", [node()]),
     {noreply, State};
 
 handle_cast({train_pipeline, Weights, Epoch}, State) ->
     NewWeights = message_primitives:synch_message(State#nstate.pythonPid, train_pipeline, Weights, train_pipeline_ack, State#nstate.masterPid),
-    State#nstate.masterPid ! {{train_pipeline_ack, Epoch}, {self(), NewWeights}},
+    State#nstate.masterPid ! {{train_pipeline_ack, Epoch}, self(), {self(), NewWeights}},
     io:format("--- NODE ~p: Training Pipeline completed ---~n", [node()]),
     {noreply, State};
 
 handle_cast(get_weights, State) ->
     Response = message_primitives:synch_message(State#nstate.pythonPid, get_weights, null, node_weights, State#nstate.masterPid),
-    State#nstate.masterPid ! {node_weights, {self(), Response}},
+    State#nstate.masterPid ! {node_weights, self(), {self(), Response}},
     io:format("--- NODE ~p: Weights returned ---~n", [node()]),
     {noreply, State}.
 
@@ -84,9 +84,4 @@ handle_info(Info, State) ->
 terminate(Reason, State) ->
     io:format("--- NODE ~p: Terminating procedure with reason: ~p ---~n", [node(), Reason]),
     python:stop(State#nstate.pythonPid),  % abort python process
-
-    case Reason =/= normal of  % reason when the server is explicitly terminated via gen_server:terminate
-        true-> erlang:disconnect_node(State#nstate.masterNode);  % let know the master node that the node server is shutting down by disconnecting from it
-        false -> ok  % do not disconnect otherwise the call gen_server:terminate will generate an exception if performed from the master node
-    end,
     ok.

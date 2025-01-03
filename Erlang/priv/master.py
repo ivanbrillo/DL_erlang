@@ -36,19 +36,19 @@ def register_handler(master_pid):
 
         if code == "get_model":
             response = federatedController.get_definition()
-            cast(master_pid, (encode_status_code("model_definition"), response))
+            cast(master_pid, (encode_status_code("model_definition"), None, response))
         elif code == "get_weights":
             response = federatedController.get_weights()
-            cast(master_pid, (encode_status_code("model_weights"), response))
+            cast(master_pid, (encode_status_code("model_weights"), None, response))
         elif code == "update_weights":
             federatedController.update_weights(payload)
-            cast(master_pid, (encode_status_code("update_weights_ack"), None))
+            cast(master_pid, (encode_status_code("update_weights_ack"), None, None))
         elif code == "save_model":
             result = federatedController.save_model(payload.decode('utf-8'))
-            cast(master_pid, (encode_status_code("model_saved"), encode_status_code(result)))
+            cast(master_pid, (encode_status_code("model_saved"), None, encode_status_code(result)))
         elif code == "load_model":
             result = federatedController.load_model(payload.decode('utf-8'))
-            cast(master_pid, (encode_status_code("model_loaded"), encode_status_code(result)))
+            cast(master_pid, (encode_status_code("model_loaded"), None, encode_status_code(result)))
         else:
             cast(master_pid, (encode_status_code("python_unhandled"), "NODE master, invalid message code " + code))
         

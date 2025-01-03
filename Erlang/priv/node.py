@@ -31,24 +31,24 @@ def register_handler(erlang_pid, node_id, master_ip):
 
         if code == "initialize":
             nodeController.initialize_model(payload)
-            cast(erlang_pid, (encode_status_code("initialize_ack"), None))
+            cast(erlang_pid, (encode_status_code("initialize_ack"), None, None))
         elif code == "load_db":
             response = nodeController.load_db()
-            cast(erlang_pid, (encode_status_code("db_ack"), response))
+            cast(erlang_pid, (encode_status_code("db_ack"), None, response))
         elif code == "update":
             nodeController.update_model(payload)
-            cast(erlang_pid, (encode_status_code("weights_ack"), None))
+            cast(erlang_pid, (encode_status_code("weights_ack"), None, None))
         elif code == "train":
             response = nodeController.train_local()
-            cast(erlang_pid, (encode_status_code("train_ack"), response))
+            cast(erlang_pid, (encode_status_code("train_ack"), None, response))
         elif code == "train_pipeline":
             nodeController.update_model(payload)
             accuracy = nodeController.train_local()
             response = nodeController.get_weights([nodeController.dataset_size])
-            cast(erlang_pid, (encode_status_code("train_pipeline_ack"), (response, accuracy)))
+            cast(erlang_pid, (encode_status_code("train_pipeline_ack"), None, (response, accuracy)))
         elif code == "get_weights":
             response = nodeController.get_weights([nodeController.dataset_size])
-            cast(erlang_pid, (encode_status_code("node_weights"), response))
+            cast(erlang_pid, (encode_status_code("node_weights"), None, response))
         else:
             cast(erlang_pid, (
             encode_status_code("python_unhandled"), f"NODE {nodeController.node_id}, invalid message code {code}"))

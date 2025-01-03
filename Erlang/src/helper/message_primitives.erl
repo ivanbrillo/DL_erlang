@@ -40,8 +40,9 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pi
     end,
 
     receive
-        {AckCode, Response} -> 
-            wait_response(N-1, RespList ++ [Response], AckCode, DestinationNodeMetrics, EndTime, Crashed, Pids);
+        {AckCode, Pid, Response} -> 
+            NewPids = lists:delete(Pid, Pids).
+            wait_response(N-1, RespList ++ [Response], AckCode, DestinationNodeMetrics, EndTime, Crashed, NewPids);
         {node_metrics, Metrics} ->   % has high frequency and will interfere with normal timeout handling
             DestinationNodeMetrics ! {node_metrics, Metrics},
             wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pids);
@@ -61,7 +62,8 @@ handleErrorMsg(Msg, N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crash
     case lists:member(Pid, Pids) of
         true -> 
             io:format("--- WARNING: nodedown or exception occurs during waiting the responses, Pid = ~p ---~n", [Pid]),
-            wait_response(N-1, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed ++ [Msg], Pids);
+            NewPids = lists:delete(Pid, Pids).
+            wait_response(N-1, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed ++ [Msg], NewPids);
         _ ->
             wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed ++ [Msg], Pids)
     end.

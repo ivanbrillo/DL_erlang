@@ -9,7 +9,7 @@ init([JavaPid]) ->
     io:format("--- MASTER: Starting erlang process, Java pid: ~p ---~n", [JavaPid]),
 
     PythonModel = python_helper:init_python_process(),
-    State = #mstate{pythonModelPID = PythonModel, javaUiPid = JavaPid},   % TODO change names!
+    State = #mstate{pythonModelPID = PythonModel, javaUiPid = JavaPid}, 
     
     python_helper:python_register_handler(PythonModel, master, self()),
     timer:send_after(10000, self(), check_nodes),  % check the connected nodes in 10s, useful for handling reconnection and new nodes
