@@ -129,15 +129,12 @@ function processingInput(input) {
     // if the input is an object
     const inputStr = typeof input === 'object' ? JSON.stringify(input) : input;
 
-    if (inputStr.startsWith("{initialized_nodes")) {
+    if (inputStr.startsWith("{initialized_nodes") || inputStr.startsWith("{loaded_nodes")) {
         initializedNodes(inputStr);
         addLogMessage("received", inputStr);
-    } else if (inputStr.startsWith("{loaded_nodes")) {
-        initializedNodes(inputStr);
-        addLogMessage("received", inputStr);
-    } else if (inputStr.startsWith("{train_epoch_completed")) {
+    }  else if (inputStr.startsWith("{train_epoch_completed")) {
         trainAccuracy(inputStr);
-    } else if (inputStr.startsWith("{training_total_completed")) {
+    } else if (inputStr.startsWith("{training_total_completed") || inputStr.startsWith("{training_error") || inputStr.startsWith("{train_refused")) {
         addLogMessage("received", inputStr);
         START.disabled = false;
         STOP.disabled = true;
@@ -151,10 +148,6 @@ function processingInput(input) {
         addLogMessage("received", inputStr);
         hideSpinner();
         uiDisabled();
-    } else if (inputStr.startsWith("{train_refused") || inputStr.startsWith("{train_error")){
-        addLogMessage("received", inputStr);
-        START.disabled = false;
-        STOP.disabled = true;
     } else if (inputStr.startsWith("{db_ack")){
         addLogMessage("received", inputStr);
         sizeDB(inputStr);

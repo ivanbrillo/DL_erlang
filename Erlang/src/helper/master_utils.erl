@@ -20,7 +20,7 @@ distribute_model_weights(PythonModelPid, Pids, JavaUiPid, async) ->
 
 distribute_model_weights(PythonModelPid, Pids, JavaUiPid, sync) ->
     distribute_model_weights(PythonModelPid, Pids, JavaUiPid, async),
-    NewPids = message_primitives:wait_response(length(Pids), weights_ack, JavaUiPid),
+    NewPids = message_primitives:wait_response(length(Pids), weights_ack, JavaUiPid, Pids),
     lists:map(fun(Pid) -> {Pid, erlang:node(Pid)} end, NewPids).
 
 
@@ -39,7 +39,7 @@ train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
     Weights = message_primitives:synch_message(PythonModelPid, get_weights, null, model_weights, JavaUiPid),
 
     lists:foreach(fun(Pid) -> node_api:train_pipeline(Pid, Weights, CurrentEpoch) end, Nodes),
-    ResponseList = message_primitives:wait_response(length(Nodes), {train_pipeline_ack, CurrentEpoch}, JavaUiPid),
+    ResponseList = message_primitives:wait_response(length(Nodes), {train_pipeline_ack, CurrentEpoch}, JavaUiPid, Nodes),
 
     case ResponseList of
         [] -> {[], 0.0};
@@ -93,10 +93,10 @@ reconnect(Node, State) ->
     end,    
 
     case master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID, State#mstate.javaUiPid) of
-    [LoadedPidNew] ->
+    [LoadedPidNodeNew] ->
         NewPidNodes = lists:keydelete(Node, 2, State#mstate.previousInitializedNodes), % remove to avoid two processes for the same node
-        PidNodes1 = [{LoadedPidNew, Node} | State#mstate.currentUpNodes],
-        PidNodes2 = [{LoadedPidNew, Node} | NewPidNodes],
+        PidNodes1 = [LoadedPidNodeNew | State#mstate.currentUpNodes],
+        PidNodes2 = [LoadedPidNodeNew | NewPidNodes],
         message_primitives:notify_ui(State#mstate.javaUiPid, {node_up, Node}),
     State#mstate{currentUpNodes = PidNodes1, previousInitializedNodes = PidNodes2};
     [] ->

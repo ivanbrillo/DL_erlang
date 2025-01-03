@@ -25,7 +25,7 @@ public class ErlangController implements Runnable {
     private final ErlangContext erlangContext;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final List<String> finishedTrainCode = List.of("train_refused", "training_total_completed", "train_error");
+    private final List<String> finishedTrainCode = List.of("train_refused", "training_total_completed", "training_error");
 
 
     public ErlangController(CommandFactory commandFactory, MessageQueues queues, ErlangContext erlangContext) {
