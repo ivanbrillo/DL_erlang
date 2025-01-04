@@ -3,6 +3,8 @@ import numpy as np
 import json
 from networkModel import NetworkModel
 from tensorflow.keras.models import model_from_json
+import tensorflow as tf
+
 
 
 class FederatedController():
@@ -96,6 +98,7 @@ class FederatedController():
 
     def load_model(self, path = "model") -> str:
         try:
+            self.model.build(self.model.network.input_shape)
             self.model.load_weights(path + ".keras")
             return "true"
         except Exception as e:

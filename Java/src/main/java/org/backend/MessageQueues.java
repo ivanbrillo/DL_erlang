@@ -15,14 +15,19 @@ public class MessageQueues {
     private final BlockingQueue<String> webSocketQueue = new LinkedBlockingQueue<>();
 
     private final BlockingQueue<String> cacheSession = new LinkedBlockingQueue<>();
-    private final List<String> cacheMsgCodes = List.of("initialized_nodes", "train_epoch_completed",
-            "training_total_completed", "node_up", "node_down", "db_ack", "new_train");
+    private final List<String> cacheMsgCodes = List.of("initialized_nodes", "train",
+            "node_up", "node_down", "db_ack", "stopped");
 
     public synchronized void addErlangMessage(String message) throws InterruptedException {
         erlangQueue.put(message);
 
         if (cacheMsgCodes.stream().anyMatch(code -> message.startsWith("{" + code)))
             cacheSession.put(message);
+
+        if(message.startsWith("{new_train")) {   // clear all old train messages since they will not be needed anymore
+            cacheSession.removeIf(msg -> msg.startsWith("{train"));
+            cacheSession.put(message);
+        }
     }
 
     public void addWebSocketMessage(String message) throws InterruptedException {
@@ -45,7 +50,7 @@ public class MessageQueues {
         // no new msgs can be added when performing restoreSession
         while (!erlangQueue.isEmpty()) {
             if (System.currentTimeMillis() - startTime > timeoutMillis)
-                throw new RuntimeException("Timeout waiting for erlang queue to empty after 1 seconds");
+                throw new RuntimeException("Timeout waiting for erlang queue to empty after " + timeoutMillis + " ms");
 
             Thread.sleep(5);
         }
@@ -59,8 +64,14 @@ public class MessageQueues {
         });
     }
 
-    public synchronized void clearCache() {
+    public synchronized void clearCache() {   // called during Stop command
         cacheSession.clear();
+        try {
+            addErlangMessage("{stopped}");   // clear the UI
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
     }
 
 

@@ -109,5 +109,5 @@ reconnect(Node, State) ->
 
 reconnect(Node, State, Pid, Reason, _MonitorRef) ->
     NewState = master_utils:reconnect(Node, State),
-    message_primitives:flush_msg('DOWN', Pid, Reason),
+    message_primitives:flush_msg('DOWN', Pid, Reason),  % avoid to retry the initialization if the error is in the startup routine
     NewState.

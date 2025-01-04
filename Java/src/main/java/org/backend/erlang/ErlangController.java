@@ -57,7 +57,7 @@ public class ErlangController implements Runnable {
 
     private void receiveErlangMessage() throws InterruptedException {
         try {
-            String msg = erlangContext.getNextMessage();
+            String msg = erlangContext.getNextMessage();   // non-blocking
 
             if (msg != null && !msg.startsWith("{rex,")) {   // RPC return value, will be discarded
                 queues.addErlangMessage(msg);
@@ -72,7 +72,7 @@ public class ErlangController implements Runnable {
     }
 
     private void executeWebSocketCommand() {
-        String commandJSON = queues.getWebSocketMessage();
+        String commandJSON = queues.getWebSocketMessage();   // non blocking
         if (commandJSON == null)
             return;
 

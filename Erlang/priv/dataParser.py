@@ -33,7 +33,7 @@ def load_images_and_labels(file_path, image=False, label=False):
         return (numpy_data)
 
 
-def preprocess_image():
+def get_dataset():
     # Split the Data
     x_train = load_images_and_labels(list_data_path[0], image=True, label=False)[start_train:start_train+len_train]
     y_train = load_images_and_labels(list_data_path[1], image=False, label=True)[start_train:start_train+len_train]
@@ -53,12 +53,3 @@ def preprocess_image():
     y_test = to_categorical(y_test, 10)
 
     return x_train, y_train, x_test, y_test
-
-# # Visualize the Data
-# print("\nVisualising of Datasets...\n")
-# figure, axis = plt.subplots(2, 5, figsize=(4,2))
-# axis = axis.ravel()
-# for i in range(10):
-#     axis[i].imshow(x_train[i].reshape(28,28), cmap="gray")
-#     axis[i].axis("off")
-# plt.show()

@@ -54,7 +54,10 @@ handle_call(distribute_weights, _From, State) ->
     {PidNodes, _} = lists:unzip(State#mstate.currentUpNodes),
     ResponseList = master_utils:distribute_model_weights(State#mstate.pythonModelPID, PidNodes, State#mstate.javaUiPid, sync),
     message_primitives:notify_ui(State#mstate.javaUiPid, {weights_updated_nodes, ResponseList}),
-    {reply, {ok, ResponseList}, State}.
+    {reply, {ok, ResponseList}, State};
+
+handle_call(stop, _From, State) ->
+    {stop, normal, State}.
 
 handle_cast({new_train, EpochsLeft, CurrentEpoch, AccuracyThreshold}, State) ->
     message_primitives:notify_ui(State#mstate.javaUiPid, {new_train, {EpochsLeft,AccuracyThreshold}}),
@@ -109,7 +112,7 @@ handle_cast(stop_training, State) ->
     {noreply, State#mstate{terminateTraining = true}}.
 
 % acks not read in the load_nodes pipeline, useful for UI dashboard
-handle_info({db_ack, Pid, InfosDB}, State) ->
+handle_info({db_ack, _Pid, InfosDB}, State) ->
     message_primitives:notify_ui(State#mstate.javaUiPid, {db_ack, InfosDB}),
     {noreply, State};
 
@@ -151,7 +154,7 @@ handle_info(Info, State) ->
 
 terminate(_Reason, State) ->    % called from supervisor shutdown or stop function
     io:format("--- MASTER: Terminating Procedure ---~n"),
-    lists:foreach(fun({Pid, _Node}) -> node_api:stop(Pid) end, State#mstate.currentUpNodes),  % send stop signal to all connected nodes
-    python:stop(State#mstate.pythonModelPID),     
     message_primitives:notify_ui(State#mstate.javaUiPid, {master_terminating, "possible restarting by supervisor"}),
+    python:stop(State#mstate.pythonModelPID), 
+    lists:foreach(fun({Pid, _Node}) -> node_api:stop(Pid) end, State#mstate.previousInitializedNodes),  % send stop signal to all connected nodes
     ok.

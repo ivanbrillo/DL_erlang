@@ -74,8 +74,6 @@ CLOSE.addEventListener('click', function () {
     const container = document.getElementById('containerNodes');
     const elements = container.querySelectorAll('.elemNode');
     elements.forEach(elem => elem.remove());
-
-
     clearChart();
     uiDisabled();
 });
@@ -179,9 +177,19 @@ function processingInput(input) {
 
     } else if (inputStr.startsWith("{operator}")) {
         buttonsVisible();
+    } else if (inputStr.startsWith("{stopped")) {
+
+        const container = document.getElementById('containerNodes');
+        const elements = container.querySelectorAll('.elemNode');
+        elements.forEach(elem => elem.remove());
+    
+        clearChart();
+        uiDisabled();
+    
     } else if (inputStr.startsWith("{master_terminating")) {
         addLogMessage("received", inputStr);
         uiDisabled();
+        CLOSE.disabled = false;
         CONNECT.disabled = true;
         clearChart();
 

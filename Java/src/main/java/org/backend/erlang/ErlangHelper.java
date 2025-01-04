@@ -12,7 +12,7 @@ public class ErlangHelper {
     public static Process startErlangNode(String path, String cookie, String name, long timeout) throws InterruptedException, IOException {
         ProcessBuilder builder = new ProcessBuilder("rebar3", "shell", "--sname", name, "--setcookie", cookie);
         builder.directory(new File(path));
-        builder.environment().put("TF_CPP_MIN_LOG_LEVEL", "3");
+        builder.environment().put("TF_CPP_MIN_LOG_LEVEL", "3");   // disable tf warning
 
         // Redirect to both file and reader
         File logFile = new File("logs/erlang.log");
@@ -20,7 +20,6 @@ public class ErlangHelper {
         Process process = builder.start();
 
         log.info("[Java] Erlang Node compiling and starting");
-
 
         // Start background thread to handle output
         new Thread(() -> {
@@ -35,14 +34,14 @@ public class ErlangHelper {
                 log.info("[Java] Erlang logging terminating");
             } catch (IOException e) {
                 log.info("[Java] Erlang logging terminating: {}", e.getMessage());
-            }
+            } 
         }).start();
 
         Thread.sleep(timeout);
 
         if (!process.isAlive()) {
             process.destroyForcibly();
-            throw new RuntimeException("[Java] Erlang node did not start correctly in 10 seconds.");
+            throw new RuntimeException("[Java] Erlang node did not start correctly in " + timeout + " seconds.");
         }
 
         return process;

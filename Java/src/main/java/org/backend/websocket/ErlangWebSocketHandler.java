@@ -37,9 +37,9 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
 
-        if (erlangContext.isConnected()) {
+        if (erlangContext.isConnected()) {   
             try {
-                queues.restoreSession(session);
+                queues.restoreSession(session);   // show current state of executions to new client
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.error("Session restoration interrupted");
@@ -55,7 +55,7 @@ public class ErlangWebSocketHandler extends TextWebSocketHandler {
 
         if (role != null && role.equals("ADMIN")) {
             try {
-                session.sendMessage(new TextMessage("{operator}"));
+                session.sendMessage(new TextMessage("{operator}"));  // show buttons on the UI
             } catch (IOException e) {
                 log.error("Error enabling admin command in UI: {}", e.getMessage());
                 throw new RuntimeException(e);

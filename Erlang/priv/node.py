@@ -69,7 +69,7 @@ def encode_status_code(code: str) -> Atom:
 
 def start_metrics_thread():
     metrics_thread = threading.Thread(target=send_system_metrics)
-    metrics_thread.daemon = True
+    metrics_thread.daemon = True  # terminates when the python process terminates
     metrics_thread.start()
 
 

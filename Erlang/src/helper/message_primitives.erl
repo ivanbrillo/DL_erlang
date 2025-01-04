@@ -40,9 +40,16 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pi
     end,
 
     receive
+        {AckCode, _Pid, Response} when Pids == [] -> 
+            wait_response(N-1, RespList ++ [Response], AckCode, DestinationNodeMetrics, EndTime, Crashed, []);
         {AckCode, Pid, Response} -> 
-            NewPids = lists:delete(Pid, Pids),
-            wait_response(N-1, RespList ++ [Response], AckCode, DestinationNodeMetrics, EndTime, Crashed, NewPids);
+            case lists:member(Pid, Pids) of
+            true ->
+                NewPids = lists:delete(Pid, Pids),
+                wait_response(N-1, RespList ++ [Response], AckCode, DestinationNodeMetrics, EndTime, Crashed, NewPids);
+            false ->
+                wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed ++ [{AckCode, Pid, Response}], Pids)
+            end;
         {node_metrics, Metrics} ->   % has high frequency and will interfere with normal timeout handling
             DestinationNodeMetrics ! {node_metrics, Metrics},
             wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pids);
@@ -57,14 +64,17 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pi
 
 
 handleErrorMsg(Msg, N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pids) ->
-    {'DOWN', _MonitorRef, process, Pid, _Reason} = Msg,
-
-    case lists:member(Pid, Pids) of
-        true -> 
-            io:format("--- WARNING: nodedown or exception occurs during waiting the responses, Pid = ~p ---~n", [Pid]),
+    {'DOWN', _MonitorRef, process, Pid, Reason} = Msg,
+    case {lists:member(Pid, Pids), Reason == noconnection} of
+        {true, false} -> 
+            io:format("--- WARNING: exception occurred during waiting the responses, Pid = ~p ---~n", [Pid]),
             NewPids = lists:delete(Pid, Pids),
             wait_response(N-1, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed ++ [Msg], NewPids);
-        _ ->
+        {true, true} -> 
+            io:format("--- WARNING: nodedown occurred during waiting the responses, Pid = ~p ---~n", [Pid]),
+            NewPids = lists:delete(Pid, Pids),
+            wait_response(N-1, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, NewPids);
+        {_, _} ->
             wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed ++ [Msg], Pids)
     end.
 

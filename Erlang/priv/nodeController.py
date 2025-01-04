@@ -11,7 +11,7 @@ class NodeController:
         self.master_pid: int
         self.node_id: int
         self.model: NetworkModel
-        self.dataset_size: int = 0 # todo 
+        self.dataset_size: int = 0
         self.x_train = None
         self.y_train = None
         self.x_test = None
@@ -23,7 +23,7 @@ class NodeController:
 
         Returns a tuple containing the shapes of the training and test sets respectively.
         """
-        self.x_train, self.y_train, self.x_test, self.y_test = preprocess_image()
+        self.x_train, self.y_train, self.x_test, self.y_test = get_dataset()
         self.dataset_size = self.x_train.shape[0]
         return self.x_train.shape, self.x_test.shape
 
@@ -88,4 +88,3 @@ class NodeController:
         weights = [w.tolist() for w in self.model.get_weights()]
         return  pickle.dumps((weights, *additional_infos)) if len(additional_infos) > 0 else pickle.dumps(weights)
 
-        # return  pickle.dumps((weights, self.dataset_size)) if add_cardinality else pickle.dumps(weights)

@@ -12,7 +12,10 @@ start_link_shell(JavaPid) ->
     {ok, started}.
 
 terminate() ->
-    gen_server:stop(erlang_master).  % exit with normal exit code, so its not restarted since the policy is transient
+    io:format("--- MASTER SUPERVISOR: Terminating Procedure ---~n"),
+    %gen_server:stop(erlang_master, normal).  % exit with normal exit code, so its not restarted since the policy is transient
+    gen_server:call(erlang_master, stop).
+
 
 
 init([JavaPid]) ->

@@ -2,6 +2,7 @@
 -behaviour(gen_server).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 -include("../helper/state.hrl").
+-define(TIMEOUT, 300000).   % default time-out
 
 
 
@@ -17,6 +18,9 @@ init([MasterPid, MasterNode]) ->
 
 handle_call(check_status, _From, State) ->
     {reply, true, State};
+
+handle_call(stop, _From, State) ->
+    {stop, normal, State};
 
 handle_call(_Request, _From, State) ->
     {reply, not_implemented, State}.
@@ -58,13 +62,13 @@ handle_cast(get_weights, State) ->
     io:format("--- NODE ~p: Weights returned ---~n", [node()]),
     {noreply, State}.
 
-% the process will terminate if the master node is down for 5 minutes
+% the process will terminate if the master node is down for more than TIMEOUT milliseconds
 handle_info({nodedown, MasterNode}, State) when MasterNode == State#nstate.masterNode ->
     io:format("--- NODE ~p: MASTER disconnected ---~n", [MasterNode]),
-    TimerRef = erlang:send_after(300000, self(), terminate),  % 5 minutes
+    TimerRef = erlang:send_after(?TIMEOUT, self(), stop),  % default: 5 minutes
     {noreply, State#nstate{termination_timer = TimerRef}};
 
-handle_info(terminate, State) ->
+handle_info(stop, State) ->
     {stop, normal, State};
 
 handle_info({nodeup, MasterNode}, State) when MasterNode == State#nstate.masterNode ->
