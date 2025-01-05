@@ -73,9 +73,6 @@ handle_info({nodeup, MasterNode}, State) when MasterNode == State#nstate.masterN
     erlang:cancel_timer(State#nstate.termination_timer),
     {noreply, State};
 
-handle_info(stop, State) ->
-    {stop, normal, State};
-
 handle_info({node_metrics, Metrics}, State) when undefined =/= State#nstate.masterPid->
     State#nstate.masterPid ! {node_metrics, Metrics},
     {noreply, State};

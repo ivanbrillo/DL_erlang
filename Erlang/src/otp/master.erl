@@ -18,7 +18,7 @@ init([JavaPid]) ->
 
 handle_call(get_nodes, _From, State) ->
     Nodes = network_helper:get_cluster_nodes(),
-    io:format("--- MASTER: nodes ~p ---~n", [Nodes]),   % TODO remove
+    io:format("--- MASTER: nodes ~p ---~n", [Nodes]),
     {reply, Nodes, State};
 
 handle_call(get_pid, _From, State) ->
@@ -27,7 +27,7 @@ handle_call(get_pid, _From, State) ->
 handle_call(load_nodes, _From, State) ->
     ActiveNodes = master_utils:load_nodes(State#mstate.currentUpNodes, State#mstate.pythonModelPID, State#mstate.javaUiPid),
     message_primitives:notify_ui(State#mstate.javaUiPid, {loaded_nodes, ActiveNodes}),
-    io:format("--- MASTER: nodes loaded ~p ---~n", [ActiveNodes]),   % TODO remove
+    io:format("--- MASTER: nodes loaded ~p ---~n", [ActiveNodes]),
     {reply, ok, State#mstate{currentUpNodes = ActiveNodes}};
 
 handle_call(load_db, _From, State) ->
@@ -40,7 +40,7 @@ handle_call(initialize_nodes, _From, State) ->
     InitializedNodes = network_helper:initialize_nodes(State#mstate.javaUiPid),
     net_kernel:monitor_nodes(true),  % send messages nodeup/nodedown when a node connects/disconnects
     message_primitives:notify_ui(State#mstate.javaUiPid, {initialized_nodes, InitializedNodes}),
-    io:format("--- MASTER: node initialized ~p ---~n", [InitializedNodes]),   % TODO remove
+    io:format("--- MASTER: node initialized ~p ---~n", [InitializedNodes]),
 
     {reply, {ok, InitializedNodes}, State#mstate{currentUpNodes = InitializedNodes, previousInitializedNodes = InitializedNodes}};
 
@@ -128,7 +128,7 @@ handle_info({nodedown, Node}, State) ->
     message_primitives:notify_ui(State#mstate.javaUiPid, {node_down, Node}),
     {noreply, State#mstate{currentUpNodes = UpdatedUpNodes}};
 
-handle_info({python_unhandled, Cause}, State) ->   % TODO: to be removed
+handle_info({python_unhandled, Cause}, State) ->
     io:format("--- MASTER: Python received unhandled message: ~p ---~n", [Cause]),
     {noreply, State};
 

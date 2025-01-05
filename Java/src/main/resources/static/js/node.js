@@ -1,3 +1,40 @@
+let nodesModel = [];
+
+function addNodeModel(name) {
+    let node = {
+        name: name,
+        trainAccuracy: null,
+        testAccuracy: null,
+        trainDataSize: null,
+        testDataSize: null
+    };
+    
+    nodesModel.push(node);
+}
+
+function updateNodeModel(name, trainAccuracy, testAccuracy, trainDataSize, testDataSize) {
+    const node = nodesModel.find(node => node.name === name);
+    
+    if (node) {
+        if (trainAccuracy !== null) node.trainAccuracy = trainAccuracy;
+        if (testAccuracy !== null) node.testAccuracy = testAccuracy;
+        if (trainDataSize !== null) node.trainDataSize = trainDataSize;
+        if (testDataSize !== null) node.testDataSize = testDataSize;
+    } else {
+        console.log("Node not found");
+    }
+}
+
+function removeNodeModel(name) {
+    const index = nodesModel.findIndex(node => node.name === name);
+    if (index !== -1) {
+        nodesModel.splice(index, 1);
+    } else {
+        console.log("Node not found");
+    }
+}
+
+
 const metrics = [
     { label: 'CPU: ', id: 'cpu-metric' },
     { label: 'Memory: ', id: 'memory-metric' },
@@ -19,9 +56,10 @@ function createNode(Name){
     node.className = 'elemNode';
     node.id = Name;
 
-
     let title = document.createElement('h3');
     title.textContent = 'NODE: '+ Name;
+
+    addNodeModel(Name);
 
     /* metrics */
     let metricsContainer = document.createElement('div');
@@ -73,6 +111,7 @@ function removeNode(name){
     const node = document.getElementById(name);
     if (node) {
         node.remove();
+        removeNodeModel(name);
         console.log(`${name} Node eliminated.`);
     }
     numNodi--;

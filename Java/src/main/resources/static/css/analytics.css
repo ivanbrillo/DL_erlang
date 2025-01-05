@@ -19,18 +19,29 @@
 }
 
 #dashboard h3 {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 600;
     color: white;
-    margin: 0px;
+    margin-top: 0px;
+    margin-bottom: 15px;
     text-align: center;
+}
+
+#header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .controls {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+}
+
+.controls #input{
+    display: flex;
+    justify-content: space-between;
 }
 
 .button {
@@ -58,7 +69,12 @@
 
 .epoch-counter {
     color: white;
-    font-size: 18px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+input#epochsInput{
+    width: 25%;
 }
 
 canvas {

@@ -8,5 +8,5 @@ class NetworkModel(tf.keras.Model):
 
     def call(self, x):
         network_output = self.network(x)
-        # todo: add specific behavior depending on the model (eg. custom penality as in VAE)
+        # administrator can add specific behavior depending on the model (eg. custom penality as in VAE)
         return network_output

@@ -32,7 +32,7 @@
 
             <button id="analytics_btn">
                 <img src="img/analytics_icon.svg" alt="">
-                <span class="btn_text">Analytics</span>
+                <span class="btn_text">Training</span>
             </Button>
         </div>
     </div>
@@ -60,14 +60,16 @@
 
 <div id="dashboard">
     <h3>NEURAL NETWORK TRAINING PROGRESS</h3>
-    <div class="controls">
-        <div>
-            <label for="epochsInput">Number of epochs:</label>
-            <input type="number" id="epochsInput" min="0" value="3">
-        </div>
-        <div>
-            <label for="accuracyTarget">Accuracy target:</label>
-            <input type="number" id="accuracyTarget" step="0.01" min="0" max="1" value="0.99">
+    <div id="header">
+        <div class="controls">
+            <div>
+                <label for="epochsInput">Number of epochs:</label>
+                <input type="number" id="epochsInput" min="0" value="3">
+            </div>
+            <div>
+                <label for="accuracyTarget">Accuracy target:</label>
+                <input type="number" id="accuracyTarget" step="0.01" min="0" max="1" value="0.99">
+            </div>
         </div>
 
         <div>

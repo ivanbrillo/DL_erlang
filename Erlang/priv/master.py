@@ -5,9 +5,6 @@ from federatedController import FederatedController
 from erlport.erlterms import Atom
 from erlport.erlang import set_message_handler, cast
 
-# todo: naming conventions
-# todo: documentation for each method
-
 
 federatedModel: NetworkModel = NetworkModel(network_definition)
 federatedController: FederatedController = FederatedController(federatedModel)

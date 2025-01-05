@@ -23,7 +23,7 @@ TOP MENU
 *******************/
 
 #top_menu{
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
     backdrop-filter: blur(10px);
     height: 5%;
     width:70%;
@@ -117,6 +117,7 @@ LEFT MENU
     background-color: #0a115b;
     filter: drop-shadow(4px 5px 5.699999809265137px rgba(1, 1, 1, 0.10000000149011612));
     border-radius: 20px;
+    width: 100%;
 }
 
 .btn_text{
@@ -139,7 +140,6 @@ BUTTON TOP MENU AND LEFT MENU
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: center;
     align-items: center;
     gap: 15px;
     position: relative;
@@ -211,7 +211,7 @@ button:disabled, #containerButton button:disabled{
     width: 30%;
     margin-left: 7%;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 20px;
     padding: 10px;
     overflow-y: auto;
     background-color: #f9f9f9;
@@ -221,4 +221,21 @@ button:disabled, #containerButton button:disabled{
     color: black;
     margin: 5px 0;
     padding: 5px;
+}
+
+
+
+#log::-webkit-scrollbar {
+    display: none;
+    color: white;
+}
+
+#log::-webkit-scrollbar-track {
+    background: white;
+    border-radius: 4px;
+}
+
+#log::-webkit-scrollbar-thumb {
+    background: white;
+    border-radius: 4px;
 }

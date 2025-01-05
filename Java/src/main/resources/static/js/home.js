@@ -7,7 +7,7 @@ let socket;
 let host = document.location.host;
 const url = "http://" + host + "/erlang-socket";
 
-// Connection to the backend using SockJS
+// Connection to the backend using SockJS after log-in 
 socket = new SockJS(url);
 
 // Event handler when the connection is open
@@ -127,8 +127,10 @@ function processingInput(input) {
     // if the input is an object
     const inputStr = typeof input === 'object' ? JSON.stringify(input) : input;
 
-    if (inputStr.startsWith("{initialized_nodes") || inputStr.startsWith("{loaded_nodes")) {
+    if (inputStr.startsWith("{initialized_nodes")) {
         initializedNodes(inputStr);
+        addLogMessage("received", inputStr);
+    }  else if (inputStr.startsWith("{loaded_nodes")) {
         addLogMessage("received", inputStr);
     }  else if (inputStr.startsWith("{train_epoch_completed")) {
         trainAccuracy(inputStr);
@@ -182,6 +184,7 @@ function processingInput(input) {
         const container = document.getElementById('containerNodes');
         const elements = container.querySelectorAll('.elemNode');
         elements.forEach(elem => elem.remove());
+        nodesModel = [];
     
         clearChart();
         uiDisabled();
@@ -196,6 +199,7 @@ function processingInput(input) {
         const container = document.getElementById('containerNodes');
         const oldElements = container.querySelectorAll('.elemNode');
         oldElements.forEach(elem => elem.remove());
+        nodesModel = [];
 
         showSpinner();
     }
@@ -241,6 +245,33 @@ function initializedNodes(input){
     result.forEach(createNode);
 }
 
+function calculateWeightedAverages(nodes) {
+    let weightedTrainAccuracySum = 0;
+    let weightedTestAccuracySum = 0;
+    let totalTrainDataSize = 0;
+    let totalTestDataSize = 0;
+
+    nodes.forEach(node => {
+        if (node.trainAccuracy !== null && node.trainDataSize !== null) {
+            weightedTrainAccuracySum += parseFloat(node.trainAccuracy) * parseFloat(node.trainDataSize);
+            totalTrainDataSize += parseFloat(node.trainDataSize);
+        }
+        if (node.testAccuracy !== null && node.testDataSize !== null) {
+            weightedTestAccuracySum += parseFloat(node.testAccuracy) * parseFloat(node.testDataSize);
+            totalTestDataSize += parseFloat(node.testDataSize);
+        }
+    });
+
+    const weightedTrainAverage = totalTrainDataSize > 0 ? weightedTrainAccuracySum / totalTrainDataSize : 0;
+    const weightedTestAverage = totalTestDataSize > 0 ? weightedTestAccuracySum / totalTestDataSize : 0;
+
+    return {
+        weightedTrainAverage,
+        weightedTestAverage
+    };
+}
+
+
 function trainAccuracy(input) {
     const content = input.substring(input.indexOf('['));
     const parts = content.split(/\],\[/).map(part => part.replace(/[\[\]{}]/g, ''));
@@ -264,14 +295,14 @@ function trainAccuracy(input) {
 
         trainElem.textContent = trainAccuracies[index]?.toFixed(3) || "N/A";
         testElem.textContent = testAccuracies[index]?.toFixed(3) || "N/A";
+
+        updateNodeModel(pid, trainAccuracies[index].toFixed(3), testAccuracies[index].toFixed(3), null, null);
     });
 
-    // Mean
-    const trainMeanAccuracy = trainAccuracies.reduce((sum, val) => sum + val, 0) / trainAccuracies.length;
-    const testMeanAccuracy = testAccuracies.reduce((sum, val) => sum + val, 0) / testAccuracies.length;
+    // Mean Accayracy
+    let averages = calculateWeightedAverages(nodesModel);
 
-
-    handleTraining(trainMeanAccuracy, testMeanAccuracy);
+    handleTraining(averages.weightedTrainAverage, averages.weightedTestAverage);
 }
 
 
@@ -318,6 +349,8 @@ function sizeDB(input) {
 
     trainElem.textContent = match[2] || "N/A";
     testElem.textContent = match[3] || "N/A";
+
+    updateNodeModel(match[1], null, null, match[2], match[3]);
 }
 
 
@@ -399,10 +432,10 @@ function addLogMessage(type, message) {
     logEntry.classList.add('log-message');
     if (type === 'received') {
         logEntry.classList.add('received');
-        logEntry.textContent = "Received message: " + message;
+        logEntry.innerHTML = "<b>Received message:</b> " + message;
     } else if (type === 'sent') {
         logEntry.classList.add('sent');
-        logEntry.innerHTML = "Sent message: " + message;
+        logEntry.innerHTML = "<b>Sent message:</b> " + message;
     }
 
     logContainer.appendChild(logEntry);

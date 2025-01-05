@@ -43,7 +43,6 @@ public class ErlangController implements Runnable {
 
     @Override
     public void run() {
-        // TODO mettere tutto asynch in erlang
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 receiveErlangMessage();
