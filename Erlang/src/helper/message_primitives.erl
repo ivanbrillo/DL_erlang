@@ -97,6 +97,7 @@ flush_msg(Msg) ->
     after 0 -> ok
     end.
 
+% flush DOWN msgs of processes that are on the same node of Pid
 flush_msg('DOWN', Pid, Reason) ->
     receive
         {'DOWN', _MonitorRef, process, Pid2, Reason} when node(Pid) == node(Pid2) -> flush_msg('DOWN', Pid2, Reason)

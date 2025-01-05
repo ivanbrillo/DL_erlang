@@ -6,6 +6,7 @@ import json
 import psutil
 from ping3 import ping
 import time
+from networkHelper import *
 
 nodeController: NodeController = NodeController()
 
@@ -18,7 +19,6 @@ def register_handler(erlang_pid, node_id, master_ip):
     :param node_id: The ID of this node as a string
     :return: A string indicating whether the handler was registered correctly
     """
-
     nodeController.node_id = node_id.decode('utf-8')
     nodeController.master_ip = ".".join(map(str, master_ip))  # ip in the form {127.0.0.1}
     nodeController.erlang_pid = erlang_pid
@@ -28,43 +28,34 @@ def register_handler(erlang_pid, node_id, master_ip):
     def handler(message):
         code, pid, payload = message
         code = code.decode('utf-8')
-
-        if code == "initialize":
-            nodeController.initialize_model(payload)
-            cast(erlang_pid, (encode_status_code("initialize_ack"), None, None))
-        elif code == "load_db":
-            response = nodeController.load_db()
-            cast(erlang_pid, (encode_status_code("db_ack"), None, response))
-        elif code == "update":
-            nodeController.update_model(payload)
-            cast(erlang_pid, (encode_status_code("weights_ack"), None, None))
-        elif code == "train":
-            response = nodeController.train_local()
-            cast(erlang_pid, (encode_status_code("train_ack"), None, response))
-        elif code == "train_pipeline":
-            nodeController.update_model(payload)
-            accuracy = nodeController.train_local()
-            response = nodeController.get_weights([nodeController.dataset_size])
-            cast(erlang_pid, (encode_status_code("train_pipeline_ack"), None, (response, accuracy)))
-        elif code == "get_weights":
-            response = nodeController.get_weights([nodeController.dataset_size])
-            cast(erlang_pid, (encode_status_code("node_weights"), None, response))
-        else:
-            cast(erlang_pid, (
-            encode_status_code("python_unhandled"), f"NODE {nodeController.node_id}, invalid message code {code}"))
+        
+        match code:
+            case "initialize":
+                nodeController.initialize_model(payload)
+                send_message(erlang_pid, "initialize_ack", None)
+            case "load_db":
+                response = nodeController.load_db()
+                send_message(erlang_pid, "db_ack", response)
+            case "update":
+                nodeController.update_model(payload)
+                send_message(erlang_pid, "weights_ack", None)
+            case "train":
+                response = nodeController.train_local()
+                send_message(erlang_pid, "train_ack", response)
+            case "train_pipeline":
+                nodeController.update_model(payload)
+                accuracy = nodeController.train_local()
+                response = nodeController.get_weights([nodeController.dataset_size])
+                send_message(erlang_pid, "train_pipeline_ack", (response, nodeController.dataset_size, accuracy))
+            case "get_weights":
+                response = nodeController.get_weights([nodeController.dataset_size])
+                send_message(erlang_pid, "node_weights", response)
+            case _:
+                send_message(erlang_pid, "python_unhandled", f"NODE {nodeController.node_id}, invalid message code {code}")
 
     set_message_handler(handler)
     return (encode_status_code("ok"), "NODE")
 
-
-def encode_status_code(code: str) -> Atom:
-    """
-    Encode a status code string into an Erlang Atom.
-
-    :param code: The status code string
-    :return: An Erlang Atom representing the status code
-    """
-    return Atom(code.encode('utf-8'))
 
 
 def start_metrics_thread():

@@ -45,14 +45,18 @@ train(CurrentEpoch, PythonModelPid, Nodes, JavaUiPid) ->
         [] -> {[], 0.0};
         _ ->
             {PidList, Messages} = lists:unzip(ResponseList),
-            {NewWeights, Accuracy} = lists:unzip(Messages),
+            {NewWeights, TrainSizes, Accuracy} = lists:unzip3(Messages),
             {TrainAccuracy, TestAccuracy} = lists:unzip(Accuracy),
+
             message_primitives:synch_message(PythonModelPid, update_weights, NewWeights, update_weights_ack, JavaUiPid),
             io:format("--- MASTER: train completed for epochs: ~p, resulting nodes train accuracy: ~p, resulting nodes test accuracy: ~p,  ---~n", [CurrentEpoch, TrainAccuracy, TestAccuracy]),
 
             message_primitives:notify_ui(JavaUiPid, {train_epoch_completed, PidList, TrainAccuracy, TestAccuracy}),
-            TrainMeanAccuracy = lists:sum(TrainAccuracy) / length(TrainAccuracy),
-            {PidList, TrainMeanAccuracy}
+            %TrainMeanAccuracy = lists:sum(TrainAccuracy) / length(TrainAccuracy),
+            TrainWeightedAccuracy = lists:sum(lists:zipwith(fun(Acc, Size) -> Acc * Size end, TrainAccuracy, TrainSizes)) / lists:sum(TrainSizes),
+
+            io:format("--- MASTER: mean weighted training accuracy ~p ---~n", [TrainWeightedAccuracy]),
+            {PidList, TrainWeightedAccuracy}
     end.
 
 
