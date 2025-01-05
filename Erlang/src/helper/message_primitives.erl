@@ -1,11 +1,15 @@
 -module(message_primitives).
--export([synch_message/5, notify_ui/2, wait_response/3, wait_response/4, flush_msg/1, flush_msg/3]).
+-export([synch_message/5, notify_ui/2, wait_response/3, wait_response/4, flush_msg/1, flush_msg/3, send_message/3]).
 -define(TIMEOUT, 60000).   % default time-out
+
+
+send_message(PidReceiver, Code, Payload) ->
+    PidReceiver ! {Code, self(), Payload}.
 
 
 synch_message(PidList, Code, Message, AckCode, DestinationNodeMetrics) when is_list(PidList) ->
     lists:foreach(fun(Pid) ->
-        Pid ! {Code, self(), Message}
+        send_message(Pid, Code, Message)
     end, PidList),
 
     EndTime = erlang:monotonic_time(millisecond) + ?TIMEOUT,
@@ -23,15 +27,19 @@ wait_response(N, AckCode, DestinationNodeMetrics)  ->
     EndTime = erlang:monotonic_time(millisecond) + ?TIMEOUT,
     wait_response(N, [], AckCode, DestinationNodeMetrics, EndTime, [], []).
 
-wait_response(N, AckCode, DestinationNodeMetrics, Pids)  ->
+wait_response(N, AckCode, DestinationNodeMetrics, Pids) when length(Pids) == N ->
     EndTime = erlang:monotonic_time(millisecond) + ?TIMEOUT,
-    wait_response(N, [], AckCode, DestinationNodeMetrics, EndTime, [], Pids).
-    
+    wait_response(N, [], AckCode, DestinationNodeMetrics, EndTime, [], Pids);
+
+wait_response(_N, _AckCode, _DestinationNodeMetrics, _Pids) ->
+    error_pids_length.
+
 
 wait_response(N, RespList, _, _, _EndTime, Crashed, _Pids) when N == 0 ->
     lists:foreach(fun(CrashedMsg) -> self() ! CrashedMsg end, Crashed),  % retransmit exceptions for proper handling
     RespList;
 
+% crashed is the list of msgs read but not handled, that need retrasmission 
 wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pids) ->
     Now = erlang:monotonic_time(millisecond),
     TimeLeft = case EndTime - Now < 0 of
@@ -40,7 +48,7 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pi
     end,
 
     receive
-        {AckCode, _Pid, Response} when Pids == [] -> 
+        {AckCode, _Pid, Response} when Pids == [] ->  % no Pids check required 
             wait_response(N-1, RespList ++ [Response], AckCode, DestinationNodeMetrics, EndTime, Crashed, []);
         {AckCode, Pid, Response} -> 
             case lists:member(Pid, Pids) of
@@ -53,7 +61,7 @@ wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pi
         {node_metrics, Metrics} ->   % has high frequency and will interfere with normal timeout handling
             DestinationNodeMetrics ! {node_metrics, Metrics},
             wait_response(N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pids);
-        {'DOWN', _MonitorRef, process, Pid, Reason} ->
+        {'DOWN', _MonitorRef, process, Pid, Reason} when length(Pids) > 0 ->  % read only if Pids check is required
             handleErrorMsg({'DOWN', _MonitorRef, process, Pid, Reason}, N, RespList, AckCode, DestinationNodeMetrics, EndTime, Crashed, Pids)
 
     after TimeLeft ->

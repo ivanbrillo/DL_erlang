@@ -5,8 +5,7 @@
 % initialize the node server and send to master {ok, {Pid, Node}}
 start_link(MasterPid, MasterNode) ->
     {ok, Pid} = gen_server:start(node, [MasterPid, MasterNode], []),
-    MasterPid ! {ok, self(), {Pid, node()}},   % allows asynchronous calls to the function
-    {ok, Pid}.
+    message_primitives:send_message(MasterPid, ok, {Pid, node()}).   % allows asynchronous calls to the function
 
 % load the specified pickle-encoded model to python, send to master {initialize_ack, Pid}
 initialize_model(Pid, Model) ->
@@ -40,7 +39,7 @@ check_status(Pid) ->
 stop(Pid) ->
     try 
         % gen_server:stop(Pid)
-        gen_server:call(Pid, stop)
+        gen_server:cast(Pid, stop)
     catch
         exit:noproc -> 
             {error, noproc}

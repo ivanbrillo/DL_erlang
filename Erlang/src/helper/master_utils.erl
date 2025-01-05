@@ -64,35 +64,37 @@ load_nodes(ListsPidNodes, PythonModelPid, JavaUiPid) ->
 
 
 check_node_alive(Pid, Node) ->
-  case rpc:call(Node, erlang, is_process_alive, [Pid]) of
-    true ->
-      case node_api:check_status(Pid) of   % the node could be in its terminating phase so the pid is still alive but the server is unavailable
-        true -> true;
-        _ -> false
-      end;
-    _ -> false
-  end.
-
-
-reconnect(Node, State) ->
-    % Determine the new PID for the node
-    PidNew = case lists:keyfind(Node, 2, State#mstate.previousInitializedNodes) of
-    {Pid, _Node} ->
-    case master_utils:check_node_alive(Pid, Node) of
+    case rpc:call(Node, erlang, is_process_alive, [Pid]) of
         true ->
-                io:format("--- MASTER: Node ~p server is still alive ---~n", [Node]),
-                erlang:monitor(process, Pid),   % the monitor is deactivated when a node is disconnected
-                Pid;
-        _ ->    io:format("--- MASTER: Node ~p server is dead, initializing ---~n", [Node]),
-                [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
-                PidN
-    end;
+        case node_api:check_status(Pid) of   % the node could be in its terminating phase so the pid is still alive but the server is unavailable
+            true -> true;
+            _ -> false
+        end;
+        _ -> false
+    end.
+
+
+initialize_node(State, Node) ->
+    % Determine the new PID for the node
+    case lists:keyfind(Node, 2, State#mstate.previousInitializedNodes) of
+    {Pid, _Node} ->
+        case master_utils:check_node_alive(Pid, Node) of
+            true ->
+                    io:format("--- MASTER: Node ~p server is still alive ---~n", [Node]),
+                    erlang:monitor(process, Pid),   % the monitor is deactivated when a node is disconnected
+                    Pid;
+            _ ->    io:format("--- MASTER: Node ~p server is dead, initializing ---~n", [Node]),
+                    [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
+                    PidN
+        end;
     false -> io:format("--- MASTER: Node ~p is newly connected, initializing ---~n", [Node]), 
         [{PidN, Node}] = network_helper:initialize_nodes([Node], State#mstate.javaUiPid),
         PidN
-    end,    
+end. 
 
-    case master_utils:load_nodes([{PidNew, Node}], State#mstate.pythonModelPID, State#mstate.javaUiPid) of
+
+load_node(State, Pid, Node) ->
+    case master_utils:load_nodes([{Pid, Node}], State#mstate.pythonModelPID, State#mstate.javaUiPid) of
     [LoadedPidNodeNew] ->
         NewPidNodes = lists:keydelete(Node, 2, State#mstate.previousInitializedNodes), % remove to avoid two processes for the same node
         PidNodes1 = [LoadedPidNodeNew | State#mstate.currentUpNodes],
@@ -105,6 +107,19 @@ reconnect(Node, State) ->
         message_primitives:flush_msg({nodeup, Node}),  % avoid to retry the initialization if the error is in the startup routine
         State
     end.
+
+
+reconnect(Node, State) ->
+    try
+        PidNew = initialize_node(State, Node),   % could throw badmatch if unable to load the node
+        load_node(State, PidNew, Node)
+    catch
+        error:badmatch ->
+            io:format("--- MASTER: Node ~p failed to initialize ---~n", [Node]),
+            message_primitives:flush_msg({nodeup, Node}),
+            State
+    end.
+
 
 
 reconnect(Node, State, Pid, Reason, _MonitorRef) ->

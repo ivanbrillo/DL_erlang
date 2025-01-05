@@ -55,12 +55,11 @@ class FederatedController():
 
     @staticmethod
     def federated_weight_average(node_outputs) -> list:
-        # Number of nodes
         """
         Averages the weights from a list of node weights.
 
         Args:
-            parsed_outputs: A list of dictionaries, where each dictionary contains the node weights and dataset size.
+            node_outputs: A list of tuples, containing the node weights and dataset size.
 
         Returns:
             A list of Numpy arrays, representing the averaged model weights.
