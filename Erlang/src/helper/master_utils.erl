@@ -118,8 +118,8 @@ reconnect(Node, State) ->
         PidNew = initialize_node(State, Node),   % could throw badmatch if unable to load the node
         load_node(State, PidNew, Node)
     catch
-        error:badmatch ->
-            io:format("--- MASTER: Node ~p failed to initialize ---~n", [Node]),
+        Error:Reason ->
+            io:format("--- MASTER: Node ~p failed to initialize (~p:~p) ---~n", [Node, Error, Reason]),
             message_primitives:flush_msg({nodeup, Node}),
             State
     end.
