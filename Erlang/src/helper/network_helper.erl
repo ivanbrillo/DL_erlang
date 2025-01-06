@@ -1,5 +1,5 @@
 -module(network_helper).
--export([get_cluster_nodes/0, initialize_nodes/1,  initialize_nodes/2, get_ip_node/0]).
+-export([get_cluster_nodes/0, initialize_nodes/1,  initialize_nodes/2, get_ip_host/1]).
 
 get_cluster_nodes() ->
     Nodes = net_adm:world(),
@@ -16,6 +16,6 @@ initialize_nodes(Nodes, JavaUiPid) ->
     lists:foreach(fun({P, _N}) -> erlang:monitor(process, P) end, PidsOk),
     PidsOk.
 
-get_ip_node() ->
-    {ok, Address} = inet:getaddr(master, inet),
+get_ip_host(Host) ->
+    {ok, Address} = inet:getaddr(Host, inet),
     Address.

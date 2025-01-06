@@ -8,8 +8,9 @@
 
 init([MasterPid, MasterNode]) ->
     PythonPid = python_helper:init_python_process(),
+    [_, HostStr] = string:split(atom_to_list(MasterNode), "@"),    % get the host of the master node
 
-    {ok, _Name} = python:call(PythonPid, node, register_handler, [self(), node(), network_helper:get_ip_node()]),
+    {ok, _Name} = python:call(PythonPid, node, register_handler, [self(), node(), network_helper:get_ip_host(HostStr)]),
     net_kernel:monitor_nodes(true),  % nodeup/nodedown messages
     State = #nstate{masterPid = MasterPid, masterNode = MasterNode, pythonPid = PythonPid},
     io:format("--- NODE ~p: Initialized correctly ---~n", [node()]),
