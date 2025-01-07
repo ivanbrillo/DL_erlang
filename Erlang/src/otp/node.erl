@@ -49,7 +49,7 @@ handle_cast(train, State) ->
     {noreply, State};
 
 handle_cast({train_pipeline, Weights, Epoch}, State) ->
-    NewWeights = message_primitives:synch_message(State#nstate.pythonPid, train_pipeline, Weights, train_pipeline_ack, State#nstate.masterPid),
+    NewWeights = message_primitives:synch_message(State#nstate.pythonPid, train_pipeline, {Weights, Epoch}, {train_pipeline_ack, Epoch}, State#nstate.masterPid),
     message_primitives:send_message(State#nstate.masterPid, {train_pipeline_ack, Epoch}, {self(), NewWeights}),
     io:format("--- NODE ~p: Training Pipeline completed ---~n", [node()]),
     {noreply, State};

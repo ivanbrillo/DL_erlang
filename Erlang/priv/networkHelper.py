@@ -14,7 +14,7 @@ def encode_status_code(code: str) -> Atom:
 
 
 def send_message(receiver, code: str, payload) -> None:
-    cast(receiver, (encode_status_code(code), None, payload))
+    cast(receiver, (code, None, payload))
     # add None because the standard msg format of the system id {Code, Pid, Payload}
 
 

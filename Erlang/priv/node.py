@@ -32,26 +32,29 @@ def register_handler(erlang_pid, node_id, master_ip):
         match code:
             case "initialize":
                 nodeController.initialize_model(payload)
-                send_message(erlang_pid, "initialize_ack", None)
+                send_message(erlang_pid, encode_status_code("initialize_ack"), None)
             case "load_db":
                 response = nodeController.load_db()
-                send_message(erlang_pid, "db_ack", response)
+                send_message(erlang_pid, encode_status_code("db_ack"), response)
             case "update":
                 nodeController.update_model(payload)
-                send_message(erlang_pid, "weights_ack", None)
+                send_message(erlang_pid, encode_status_code("weights_ack"), None)
             case "train":
                 response = nodeController.train_local()
-                send_message(erlang_pid, "train_ack", response)
+                send_message(erlang_pid, encode_status_code("train_ack"), response)
             case "train_pipeline":
-                nodeController.update_model(payload)
+                weights, epoch = payload
+                nodeController.update_model(weights)
                 accuracy = nodeController.train_local()
                 response = nodeController.get_weights([nodeController.dataset_size])
-                send_message(erlang_pid, "train_pipeline_ack", (response, nodeController.dataset_size, accuracy))
+
+                code_ack = (encode_status_code("train_pipeline_ack"), epoch) 
+                send_message(erlang_pid, code_ack, (response, nodeController.dataset_size, accuracy))
             case "get_weights":
                 response = nodeController.get_weights([nodeController.dataset_size])
-                send_message(erlang_pid, "node_weights", response)
+                send_message(erlang_pid, encode_status_code("node_weights"), response)
             case _:
-                send_message(erlang_pid, "python_unhandled", f"NODE {nodeController.node_id}, invalid message code {code}")
+                send_message(erlang_pid, encode_status_code("python_unhandled"), f"NODE {nodeController.node_id}, invalid message code {code}")
 
     set_message_handler(handler)
     return (encode_status_code("ok"), "NODE")
