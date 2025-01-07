@@ -34,21 +34,21 @@ def register_handler(master_pid):
         match code:
             case "get_model":
                 response = federatedController.get_definition()
-                send_message(master_pid, "model_definition", response)
+                send_message(master_pid, encode_status_code("model_definition"), response)
             case "get_weights":
                 response = federatedController.get_weights()
-                send_message(master_pid, "model_weights", response)
+                send_message(master_pid, encode_status_code("model_weights"), response)
             case "update_weights":
                 federatedController.update_weights(payload)
-                send_message(master_pid, "update_weights_ack", None)
+                send_message(master_pid, encode_status_code("update_weights_ack"), None)
             case "save_model":
                 result = federatedController.save_model(payload.decode('utf-8'))
-                send_message(master_pid, "model_saved", encode_status_code(result))
+                send_message(master_pid, encode_status_code("model_saved"), encode_status_code(result))
             case "load_model":
                 result = federatedController.load_model(payload.decode('utf-8'))
-                send_message(master_pid, "model_loaded", encode_status_code(result))
+                send_message(master_pid, encode_status_code("model_loaded"), encode_status_code(result))
             case _:
-                send_message(master_pid, "python_unhandled", "NODE master, invalid message code " + code)
+                send_message(master_pid, encode_status_code("python_unhandled"), "NODE master, invalid message code " + code)
 
     set_message_handler(handler)
     return (encode_status_code("ok"), "MODEL")
