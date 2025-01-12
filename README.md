@@ -1,9 +1,9 @@
 # ds_proj
 
 ### Documentation Links
-- https://ivanbrillo.github.io/DL_erlang/
-Note: The code documentation link in the page above doesn't work. The HTML files are located in `docs/_build/html/index.html`
 
+
+# Stand Alone Use (without Java server)
 ### Hide Warnings (Linux)
 ```export TF_CPP_MIN_LOG_LEVEL=3```
 
@@ -31,9 +31,15 @@ If you want to train the model for at most `N` epoch, until a `T` accuracy thres
 ```master_api:train(N, T).```
 
 
-### Emulating disconnection
+### Emulating disconnection and sleep
 To emulate a node disconnection, from the master terminal you can execute:
 
 ```erlang:disconnect_node('slave1@localhost').```
 
 This will disconnect the slave1@localhost node and the connection lost handling will be executed from the node and the master.
+
+The sleep in the python node: 
+```time.sleep(70000)```
+
+
+
