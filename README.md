@@ -1,7 +1,7 @@
 # ds_proj
 
 ### Documentation Links
-
+https://github.com/ivanbrillo/FederatedLearningErlang/blob/main/Federated_Learning_DOC.pdf
 
 # Stand Alone Use (without Java server)
 ### Hide Warnings (Linux)
